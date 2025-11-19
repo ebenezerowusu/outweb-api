@@ -49,17 +49,33 @@
 - Custom permission overrides
 - Notification preferences management
 
+### 4. Sellers Module
+**Dealer & Private Seller Management**
+- `GET /sellers` - List sellers with filters + pagination (Admin only)
+- `GET /sellers/:id` - Get seller by ID (Admin or seller member)
+- `POST /sellers` - Create new seller (dealer or private)
+- `PATCH /sellers/:id` - Update seller profile (Admin or seller member)
+- `PATCH /sellers/:id/status` - Update seller verification/approval (Admin only)
+- `PATCH /sellers/:id/meta` - Update seller metadata (Admin only)
+- `PATCH /sellers/:id/users` - Update seller staff/team (Admin or seller member)
+
+**Features**:
+- Dealer and private seller support
+- Business details and verification (license, insurance)
+- Dealer group association
+- Staff/team management with roles
+- Advanced filtering (type, location, status, user membership)
+- Cursor-based pagination
+- Seller member vs Admin access control
+- License and insurance tracking
+- Syndication system integration (placeholder)
+- Statistics tracking (listings, sales, ratings)
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 4. Sellers Module
-- Dealer and private seller management
-- Business details and verification
-- Staff/team management
-- Seller-scoped listing operations
 
 ### 5. Seller Groups Module
 - Dealer group organization
@@ -159,7 +175,7 @@ None
 | Health | 3 | ✅ Complete |
 | Auth | 12 | ✅ Complete (core), ⏳ Integration pending |
 | Users | 9 | ✅ Complete |
-| Sellers | 7 | ⏳ Pending |
+| Sellers | 7 | ✅ Complete |
 | Seller Groups | 5 | ⏳ Pending |
 | Seller Reviews | 6 | ⏳ Pending |
 | RBAC | 5 | ⏳ Pending |
@@ -172,12 +188,13 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~20% complete (3/15 modules)
+**Total Progress**: ~27% complete (4/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement Sellers module (required for marketplace functionality)
-3. Implement Seller Groups (dealer organization)
+1. Implement Seller Groups (dealer organization)
+2. Implement Seller Reviews (rating and feedback)
+3. Implement RBAC Helper APIs (permission checking)
 4. Implement Taxonomies (required for listings)
 5. Implement Listings & Vehicles (core marketplace feature)
 6. Integrate Stripe, SendGrid, and Twilio services
