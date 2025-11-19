@@ -13,6 +13,11 @@ import { SellerGroupsModule } from './modules/seller-groups/seller-groups.module
 import { SellerReviewsModule } from './modules/seller-reviews/seller-reviews.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module';
+import { ListingsModule } from './modules/listings/listings.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ListingOffersModule } from './modules/listing-offers/listing-offers.module';
 
 @Module({
   imports: [
@@ -31,6 +36,11 @@ import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module';
     SellerReviewsModule,
     RbacModule,
     TaxonomiesModule,
+    ListingsModule,
+    SubscriptionsModule,
+    OrdersModule,
+    NotificationsModule,
+    ListingOffersModule,
   ],
   providers: [
     // Global exception filter (RFC-7807 format)

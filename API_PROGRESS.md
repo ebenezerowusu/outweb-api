@@ -163,18 +163,40 @@
 - Public access for read operations
 - Admin-only write operations
 
+### 9. Listings & Vehicles Module
+**Vehicle Listing Management & Marketplace**
+- `GET /listings` - List listings with advanced filtering (Public)
+- `GET /listings/:id` - Get listing by ID (Public)
+- `POST /listings` - Create new listing (Seller or Admin)
+- `PATCH /listings/:id` - Update listing (Seller or Admin)
+- `PATCH /listings/:id/status` - Update listing status (Seller or Admin)
+- `PATCH /listings/:id/visibility` - Update visibility settings (Seller or Admin)
+- `POST /listings/:id/feature` - Feature a listing (Admin only)
+- `DELETE /listings/:id` - Delete/archive listing (Seller or Admin)
+
+**Features**:
+- Complete vehicle data (VIN, make, model, trim, year, mileage, colors, battery, FSD)
+- Pricing with history tracking and negotiation flags
+- Rich media support structure (photos, videos, documents)
+- Location-based filtering (country, state, city, ZIP, coordinates)
+- Condition tracking (ratings, descriptions, known issues, modifications)
+- Service and accident history
+- Advanced search (20+ filters: price, mileage, year, colors, features)
+- Multiple sort options
+- State machine (draft → published → sold/expired/archived)
+- Visibility controls (public, seller info, pricing, offers)
+- Performance metrics (views, favorites, inquiries)
+- Featured listings with expiration
+- VIN privacy (last 4 digits only in public)
+- Taxonomy integration
+- Soft delete functionality
+- Auto view counting
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 9. Listings & Vehicles Module
-- Vehicle listing creation (Sell Your Tesla flow)
-- Listing search & filtering with facets
-- Vehicle data management
-- Media uploads (images/videos)
-- Status transitions (Published, Sold, Expired, etc.)
 
 ### 10. Payments & Subscriptions Module
 - Subscription plan management
@@ -250,7 +272,7 @@ None
 | Seller Reviews | 7 | ✅ Complete |
 | RBAC | 5 | ✅ Complete |
 | Taxonomies | 9 | ✅ Complete |
-| Listings/Vehicles | 15+ | ⏳ Pending |
+| Listings/Vehicles | 8 | ✅ Complete |
 | Payments | 16 | ⏳ Pending |
 | Orders | 10 | ⏳ Pending |
 | Notifications | 9 | ⏳ Pending |
@@ -258,20 +280,20 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~53% complete (8/15 modules)
+**Total Progress**: ~60% complete (9/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement Listings & Vehicles (core marketplace feature - depends on Taxonomies)
-2. Implement Payments & Subscriptions (Stripe integration)
-3. Implement Orders & Transactions
-4. Implement Notifications (multi-channel: email, SMS, push)
-5. Implement Listing Offers (offer negotiation)
-6. Implement Chat system (Offer Chats & Messages)
-7. Integrate Stripe, SendGrid, and Twilio services
-8. Complete email verification and password reset flows
-9. Add 2FA implementation
-10. Production readiness (testing, documentation, deployment)
+1. Implement Payments & Subscriptions (Stripe integration for dealer subscriptions)
+2. Implement Orders & Transactions (vehicle purchase workflow)
+3. Implement Notifications (multi-channel: email, SMS, push)
+4. Implement Listing Offers (offer negotiation system)
+5. Implement Chat system (Offer Chats & Messages)
+6. Integrate external services (Stripe, SendGrid, Twilio)
+7. Complete auth flows (email verification, password reset, 2FA)
+8. Add media upload functionality (Azure Storage integration)
+9. Production readiness (testing, monitoring, documentation)
+10. Deployment and scaling configuration
 
 ## 📝 Notes
 
