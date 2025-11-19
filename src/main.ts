@@ -19,9 +19,9 @@ async function bootstrap() {
   );
 
   const configService = app.get(ConfigService<AppConfig>);
-  const port = configService.get('port', { infer: true });
-  const nodeEnv = configService.get('nodeEnv', { infer: true });
-  const corsOrigins = configService.get('corsOrigin', { infer: true });
+  const port = configService.get('port', { infer: true }) || 3000;
+  const nodeEnv = configService.get('nodeEnv', { infer: true }) || 'development';
+  const corsOrigins = configService.get('corsOrigin', { infer: true }) || '*';
 
   // Enable CORS
   app.enableCors({

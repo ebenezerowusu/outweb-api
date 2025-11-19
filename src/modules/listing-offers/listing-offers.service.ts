@@ -7,6 +7,7 @@ import {
   OfferState,
   OfferHistoryEntry,
   OfferStatistics,
+  OfferTerms,
 } from './interfaces/listing-offer.interface';
 import { CreateListingOfferDto } from './dto/create-listing-offer.dto';
 import {
@@ -16,9 +17,10 @@ import {
   WithdrawOfferDto,
 } from './dto/update-listing-offer.dto';
 import { QueryListingOffersDto } from './dto/query-listing-offer.dto';
+import { ListingDocument } from '../listings/interfaces/listing.interface';
 
 const OFFERS_CONTAINER = 'ListingOffers';
-const LISTINGS_CONTAINER = 'Listings';
+const LISTINGS_CONTAINER = 'listings';
 
 @Injectable()
 export class ListingOffersService {
@@ -138,18 +140,18 @@ export class ListingOffersService {
     const now = new Date().toISOString();
 
     // Fetch listing to validate and get seller info
-    const listing = await this.cosmosService.getItem(LISTINGS_CONTAINER, dto.listingId, dto.listingId);
+    const listing = await this.cosmosService.getItem<ListingDocument>(LISTINGS_CONTAINER, dto.listingId, dto.listingId);
     if (!listing) {
       throw new NotFoundException({ message: 'Listing not found' });
     }
 
     // Validate listing is available
-    if (listing.status.state !== 'active') {
+    if (listing.status.state !== 'published') {
       throw new BadRequestException({ message: 'Cannot make offer on inactive listing' });
     }
 
     // Prevent seller from making offer on their own listing
-    if (listing.seller.sellerId === userId) {
+    if (listing.seller.id === userId) {
       throw new BadRequestException({ message: 'You cannot make an offer on your own listing' });
     }
 
@@ -184,7 +186,7 @@ export class ListingOffersService {
       type: 'listing_offer',
       listingId: dto.listingId,
       buyerId: userId,
-      sellerId: listing.seller.sellerId,
+      sellerId: listing.seller.id,
       offer: {
         amount: dto.amount,
         currency: 'USD',
@@ -214,15 +216,15 @@ export class ListingOffersService {
         },
       ],
       terms: dto.terms
-        ? {
-            inspectionContingent: dto.terms.inspectionContingent || false,
-            financingContingent: dto.terms.financingContingent || false,
-            tradeInRequired: dto.terms.tradeInRequired || false,
-            tradeInDetails: dto.terms.tradeInDetails || null,
-            deliveryRequired: dto.terms.deliveryRequired || false,
-            deliveryLocation: dto.terms.deliveryLocation || null,
-            additionalTerms: dto.terms.additionalTerms || null,
-          }
+        ? ({
+            inspectionContingent: dto.terms.inspectionContingent ?? false,
+            financingContingent: dto.terms.financingContingent ?? false,
+            tradeInRequired: dto.terms.tradeInRequired ?? false,
+            tradeInDetails: dto.terms.tradeInDetails ?? null,
+            deliveryRequired: dto.terms.deliveryRequired ?? false,
+            deliveryLocation: dto.terms.deliveryLocation ?? null,
+            additionalTerms: dto.terms.additionalTerms ?? null,
+          } as OfferTerms)
         : null,
       audit: {
         createdAt: now,
@@ -424,10 +426,10 @@ export class ListingOffersService {
         },
       ],
       terms: dto.terms
-        ? {
+        ? ({
             ...originalOffer.terms,
             ...dto.terms,
-          }
+          } as OfferTerms)
         : originalOffer.terms,
       audit: {
         createdAt: now,
@@ -499,8 +501,8 @@ export class ListingOffersService {
    */
   async getStatistics(listingId: string, sellerId: string): Promise<OfferStatistics> {
     // Verify seller owns the listing
-    const listing = await this.cosmosService.getItem(LISTINGS_CONTAINER, listingId, listingId);
-    if (!listing || listing.seller.sellerId !== sellerId) {
+    const listing = await this.cosmosService.getItem<ListingDocument>(LISTINGS_CONTAINER, listingId, listingId);
+    if (!listing || listing.seller.id !== sellerId) {
       throw new ForbiddenException({ message: 'You do not have permission to view statistics for this listing' });
     }
 

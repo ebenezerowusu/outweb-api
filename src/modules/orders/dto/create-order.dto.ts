@@ -13,6 +13,31 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DeliveryMethod } from '../interfaces/order.interface';
 
 /**
+ * DTO for delivery address
+ */
+export class CreateDeliveryAddressDto {
+  @ApiProperty({ description: 'Street address' })
+  @IsString()
+  street: string;
+
+  @ApiProperty({ description: 'City' })
+  @IsString()
+  city: string;
+
+  @ApiProperty({ description: 'State/Province' })
+  @IsString()
+  state: string;
+
+  @ApiProperty({ description: 'Postal code' })
+  @IsString()
+  postalCode: string;
+
+  @ApiProperty({ description: 'Country code', example: 'US' })
+  @IsString()
+  country: string;
+}
+
+/**
  * DTO for creating a new order
  */
 export class CreateOrderDto {
@@ -51,28 +76,6 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   notes?: string;
-}
-
-export class CreateDeliveryAddressDto {
-  @ApiProperty({ description: 'Street address' })
-  @IsString()
-  street: string;
-
-  @ApiProperty({ description: 'City' })
-  @IsString()
-  city: string;
-
-  @ApiProperty({ description: 'State/Province' })
-  @IsString()
-  state: string;
-
-  @ApiProperty({ description: 'Postal code' })
-  @IsString()
-  postalCode: string;
-
-  @ApiProperty({ description: 'Country code', example: 'US' })
-  @IsString()
-  country: string;
 }
 
 /**

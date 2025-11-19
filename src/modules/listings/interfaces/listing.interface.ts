@@ -90,7 +90,7 @@ export interface PriceChange {
 export interface ListingMedia {
   photos: ListingPhoto[];
   videos: ListingVideo[];
-  documents: ListingDocument[];
+  documents: ListingMediaDocument[];
 }
 
 /**
@@ -121,7 +121,7 @@ export interface ListingVideo {
 /**
  * Listing Document (inspection reports, etc.)
  */
-export interface ListingDocument {
+export interface ListingMediaDocument {
   id: string;
   url: string;
   filename: string;
@@ -253,5 +253,5 @@ export interface ListingAudit {
  * Public Listing (safe for API responses)
  */
 export type PublicListing = Omit<ListingDocument, 'vehicle'> & {
-  vehicle: Omit<ListingVehicle, 'vin'> & { vinLastFour?: string };
+  vehicle: Omit<ListingVehicle, 'vin'> & { vinLastFour: string };
 };
