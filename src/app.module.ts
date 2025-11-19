@@ -11,6 +11,8 @@ import { UsersModule } from './modules/users/users.module';
 import { SellersModule } from './modules/sellers/sellers.module';
 import { SellerGroupsModule } from './modules/seller-groups/seller-groups.module';
 import { SellerReviewsModule } from './modules/seller-reviews/seller-reviews.module';
+import { RbacModule } from './modules/rbac/rbac.module';
+import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { SellerReviewsModule } from './modules/seller-reviews/seller-reviews.mod
     SellersModule,
     SellerGroupsModule,
     SellerReviewsModule,
+    RbacModule,
+    TaxonomiesModule,
   ],
   providers: [
     // Global exception filter (RFC-7807 format)
