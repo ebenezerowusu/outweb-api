@@ -91,16 +91,34 @@
 - Statistics aggregation (locations, listings, sales, ratings)
 - Audit trail tracking
 
+### 6. Seller Reviews Module
+**Review Creation, Rating Aggregation & Moderation**
+- `GET /sellers/:sellerId/reviews` - List reviews with filters + pagination
+- `GET /sellers/:sellerId/reviews/:id` - Get review by ID
+- `POST /sellers/:sellerId/reviews` - Create new review
+- `PATCH /sellers/:sellerId/reviews/:id` - Update review (reviewer only)
+- `DELETE /sellers/:sellerId/reviews/:id` - Delete review (reviewer or admin)
+- `POST /sellers/:sellerId/reviews/:id/response` - Create seller response
+- `PATCH /sellers/:sellerId/reviews/:id/moderation` - Update moderation (Admin only)
+
+**Features**:
+- Comprehensive rating system (overall, communication, vehicle condition, pricing, process)
+- Verified purchase tracking (linked to orders)
+- Review content (title, body, pros/cons)
+- Seller response functionality
+- Moderation system (pending, approved, rejected, flagged)
+- Advanced filtering (rating range, verified purchases, status, seller response)
+- Duplicate review prevention (one review per user per seller)
+- Engagement tracking (helpful/not helpful counts)
+- Cursor-based pagination
+- Reviewer information with avatar and review count
+- Audit trail tracking
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 6. Seller Reviews Module
-- Review creation
-- Rating aggregation
-- Moderation (flag/unflag)
 
 ### 7. RBAC Helper APIs
 - Permission checking (`/rbac/check`, `/rbac/check/batch`)
@@ -192,7 +210,7 @@ None
 | Users | 9 | ✅ Complete |
 | Sellers | 7 | ✅ Complete |
 | Seller Groups | 7 | ✅ Complete |
-| Seller Reviews | 6 | ⏳ Pending |
+| Seller Reviews | 7 | ✅ Complete |
 | RBAC | 5 | ⏳ Pending |
 | Taxonomies | 16 | ⏳ Pending |
 | Listings/Vehicles | 15+ | ⏳ Pending |
@@ -203,20 +221,20 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~33% complete (5/15 modules)
+**Total Progress**: ~40% complete (6/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement Seller Reviews (rating and feedback)
-2. Implement RBAC Helper APIs (permission checking)
-3. Implement Taxonomies (required for listings)
-4. Implement Listings & Vehicles (core marketplace feature)
-5. Implement Payments & Subscriptions (Stripe integration)
-6. Implement Orders & Transactions
-7. Implement Notifications (multi-channel)
-8. Integrate Stripe, SendGrid, and Twilio services
-9. Complete email verification and password reset flows
-10. Implement remaining modules
+1. Implement RBAC Helper APIs (permission checking and suggestions)
+2. Implement Taxonomies (required for listings - make, model, color, etc.)
+3. Implement Listings & Vehicles (core marketplace feature)
+4. Implement Payments & Subscriptions (Stripe integration)
+5. Implement Orders & Transactions
+6. Implement Notifications (multi-channel: email, SMS, push)
+7. Implement Listing Offers (offer negotiation)
+8. Implement Chat system (Offer Chats & Messages)
+9. Integrate Stripe, SendGrid, and Twilio services
+10. Complete email verification and password reset flows
 
 ## 📝 Notes
 
