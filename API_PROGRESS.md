@@ -114,17 +114,30 @@
 - Reviewer information with avatar and review count
 - Audit trail tracking
 
+### 7. RBAC Helper APIs Module
+**Permission Checking & Role Management**
+- `POST /rbac/check` - Check single permission (Admin only)
+- `POST /rbac/check/batch` - Check multiple permissions (Admin only)
+- `GET /rbac/me` - Get current user's effective permissions
+- `GET /rbac/permissions/suggest` - Permission suggestions (Admin only)
+- `GET /rbac/roles/suggest` - Role suggestions (Admin only)
+
+**Features**:
+- Single and batch permission checking
+- Effective permissions calculation (roles + custom permissions)
+- Permission source tracking (direct, role-based, or none)
+- Comprehensive permissions catalog (21 predefined permissions)
+- Role catalog with 7 predefined roles (Super Admin, Admin, Dealer, etc.)
+- Search-based suggestions for permissions and roles
+- Category-based permission organization
+- Role permission inheritance
+- Permission descriptions and metadata
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 7. RBAC Helper APIs
-- Permission checking (`/rbac/check`, `/rbac/check/batch`)
-- Current user's effective permissions (`/rbac/me`)
-- Permission suggestions (`/rbac/permissions/suggest`)
-- Role suggestions (`/rbac/roles/suggest`)
 
 ### 8. Taxonomies Module
 - CRUD for taxonomies (make, model, color, etc.)
@@ -211,7 +224,7 @@ None
 | Sellers | 7 | ✅ Complete |
 | Seller Groups | 7 | ✅ Complete |
 | Seller Reviews | 7 | ✅ Complete |
-| RBAC | 5 | ⏳ Pending |
+| RBAC | 5 | ✅ Complete |
 | Taxonomies | 16 | ⏳ Pending |
 | Listings/Vehicles | 15+ | ⏳ Pending |
 | Payments | 16 | ⏳ Pending |
@@ -221,20 +234,20 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~40% complete (6/15 modules)
+**Total Progress**: ~47% complete (7/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement RBAC Helper APIs (permission checking and suggestions)
-2. Implement Taxonomies (required for listings - make, model, color, etc.)
-3. Implement Listings & Vehicles (core marketplace feature)
-4. Implement Payments & Subscriptions (Stripe integration)
-5. Implement Orders & Transactions
-6. Implement Notifications (multi-channel: email, SMS, push)
-7. Implement Listing Offers (offer negotiation)
-8. Implement Chat system (Offer Chats & Messages)
-9. Integrate Stripe, SendGrid, and Twilio services
-10. Complete email verification and password reset flows
+1. Implement Taxonomies (required for listings - make, model, color, etc.)
+2. Implement Listings & Vehicles (core marketplace feature)
+3. Implement Payments & Subscriptions (Stripe integration)
+4. Implement Orders & Transactions
+5. Implement Notifications (multi-channel: email, SMS, push)
+6. Implement Listing Offers (offer negotiation)
+7. Implement Chat system (Offer Chats & Messages)
+8. Integrate Stripe, SendGrid, and Twilio services
+9. Complete email verification and password reset flows
+10. Add 2FA implementation
 
 ## 📝 Notes
 
