@@ -16,6 +16,7 @@ import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     ListingsModule,
     SubscriptionsModule,
     OrdersModule,
+    NotificationsModule,
   ],
   providers: [
     // Global exception filter (RFC-7807 format)
