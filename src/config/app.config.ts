@@ -22,6 +22,15 @@ export const AppConfigSchema = z.object({
   // Stripe
   stripeSecretKey: z.string().startsWith('sk_'),
   stripeWebhookSecret: z.string().startsWith('whsec_'),
+  stripeProductIdBasic: z.string().startsWith('prod_').optional(),
+  stripeProductIdPro: z.string().startsWith('prod_').optional(),
+  stripeProductIdEnterprise: z.string().startsWith('prod_').optional(),
+  stripePriceIdBasicMonthly: z.string().startsWith('price_').optional(),
+  stripePriceIdBasicYearly: z.string().startsWith('price_').optional(),
+  stripePriceIdProMonthly: z.string().startsWith('price_').optional(),
+  stripePriceIdProYearly: z.string().startsWith('price_').optional(),
+  stripePriceIdEnterpriseMonthly: z.string().startsWith('price_').optional(),
+  stripePriceIdEnterpriseYearly: z.string().startsWith('price_').optional(),
 
   // SendGrid
   sendgridApiKey: z.string().startsWith('SG.'),
@@ -67,6 +76,15 @@ export function loadConfig(): AppConfig {
 
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    stripeProductIdBasic: process.env.STRIPE_PRODUCT_ID_BASIC,
+    stripeProductIdPro: process.env.STRIPE_PRODUCT_ID_PRO,
+    stripeProductIdEnterprise: process.env.STRIPE_PRODUCT_ID_ENTERPRISE,
+    stripePriceIdBasicMonthly: process.env.STRIPE_PRICE_ID_BASIC_MONTHLY,
+    stripePriceIdBasicYearly: process.env.STRIPE_PRICE_ID_BASIC_YEARLY,
+    stripePriceIdProMonthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
+    stripePriceIdProYearly: process.env.STRIPE_PRICE_ID_PRO_YEARLY,
+    stripePriceIdEnterpriseMonthly: process.env.STRIPE_PRICE_ID_ENTERPRISE_MONTHLY,
+    stripePriceIdEnterpriseYearly: process.env.STRIPE_PRICE_ID_ENTERPRISE_YEARLY,
 
     sendgridApiKey: process.env.SENDGRID_API_KEY,
     sendgridFromEmail: process.env.SENDGRID_FROM_EMAIL,
