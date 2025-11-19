@@ -28,18 +28,32 @@
 - `POST /auth/2fa/setup` - Enable 2FA
 - `POST /auth/2fa/disable` - Disable 2FA
 
+### 3. Users Module
+**User Management & RBAC**
+- `GET /users` - List users with filters + pagination (Admin only)
+- `GET /users/me` - Get current user's profile
+- `GET /users/:id` - Get user by ID (Admin or self)
+- `PATCH /users/:id` - Update user profile and preferences (Admin or self)
+- `PATCH /users/:id/status` - Update user status (Admin only)
+- `PATCH /users/:id/market` - Update user market settings (Admin only)
+- `PATCH /users/:id/roles` - Update user roles (Admin only)
+- `PATCH /users/:id/permissions` - Update user custom permissions (Admin only)
+- `GET /users/:id/effective-permissions` - Get resolved effective permissions
+
+**Features**:
+- Advanced filtering (email, username, status, roles)
+- Cursor-based pagination
+- Self vs Admin access control
+- Profile field updates (name, phone, avatar, preferences)
+- Role-based permission inheritance
+- Custom permission overrides
+- Notification preferences management
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 3. Users Module
-- User CRUD operations
-- Role management
-- Permission management
-- Effective permissions calculation
-- Profile updates
 
 ### 4. Sellers Module
 - Dealer and private seller management
@@ -144,7 +158,7 @@ None
 |--------|--------|--------|
 | Health | 3 | ✅ Complete |
 | Auth | 12 | ✅ Complete (core), ⏳ Integration pending |
-| Users | 7 | ⏳ Pending |
+| Users | 9 | ✅ Complete |
 | Sellers | 7 | ⏳ Pending |
 | Seller Groups | 5 | ⏳ Pending |
 | Seller Reviews | 6 | ⏳ Pending |
@@ -158,12 +172,11 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~15% complete (2/15 modules)
+**Total Progress**: ~20% complete (3/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement Users module (foundation for all user-related operations)
-2. Implement Sellers module (required for marketplace functionality)
+1. Implement Sellers module (required for marketplace functionality)
 3. Implement Seller Groups (dealer organization)
 4. Implement Taxonomies (required for listings)
 5. Implement Listings & Vehicles (core marketplace feature)

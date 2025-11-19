@@ -7,6 +7,7 @@ import { CountryGuard } from './common/guards/country.guard';
 import { RbacGuard } from './common/guards/rbac.guard';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from './modules/auth/auth.module';
     // Feature modules
     HealthModule,
     AuthModule,
+    UsersModule,
   ],
   providers: [
     // Global exception filter (RFC-7807 format)
