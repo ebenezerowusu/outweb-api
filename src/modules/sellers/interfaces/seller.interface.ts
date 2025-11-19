@@ -91,3 +91,10 @@ export interface SellerAudit {
   createdBy: string;
   updatedBy: string;
 }
+
+/**
+ * Public Seller (excludes sensitive data like syndicationApiKey)
+ */
+export type PublicSeller = Omit<SellerDocument, 'dealerDetails'> & {
+  dealerDetails: Omit<DealerDetails, 'syndicationSystem'> | null;
+};
