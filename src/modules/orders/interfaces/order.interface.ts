@@ -24,7 +24,7 @@ export interface OrderDocument {
   delivery: OrderDelivery | null;
 
   // Documents and Notes
-  documents: OrderDocument[];
+  documents: OrderDocumentAttachment[];
   notes: OrderNote[];
 
   // Audit
@@ -158,7 +158,7 @@ export interface DeliveryAddress {
 /**
  * Order documents (contracts, inspection reports, etc.)
  */
-export interface OrderDocument {
+export interface OrderDocumentAttachment {
   id: string;
   type: string;
   name: string;
@@ -193,9 +193,11 @@ export interface OrderAudit {
 /**
  * Public Order (excludes sensitive information)
  */
-export interface PublicOrder extends Omit<OrderDocument, 'listing'> {
-  listing: Omit<OrderListing, 'vin'> & { vinLastFour: string };
-}
+export type PublicOrder = Omit<OrderDocument, 'listing'> & {
+  listing: Omit<OrderListing, 'vehicle'> & {
+    vehicle: Omit<OrderListing['vehicle'], 'vin'>;
+  };
+};
 
 /**
  * Order Transaction Document Interface

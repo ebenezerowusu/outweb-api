@@ -21,8 +21,10 @@ import {
   AddOrderDocumentDto,
 } from './dto/update-order.dto';
 import { QueryOrdersDto, QueryOrderTransactionsDto } from './dto/query-order.dto';
+import { ListingDocument } from '../listings/interfaces/listing.interface';
 
 const ORDERS_CONTAINER = 'Orders';
+const LISTINGS_CONTAINER = 'listings';
 
 @Injectable()
 export class OrdersService {
@@ -117,13 +119,13 @@ export class OrdersService {
     const now = new Date().toISOString();
 
     // Fetch listing to validate and get details
-    const listing = await this.cosmosService.getItem(ORDERS_CONTAINER, dto.listingId, dto.listingId);
+    const listing = await this.cosmosService.getItem<ListingDocument>(LISTINGS_CONTAINER, dto.listingId, dto.listingId);
     if (!listing) {
       throw new NotFoundException({ message: 'Listing not found' });
     }
 
     // Validate listing is available for purchase
-    if (listing.status.state !== 'active') {
+    if (listing.status.state !== 'published') {
       throw new BadRequestException({ message: 'Listing is not available for purchase' });
     }
 
@@ -133,14 +135,17 @@ export class OrdersService {
     const balanceAmount = dto.agreedPrice + taxAmount + feeAmount - dto.depositAmount;
     const totalAmount = dto.agreedPrice + taxAmount + feeAmount;
 
+    // Generate title from vehicle data
+    const listingTitle = `${listing.vehicle.year} ${listing.vehicle.make} ${listing.vehicle.model}${listing.vehicle.trim ? ' ' + listing.vehicle.trim : ''}`;
+
     const order: OrderDocument = {
       id: this.cosmosService.generateId(),
       type: 'order',
       buyerId: userId,
-      sellerId: listing.seller.sellerId,
+      sellerId: listing.seller.id,
       listing: {
         listingId: dto.listingId,
-        title: listing.title,
+        title: listingTitle,
         vehicle: {
           vin: listing.vehicle.vin,
           vinLastFour: listing.vehicle.vin.slice(-4),
@@ -636,14 +641,13 @@ export class OrdersService {
    */
   private toPublicOrder(order: OrderDocument): PublicOrder {
     const { listing, ...rest } = order;
+    const { vin, ...vehicleWithoutVin } = listing.vehicle;
+
     return {
       ...rest,
       listing: {
         ...listing,
-        vehicle: {
-          ...listing.vehicle,
-          vin: undefined as any,
-        },
+        vehicle: vehicleWithoutVin,
       },
     };
   }

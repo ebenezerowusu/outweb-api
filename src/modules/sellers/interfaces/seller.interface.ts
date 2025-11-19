@@ -43,7 +43,9 @@ export interface DealerDetails {
   dealerGroupId: string | null;
   businessType: string; // "franchise_dealership" | "group_affiliated_dealership" | etc
   licensePhoto: string | null;
+  licenseNumber: string | null;
   licenseExpiration: string | null;
+  licenseStatus: string | null;
   resaleCertificatePhoto: string | null;
   sellersPermitPhoto: string | null;
   owner: {
@@ -51,10 +53,17 @@ export interface DealerDetails {
     name: string;
     email: string;
   };
+  insuranceDetails: {
+    provider: string | null;
+    policyNumber: string | null;
+    expirationDate: string | null;
+  };
   syndicationSystem: string;
+  syndicationApiKey: string | null;
   businessSite: {
     [key: string]: string; // site1, site2, site3, etc.
   };
+  businessSiteLocations: string[];
 }
 
 export interface PrivateDetails {
@@ -65,6 +74,8 @@ export interface PrivateDetails {
 export interface SellerUser {
   userId: string;
   role: string; // "owner" | "sales_manager" | "finance_manager" | etc
+  joinedAt: string;
+  invitedBy: string;
 }
 
 export interface SellerListing {
@@ -77,12 +88,19 @@ export interface SellerStatus {
   verified: boolean;
   approved: boolean;
   blocked: boolean;
+  blockedReason: string | null;
 }
 
 export interface SellerMeta {
   rating: number | null;
   reviewsCount: number;
   tags: string[];
+  totalListings: number;
+  activeListings: number;
+  soldListings: number;
+  averageRating: number;
+  totalReviews: number;
+  totalSales: number;
 }
 
 export interface SellerAudit {
@@ -93,8 +111,8 @@ export interface SellerAudit {
 }
 
 /**
- * Public Seller (excludes sensitive data like syndicationApiKey)
+ * Public Seller (excludes sensitive data like syndicationApiKey and syndicationSystem)
  */
 export type PublicSeller = Omit<SellerDocument, 'dealerDetails'> & {
-  dealerDetails: Omit<DealerDetails, 'syndicationSystem'> | null;
+  dealerDetails: Omit<DealerDetails, 'syndicationSystem' | 'syndicationApiKey'> | null;
 };

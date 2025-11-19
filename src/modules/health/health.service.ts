@@ -16,7 +16,7 @@ export class HealthService {
     const connectionString = this.configService.get(
       'azureStorageConnectionString',
       { infer: true },
-    );
+    )!;
     this.blobServiceClient =
       BlobServiceClient.fromConnectionString(connectionString);
   }

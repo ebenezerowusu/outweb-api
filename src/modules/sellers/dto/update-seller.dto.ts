@@ -85,6 +85,67 @@ export class UpdateSellerDto {
   @IsString()
   @IsOptional()
   licenseExpiration?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  logoUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  bannerUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licensePhotoUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licenseNumber?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insuranceProvider?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insurancePolicyNumber?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insuranceExpiration?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  syndicationSystem?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  syndicationApiKey?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  businessSiteLocations?: string[];
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  fullName?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  idVerificationPhotoUrl?: string;
 }
 
 /**
@@ -105,6 +166,16 @@ export class UpdateSellerStatusDto {
   @IsBoolean()
   @IsOptional()
   blocked?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  blockedReason?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licenseStatus?: string;
 }
 
 /**
@@ -129,6 +200,43 @@ export class UpdateSellerMetaDto {
   @IsString({ each: true })
   @IsOptional()
   tags?: string[];
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  totalListings?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  activeListings?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  soldListings?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  @IsOptional()
+  averageRating?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  totalReviews?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  totalSales?: number;
 }
 
 /**

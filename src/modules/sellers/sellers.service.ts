@@ -176,6 +176,7 @@ export class SellersService {
       },
       market: {
         country: country,
+        allowedCountries: [country],
         source: 'web',
       },
       dealerDetails: dto.dealerDetails
@@ -192,13 +193,21 @@ export class SellersService {
             licenseNumber: dto.dealerDetails.licenseNumber || null,
             licenseExpiration: dto.dealerDetails.licenseExpiration || null,
             licenseStatus: 'pending',
+            resaleCertificatePhoto: null,
+            sellersPermitPhoto: null,
+            owner: {
+              isOwner: true,
+              name: dto.dealerDetails.companyName,
+              email: dto.email,
+            },
             insuranceDetails: {
               provider: dto.dealerDetails.insuranceProvider || null,
               policyNumber: dto.dealerDetails.insurancePolicyNumber || null,
               expirationDate: dto.dealerDetails.insuranceExpiration || null,
             },
-            syndicationSystem: dto.dealerDetails.syndicationSystem,
+            syndicationSystem: dto.dealerDetails.syndicationSystem || 'none',
             syndicationApiKey: dto.dealerDetails.syndicationApiKey || null,
+            businessSite: {},
             businessSiteLocations: dto.dealerDetails.businessSiteLocations || [],
           }
         : null,
@@ -222,6 +231,9 @@ export class SellersService {
         blockedReason: null,
       },
       meta: {
+        rating: null,
+        reviewsCount: 0,
+        tags: [],
         totalListings: 0,
         activeListings: 0,
         soldListings: 0,
@@ -519,17 +531,15 @@ export class SellersService {
    * Helper: Convert SellerDocument to PublicSeller
    */
   private toPublicSeller(seller: SellerDocument): PublicSeller {
-    // Remove sensitive fields like syndicationApiKey from response
-    const publicSeller: PublicSeller = {
-      ...seller,
-      dealerDetails: seller.dealerDetails
-        ? {
-            ...seller.dealerDetails,
-            syndicationApiKey: undefined, // Never expose API keys
-          }
-        : null,
-    };
+    // Remove sensitive fields like syndicationApiKey and syndicationSystem from response
+    if (seller.dealerDetails) {
+      const { syndicationSystem, syndicationApiKey, ...safeDealerDetails } = seller.dealerDetails;
+      return {
+        ...seller,
+        dealerDetails: safeDealerDetails,
+      };
+    }
 
-    return publicSeller;
+    return seller as PublicSeller;
   }
 }

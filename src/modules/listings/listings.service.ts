@@ -172,7 +172,8 @@ export class ListingsService {
       created_asc: 'c.audit.createdAt ASC',
       created_desc: 'c.audit.createdAt DESC',
     };
-    sqlQuery += ` ORDER BY ${sortMap[query.sortBy] || 'c.audit.createdAt DESC'}`;
+    const sortBy = query.sortBy || 'created_desc';
+    sqlQuery += ` ORDER BY ${sortMap[sortBy] || 'c.audit.createdAt DESC'}`;
 
     const { items, continuationToken } = await this.cosmosService.queryItems<ListingDocument>(
       this.LISTINGS_CONTAINER,
@@ -667,13 +668,13 @@ export class ListingsService {
    */
   private toPublicListing(listing: ListingDocument): PublicListing {
     const { vehicle, ...rest } = listing;
-    const vinLastFour = vehicle.vin.slice(-4);
+    const { vin, ...vehicleWithoutVin } = vehicle;
+    const vinLastFour = vin.slice(-4);
 
     return {
       ...rest,
       vehicle: {
-        ...vehicle,
-        vin: undefined as any,
+        ...vehicleWithoutVin,
         vinLastFour,
       },
     };

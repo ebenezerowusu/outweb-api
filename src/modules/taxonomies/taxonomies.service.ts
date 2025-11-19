@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CosmosService } from '@/common/services/cosmos.service';
 import { PaginatedResponse } from '@/common/types/pagination.type';
-import { TaxonomyDocument, PublicTaxonomy } from './interfaces/taxonomy.interface';
+import { TaxonomyDocument, PublicTaxonomy, TaxonomyCategory } from './interfaces/taxonomy.interface';
 import { CreateTaxonomyDto } from './dto/create-taxonomy.dto';
 import {
   UpdateTaxonomyDto,
@@ -173,7 +173,7 @@ export class TaxonomiesService {
     }
 
     // Handle parent taxonomy if provided
-    let parent = null;
+    let parent: { id: string; name: string; slug: string; category: TaxonomyCategory } | null = null;
     let hierarchyLevel = 0;
     let hierarchyPath: string[] = [];
 
@@ -250,7 +250,7 @@ export class TaxonomiesService {
 
     // Update parent's child count if applicable
     if (parent) {
-      await this.updateParentChildCount(dto.parentId);
+      await this.updateParentChildCount(parent.id);
     }
 
     return this.toPublicTaxonomy(createdTaxonomy);

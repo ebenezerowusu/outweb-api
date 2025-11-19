@@ -53,9 +53,9 @@ export class CosmosService implements OnModuleInit {
    */
   private async connect(): Promise<void> {
     try {
-      const endpoint = this.configService.get('cosmosEndpoint', { infer: true });
-      const key = this.configService.get('cosmosKey', { infer: true });
-      const databaseId = this.configService.get('cosmosDatabase', { infer: true });
+      const endpoint = this.configService.get('cosmosEndpoint', { infer: true })!;
+      const key = this.configService.get('cosmosKey', { infer: true })!;
+      const databaseId = this.configService.get('cosmosDatabase', { infer: true })!;
 
       this.client = new CosmosClient({ endpoint, key });
       this.database = this.client.database(databaseId);
@@ -110,8 +110,8 @@ export class CosmosService implements OnModuleInit {
   ): Promise<T | null> {
     try {
       const container = this.getContainer(containerName);
-      const { resource } = await container.item(id, partitionKeyValue).read<T>();
-      return resource || null;
+      const { resource } = await container.item(id, partitionKeyValue).read();
+      return (resource as T) || null;
     } catch (error: any) {
       if (error.code === 404) {
         return null;
