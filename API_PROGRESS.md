@@ -71,16 +71,31 @@
 - Syndication system integration (placeholder)
 - Statistics tracking (listings, sales, ratings)
 
+### 5. Seller Groups Module
+**Dealer Group Organization & Multi-Location Management**
+- `GET /seller-groups` - List seller groups with filters + pagination
+- `GET /seller-groups/:id` - Get seller group by ID
+- `POST /seller-groups` - Create new seller group (Admin only)
+- `PATCH /seller-groups/:id` - Update group profile (Admin only)
+- `PATCH /seller-groups/:id/settings` - Update group settings (Admin only)
+- `PATCH /seller-groups/:id/members` - Update group members (Admin only)
+- `PATCH /seller-groups/:id/meta` - Update group metadata (Admin only)
+
+**Features**:
+- Multi-location dealer management
+- Headquarters and contact information
+- Member management with roles (primary/member)
+- Group-wide settings (shared inventory, pricing, branding, transfers, payments)
+- Advanced filtering (name, location, seller membership)
+- Cursor-based pagination
+- Statistics aggregation (locations, listings, sales, ratings)
+- Audit trail tracking
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 5. Seller Groups Module
-- Dealer group organization
-- Multi-location management
-- Group-wide settings
 
 ### 6. Seller Reviews Module
 - Review creation
@@ -176,7 +191,7 @@ None
 | Auth | 12 | ✅ Complete (core), ⏳ Integration pending |
 | Users | 9 | ✅ Complete |
 | Sellers | 7 | ✅ Complete |
-| Seller Groups | 5 | ⏳ Pending |
+| Seller Groups | 7 | ✅ Complete |
 | Seller Reviews | 6 | ⏳ Pending |
 | RBAC | 5 | ⏳ Pending |
 | Taxonomies | 16 | ⏳ Pending |
@@ -188,18 +203,20 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~27% complete (4/15 modules)
+**Total Progress**: ~33% complete (5/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement Seller Groups (dealer organization)
-2. Implement Seller Reviews (rating and feedback)
-3. Implement RBAC Helper APIs (permission checking)
-4. Implement Taxonomies (required for listings)
-5. Implement Listings & Vehicles (core marketplace feature)
-6. Integrate Stripe, SendGrid, and Twilio services
-7. Complete email verification and password reset flows
-8. Implement remaining modules
+1. Implement Seller Reviews (rating and feedback)
+2. Implement RBAC Helper APIs (permission checking)
+3. Implement Taxonomies (required for listings)
+4. Implement Listings & Vehicles (core marketplace feature)
+5. Implement Payments & Subscriptions (Stripe integration)
+6. Implement Orders & Transactions
+7. Implement Notifications (multi-channel)
+8. Integrate Stripe, SendGrid, and Twilio services
+9. Complete email verification and password reset flows
+10. Implement remaining modules
 
 ## 📝 Notes
 

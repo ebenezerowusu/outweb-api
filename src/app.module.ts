@@ -9,6 +9,7 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { SellersModule } from './modules/sellers/sellers.module';
+import { SellerGroupsModule } from './modules/seller-groups/seller-groups.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SellersModule } from './modules/sellers/sellers.module';
     AuthModule,
     UsersModule,
     SellersModule,
+    SellerGroupsModule,
   ],
   providers: [
     // Global exception filter (RFC-7807 format)
