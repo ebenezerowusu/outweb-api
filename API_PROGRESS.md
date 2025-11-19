@@ -133,17 +133,41 @@
 - Role permission inheritance
 - Permission descriptions and metadata
 
+### 8. Taxonomies Module
+**Vehicle Classifications & Attributes Management**
+- `GET /taxonomies` - List taxonomies with filters + pagination (Public)
+- `GET /taxonomies/suggest` - Autocomplete suggestions (Public)
+- `GET /taxonomies/:id` - Get taxonomy by ID (Public)
+- `GET /taxonomies/:category/:slug` - Get by category and slug (Public)
+- `POST /taxonomies` - Create new taxonomy (Admin only)
+- `PATCH /taxonomies/:id` - Update taxonomy (Admin only)
+- `PATCH /taxonomies/:id/status` - Update status (Admin only)
+- `PATCH /taxonomies/bulk` - Bulk update taxonomies (Admin only)
+- `DELETE /taxonomies/:id` - Delete taxonomy (Admin only)
+
+**Features**:
+- 11 taxonomy categories (make, model, trim, year, color, interior_color, body_type, drivetrain, battery_size, feature, condition)
+- SEO-friendly slug generation and management
+- Hierarchical taxonomy support (parent-child relationships)
+- Duplicate slug prevention within categories
+- Autocomplete/suggestions with search
+- Bulk operations for status updates
+- Display order management
+- Popular taxonomy marking
+- Usage count tracking
+- SEO metadata (meta title, description, keywords)
+- Custom metadata storage
+- Active/visible status management
+- Child count tracking and validation
+- Cursor-based pagination
+- Public access for read operations
+- Admin-only write operations
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 8. Taxonomies Module
-- CRUD for taxonomies (make, model, color, etc.)
-- SEO-friendly slug management
-- Autocomplete/suggestions
-- Bulk operations
 
 ### 9. Listings & Vehicles Module
 - Vehicle listing creation (Sell Your Tesla flow)
@@ -225,7 +249,7 @@ None
 | Seller Groups | 7 | ✅ Complete |
 | Seller Reviews | 7 | ✅ Complete |
 | RBAC | 5 | ✅ Complete |
-| Taxonomies | 16 | ⏳ Pending |
+| Taxonomies | 9 | ✅ Complete |
 | Listings/Vehicles | 15+ | ⏳ Pending |
 | Payments | 16 | ⏳ Pending |
 | Orders | 10 | ⏳ Pending |
@@ -234,20 +258,20 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~47% complete (7/15 modules)
+**Total Progress**: ~53% complete (8/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement Taxonomies (required for listings - make, model, color, etc.)
-2. Implement Listings & Vehicles (core marketplace feature)
-3. Implement Payments & Subscriptions (Stripe integration)
-4. Implement Orders & Transactions
-5. Implement Notifications (multi-channel: email, SMS, push)
-6. Implement Listing Offers (offer negotiation)
-7. Implement Chat system (Offer Chats & Messages)
-8. Integrate Stripe, SendGrid, and Twilio services
-9. Complete email verification and password reset flows
-10. Add 2FA implementation
+1. Implement Listings & Vehicles (core marketplace feature - depends on Taxonomies)
+2. Implement Payments & Subscriptions (Stripe integration)
+3. Implement Orders & Transactions
+4. Implement Notifications (multi-channel: email, SMS, push)
+5. Implement Listing Offers (offer negotiation)
+6. Implement Chat system (Offer Chats & Messages)
+7. Integrate Stripe, SendGrid, and Twilio services
+8. Complete email verification and password reset flows
+9. Add 2FA implementation
+10. Production readiness (testing, documentation, deployment)
 
 ## 📝 Notes
 
