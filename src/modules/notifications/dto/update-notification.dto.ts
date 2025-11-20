@@ -23,6 +23,56 @@ export class ArchiveNotificationDto {
 }
 
 /**
+ * DTO for global notification channel preferences
+ */
+export class GlobalPreferencesDto {
+  @ApiPropertyOptional({ description: 'Enable in-app notifications', default: true })
+  @IsBoolean()
+  @IsOptional()
+  inApp?: boolean;
+
+  @ApiPropertyOptional({ description: 'Enable email notifications', default: true })
+  @IsBoolean()
+  @IsOptional()
+  email?: boolean;
+
+  @ApiPropertyOptional({ description: 'Enable SMS notifications', default: false })
+  @IsBoolean()
+  @IsOptional()
+  sms?: boolean;
+
+  @ApiPropertyOptional({ description: 'Enable push notifications', default: true })
+  @IsBoolean()
+  @IsOptional()
+  push?: boolean;
+}
+
+/**
+ * DTO for category-specific notification preferences
+ */
+export class CategoryPreferencesDto {
+  @ApiPropertyOptional({ description: 'Enable in-app notifications for this category', default: true })
+  @IsBoolean()
+  @IsOptional()
+  inApp?: boolean;
+
+  @ApiPropertyOptional({ description: 'Enable email notifications for this category', default: true })
+  @IsBoolean()
+  @IsOptional()
+  email?: boolean;
+
+  @ApiPropertyOptional({ description: 'Enable SMS notifications for this category', default: false })
+  @IsBoolean()
+  @IsOptional()
+  sms?: boolean;
+
+  @ApiPropertyOptional({ description: 'Enable push notifications for this category', default: true })
+  @IsBoolean()
+  @IsOptional()
+  push?: boolean;
+}
+
+/**
  * DTO for updating notification preferences
  */
 export class UpdateNotificationPreferencesDto {
@@ -74,48 +124,4 @@ export class UpdateNotificationPreferencesDto {
   @Type(() => CategoryPreferencesDto)
   @IsOptional()
   system?: CategoryPreferencesDto;
-}
-
-export class GlobalPreferencesDto {
-  @ApiPropertyOptional({ description: 'Enable in-app notifications', default: true })
-  @IsBoolean()
-  @IsOptional()
-  inApp?: boolean;
-
-  @ApiPropertyOptional({ description: 'Enable email notifications', default: true })
-  @IsBoolean()
-  @IsOptional()
-  email?: boolean;
-
-  @ApiPropertyOptional({ description: 'Enable SMS notifications', default: false })
-  @IsBoolean()
-  @IsOptional()
-  sms?: boolean;
-
-  @ApiPropertyOptional({ description: 'Enable push notifications', default: true })
-  @IsBoolean()
-  @IsOptional()
-  push?: boolean;
-}
-
-export class CategoryPreferencesDto {
-  @ApiPropertyOptional({ description: 'Enable in-app notifications for this category', default: true })
-  @IsBoolean()
-  @IsOptional()
-  inApp?: boolean;
-
-  @ApiPropertyOptional({ description: 'Enable email notifications for this category', default: true })
-  @IsBoolean()
-  @IsOptional()
-  email?: boolean;
-
-  @ApiPropertyOptional({ description: 'Enable SMS notifications for this category', default: false })
-  @IsBoolean()
-  @IsOptional()
-  sms?: boolean;
-
-  @ApiPropertyOptional({ description: 'Enable push notifications for this category', default: true })
-  @IsBoolean()
-  @IsOptional()
-  push?: boolean;
 }
