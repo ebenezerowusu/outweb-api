@@ -31,41 +31,8 @@ export class RejectOfferDto {
 }
 
 /**
- * DTO for making a counter-offer
+ * DTO for offer terms update
  */
-export class CounterOfferDto {
-  @ApiProperty({ description: 'Counter-offer amount', example: 44000 })
-  @IsNumber()
-  @Min(0)
-  amount: number;
-
-  @ApiPropertyOptional({ description: 'Message to buyer' })
-  @IsString()
-  @IsOptional()
-  message?: string;
-
-  @ApiPropertyOptional({ description: 'Counter-offer expiration date (defaults to 7 days)', example: '2024-01-20T00:00:00Z' })
-  @IsISO8601()
-  @IsOptional()
-  expiresAt?: string;
-
-  @ApiPropertyOptional({ description: 'Modified terms' })
-  @IsObject()
-  @ValidateNested()
-  @Type(() => UpdateOfferTermsDto)
-  @IsOptional()
-  terms?: UpdateOfferTermsDto;
-}
-
-/**
- * DTO for withdrawing an offer
- */
-export class WithdrawOfferDto {
-  @ApiProperty({ description: 'Withdrawal reason' })
-  @IsString()
-  reason: string;
-}
-
 export class UpdateOfferTermsDto {
   @ApiPropertyOptional({ description: 'Offer contingent on inspection' })
   @IsBoolean()
@@ -101,4 +68,40 @@ export class UpdateOfferTermsDto {
   @IsString()
   @IsOptional()
   additionalTerms?: string;
+}
+
+/**
+ * DTO for making a counter-offer
+ */
+export class CounterOfferDto {
+  @ApiProperty({ description: 'Counter-offer amount', example: 44000 })
+  @IsNumber()
+  @Min(0)
+  amount: number;
+
+  @ApiPropertyOptional({ description: 'Message to buyer' })
+  @IsString()
+  @IsOptional()
+  message?: string;
+
+  @ApiPropertyOptional({ description: 'Counter-offer expiration date (defaults to 7 days)', example: '2024-01-20T00:00:00Z' })
+  @IsISO8601()
+  @IsOptional()
+  expiresAt?: string;
+
+  @ApiPropertyOptional({ description: 'Modified terms' })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UpdateOfferTermsDto)
+  @IsOptional()
+  terms?: UpdateOfferTermsDto;
+}
+
+/**
+ * DTO for withdrawing an offer
+ */
+export class WithdrawOfferDto {
+  @ApiProperty({ description: 'Withdrawal reason' })
+  @IsString()
+  reason: string;
 }
