@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ListingOffersController } from './listing-offers.controller';
 import { ListingOffersService } from './listing-offers.service';
+import { CosmosService } from '@/common/services/cosmos.service';
 
 /**
  * Listing Offers Module
@@ -8,7 +9,7 @@ import { ListingOffersService } from './listing-offers.service';
  */
 @Module({
   controllers: [ListingOffersController],
-  providers: [ListingOffersService],
+  providers: [ListingOffersService, CosmosService],
   exports: [ListingOffersService],
 })
 export class ListingOffersModule {}
