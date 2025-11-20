@@ -90,8 +90,13 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
 
-    // Apply security globally to all endpoints by default
+    // Apply security globally to all endpoints except health endpoints
     for (const path in document.paths) {
+      // Skip security for health endpoints (they use @SkipAuth and @SkipCountryGuard)
+      if (path.startsWith('/api/health')) {
+        continue;
+      }
+
       for (const method in document.paths[path]) {
         const operation = document.paths[path][method];
         if (operation && typeof operation === 'object') {
