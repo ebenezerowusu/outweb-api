@@ -89,7 +89,31 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('docs', app, document);
+
+    // Apply security globally to all endpoints except health endpoints
+    for (const path in document.paths) {
+      // Skip security for health endpoints (they use @SkipAuth and @SkipCountryGuard)
+      if (path.startsWith('/api/health')) {
+        continue;
+      }
+
+      for (const method in document.paths[path]) {
+        const operation = document.paths[path][method];
+        if (operation && typeof operation === 'object') {
+          // Apply both security schemes to all endpoints
+          operation.security = [
+            { Authorization: [] },
+            { 'X-Country': [] },
+          ];
+        }
+      }
+    }
+
+    SwaggerModule.setup('docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true, // Persist auth tokens across browser sessions
+      },
+    });
 
     logger.log(`Swagger documentation available at http://localhost:${port}/docs`);
   }
