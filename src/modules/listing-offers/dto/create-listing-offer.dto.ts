@@ -12,36 +12,8 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
- * DTO for creating a new offer
+ * DTO for offer terms and conditions
  */
-export class CreateListingOfferDto {
-  @ApiProperty({ description: 'Listing ID to make offer on' })
-  @IsString()
-  listingId: string;
-
-  @ApiProperty({ description: 'Offer amount', example: 42000 })
-  @IsNumber()
-  @Min(0)
-  amount: number;
-
-  @ApiPropertyOptional({ description: 'Message to seller' })
-  @IsString()
-  @IsOptional()
-  message?: string;
-
-  @ApiPropertyOptional({ description: 'Offer expiration date (defaults to 7 days)', example: '2024-01-20T00:00:00Z' })
-  @IsISO8601()
-  @IsOptional()
-  expiresAt?: string;
-
-  @ApiPropertyOptional({ description: 'Offer terms and conditions' })
-  @IsObject()
-  @ValidateNested()
-  @Type(() => CreateOfferTermsDto)
-  @IsOptional()
-  terms?: CreateOfferTermsDto;
-}
-
 export class CreateOfferTermsDto {
   @ApiPropertyOptional({ description: 'Offer contingent on inspection', default: false })
   @IsBoolean()
@@ -77,4 +49,35 @@ export class CreateOfferTermsDto {
   @IsString()
   @IsOptional()
   additionalTerms?: string;
+}
+
+/**
+ * DTO for creating a new offer
+ */
+export class CreateListingOfferDto {
+  @ApiProperty({ description: 'Listing ID to make offer on' })
+  @IsString()
+  listingId: string;
+
+  @ApiProperty({ description: 'Offer amount', example: 42000 })
+  @IsNumber()
+  @Min(0)
+  amount: number;
+
+  @ApiPropertyOptional({ description: 'Message to seller' })
+  @IsString()
+  @IsOptional()
+  message?: string;
+
+  @ApiPropertyOptional({ description: 'Offer expiration date (defaults to 7 days)', example: '2024-01-20T00:00:00Z' })
+  @IsISO8601()
+  @IsOptional()
+  expiresAt?: string;
+
+  @ApiPropertyOptional({ description: 'Offer terms and conditions' })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => CreateOfferTermsDto)
+  @IsOptional()
+  terms?: CreateOfferTermsDto;
 }
