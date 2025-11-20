@@ -120,6 +120,36 @@ export class CompleteInspectionDto {
 }
 
 /**
+ * DTO for delivery address update
+ */
+export class UpdateDeliveryAddressDto {
+  @ApiPropertyOptional({ description: 'Street address' })
+  @IsString()
+  @IsOptional()
+  street?: string;
+
+  @ApiPropertyOptional({ description: 'City' })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiPropertyOptional({ description: 'State/Province' })
+  @IsString()
+  @IsOptional()
+  state?: string;
+
+  @ApiPropertyOptional({ description: 'Postal code' })
+  @IsString()
+  @IsOptional()
+  postalCode?: string;
+
+  @ApiPropertyOptional({ description: 'Country code' })
+  @IsString()
+  @IsOptional()
+  country?: string;
+}
+
+/**
  * DTO for updating delivery information
  */
 export class UpdateDeliveryDto {
@@ -159,33 +189,6 @@ export class UpdateDeliveryDto {
   @IsString()
   @IsOptional()
   specialInstructions?: string;
-}
-
-export class UpdateDeliveryAddressDto {
-  @ApiPropertyOptional({ description: 'Street address' })
-  @IsString()
-  @IsOptional()
-  street?: string;
-
-  @ApiPropertyOptional({ description: 'City' })
-  @IsString()
-  @IsOptional()
-  city?: string;
-
-  @ApiPropertyOptional({ description: 'State/Province' })
-  @IsString()
-  @IsOptional()
-  state?: string;
-
-  @ApiPropertyOptional({ description: 'Postal code' })
-  @IsString()
-  @IsOptional()
-  postalCode?: string;
-
-  @ApiPropertyOptional({ description: 'Country code' })
-  @IsString()
-  @IsOptional()
-  country?: string;
 }
 
 /**
