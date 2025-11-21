@@ -51,7 +51,7 @@ async function bootstrap() {
     const config = new DocumentBuilder()
       .setTitle('OnlyUsedTesla API')
       .setDescription(
-        'NestJS + Fastify backend service for OnlyUsedTesla platform - A high-performance marketplace for used Tesla vehicles',
+        'API backend service for OnlyUsedTesla platform - A high-performance marketplace for used Tesla vehicles',
       )
       .setVersion('1.0.0')
       .addBearerAuth(
