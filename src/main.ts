@@ -118,7 +118,7 @@ async function bootstrap() {
         .topbar { background-color: #1a1a2e; }
       `,
       swaggerOptions: {
-        persistAuthorization: true, // Persist auth tokens across browser sessions
+        persistAuthorization: true,
       },
     });
 
