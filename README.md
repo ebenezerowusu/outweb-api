@@ -56,6 +56,7 @@ nano .env
 
 Required environment variables (see `.env.example`):
 
+- `API_VERSION` - API version prefix (default: v2)
 - `COSMOS_ENDPOINT` - Azure Cosmos DB endpoint URL
 - `COSMOS_KEY` - Azure Cosmos DB primary key
 - `COSMOS_DATABASE` - Database name (default: OnlyUsedTesla-v2)
@@ -83,15 +84,22 @@ npm run start:debug
 ```
 
 The API will be available at:
-- **API**: `http://localhost:3000/api`
+- **API**: `http://localhost:3000/api/v2`
 - **Swagger Docs**: `http://localhost:3000/docs`
+
+### API Versioning
+
+The API uses path-based versioning (e.g., `/api/v2/`). To change the API version:
+
+1. Set the `API_VERSION` environment variable (default: `v2`)
+2. All endpoints will automatically use the specified version prefix
 
 ## API Architecture
 
 ### Shared Conventions
 
 #### Authentication
-- **Bearer Auth**: Required on all routes except `/auth/*`, `/health/*`, and webhooks
+- **Bearer Auth**: Required on all routes except `/api/v2/auth/*`, `/api/v2/health/*`, and webhooks
 - **Header**: `Authorization: Bearer <accessToken>`
 - **Token Format**: JWT (EdDSA signed)
 
@@ -105,7 +113,7 @@ All list endpoints use cursor-based pagination:
 
 **Request**:
 ```
-GET /api/endpoint?limit=20&cursor=opaque-token
+GET /api/v2/endpoint?limit=20&cursor=opaque-token
 ```
 
 **Response**:
@@ -134,33 +142,35 @@ GET /api/endpoint?limit=20&cursor=opaque-token
 
 ### Core Modules
 
-1. **Health** - `/health`
+All endpoints are prefixed with `/api/v2/` (configurable via `API_VERSION` env var).
+
+1. **Health** - `/api/v2/health`
    - Service liveness check
    - Cosmos DB connection test
    - Azure Storage connection test
 
-2. **Auth** - `/auth`
+2. **Auth** - `/api/v2/auth`
    - Sign in, sign up (private/dealer)
    - Token refresh, logout
    - Email verification, password reset
    - 2FA setup/disable
 
-3. **Users** - `/users`
+3. **Users** - `/api/v2/users`
    - User management
    - Profile updates
    - Role and permission management
    - Effective permissions calculation
 
-4. **Sellers** - `/sellers`
+4. **Sellers** - `/api/v2/sellers`
    - Dealer and private seller management
    - Business details, verification
    - Staff/team management
 
-5. **Seller Groups** - `/sellerGroups`
+5. **Seller Groups** - `/api/v2/sellerGroups`
    - Dealer group organization
    - Multi-location management
 
-6. **Seller Reviews** - `/sellerReviews`
+6. **Seller Reviews** - `/api/v2/sellerReviews`
    - Buyer reviews for sellers
    - Rating aggregation
 
