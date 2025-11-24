@@ -24,13 +24,13 @@ export class QuerySubscriptionsDto {
   sellerId?: string;
 
   @ApiProperty({
-    description: 'Filter by subscription tier',
-    enum: ['basic', 'pro', 'enterprise'],
+    description: 'Filter by subscription category',
+    enum: ['cashoffer', 'dealer_wholesale', 'dealer_advertising'],
     required: false,
   })
-  @IsEnum(['basic', 'pro', 'enterprise'])
+  @IsEnum(['cashoffer', 'dealer_wholesale', 'dealer_advertising'])
   @IsOptional()
-  tier?: 'basic' | 'pro' | 'enterprise';
+  category?: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
 
   @ApiProperty({
     description: 'Filter by subscription state',

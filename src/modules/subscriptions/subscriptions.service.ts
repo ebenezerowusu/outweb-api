@@ -36,63 +36,67 @@ export class SubscriptionsService {
   ) {}
 
   /**
-   * Get subscription plan features based on tier
+   * Get subscription plan features based on category
+   * TODO: Consider moving this to a database-driven approach using the subscription-plans.data.ts
    */
-  private getPlanFeatures(tier: 'basic' | 'pro' | 'enterprise'): SubscriptionFeatures {
+  private getPlanFeatures(category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising'): SubscriptionFeatures {
     const featuresMap: Record<string, SubscriptionFeatures> = {
-      basic: {
-        maxListings: 10,
-        maxPhotosPerListing: 20,
-        maxVideosPerListing: 1,
-        featuredListings: 1,
-        analytics: false,
+      cashoffer: {
+        maxListings: 50,
+        maxPhotosPerListing: 30,
+        maxVideosPerListing: 2,
+        featuredListings: 0,
+        analytics: true,
         prioritySupport: false,
         apiAccess: false,
         customBranding: false,
         multiLocation: false,
       },
-      pro: {
-        maxListings: 50,
-        maxPhotosPerListing: 50,
+      dealer_wholesale: {
+        maxListings: 100,
+        maxPhotosPerListing: 40,
         maxVideosPerListing: 3,
-        featuredListings: 5,
+        featuredListings: 0,
         analytics: true,
         prioritySupport: false,
         apiAccess: false,
-        customBranding: true,
+        customBranding: false,
         multiLocation: true,
       },
-      enterprise: {
-        maxListings: -1, // unlimited
-        maxPhotosPerListing: 100,
-        maxVideosPerListing: 10,
-        featuredListings: 20,
+      dealer_advertising: {
+        maxListings: 20,
+        maxPhotosPerListing: 30,
+        maxVideosPerListing: 2,
+        featuredListings: 5,
         analytics: true,
         prioritySupport: true,
-        apiAccess: true,
-        customBranding: true,
-        multiLocation: true,
+        apiAccess: false,
+        customBranding: false,
+        multiLocation: false,
       },
     };
 
-    return featuresMap[tier];
+    return featuresMap[category];
   }
 
   /**
-   * Get price ID for plan
+   * Get price ID for plan using subscription-plans.data.ts structure
    */
-  private getPriceId(tier: 'basic' | 'pro' | 'enterprise', interval: 'monthly' | 'yearly'): string {
-    const configKey = `stripePriceId${tier.charAt(0).toUpperCase() + tier.slice(1)}${
-      interval.charAt(0).toUpperCase() + interval.slice(1)
-    }`;
+  private getPriceId(category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising', interval: 'monthly'): string {
+    // Map category to Stripe price ID
+    const priceIdMap: Record<string, string> = {
+      cashoffer: 'price_cashoffer_monthly',
+      dealer_wholesale: 'price_dealer_wholesale_monthly',
+      dealer_advertising: 'price_dealer_advertising_monthly',
+    };
 
-    const priceId = this.configService.get<string>(configKey);
+    const priceId = priceIdMap[category];
 
     if (!priceId) {
       throw new BadRequestException({
         statusCode: 400,
         error: 'Bad Request',
-        message: `Price ID not configured for ${tier} ${interval} plan`,
+        message: `Price ID not configured for ${category} ${interval} plan`,
       });
     }
 
@@ -100,17 +104,23 @@ export class SubscriptionsService {
   }
 
   /**
-   * Get product ID for plan
+   * Get product ID for plan using subscription-plans.data.ts structure
    */
-  private getProductId(tier: 'basic' | 'pro' | 'enterprise'): string {
-    const configKey = `stripeProductId${tier.charAt(0).toUpperCase() + tier.slice(1)}`;
-    const productId = this.configService.get<string>(configKey);
+  private getProductId(category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising'): string {
+    // Map category to Stripe product ID
+    const productIdMap: Record<string, string> = {
+      cashoffer: 'prod_cashoffer',
+      dealer_wholesale: 'prod_dealer_wholesale',
+      dealer_advertising: 'prod_dealer_advertising',
+    };
+
+    const productId = productIdMap[category];
 
     if (!productId) {
       throw new BadRequestException({
         statusCode: 400,
         error: 'Bad Request',
-        message: `Product ID not configured for ${tier} plan`,
+        message: `Product ID not configured for ${category} plan`,
       });
     }
 
@@ -124,8 +134,8 @@ export class SubscriptionsService {
     dto: CreateCheckoutSessionDto,
     userId: string,
   ): Promise<{ sessionId: string; url: string }> {
-    const priceId = this.getPriceId(dto.tier, dto.interval);
-    const productId = this.getProductId(dto.tier);
+    const priceId = this.getPriceId(dto.category, dto.interval);
+    const productId = this.getProductId(dto.category);
 
     // TODO: Integrate with Stripe SDK
     // const stripe = new Stripe(this.configService.get('stripeSecretKey'), { apiVersion: '2023-10-16' });
@@ -140,7 +150,7 @@ export class SubscriptionsService {
     //   metadata: {
     //     userId: userId,
     //     sellerId: dto.sellerId || '',
-    //     tier: dto.tier,
+    //     category: dto.category,
     //     interval: dto.interval,
     //   },
     //   success_url: dto.successUrl,
@@ -173,10 +183,10 @@ export class SubscriptionsService {
       parameters.push({ name: '@sellerId', value: query.sellerId });
     }
 
-    // Filter by tier
-    if (query.tier) {
-      sqlQuery += ' AND c.plan.tier = @tier';
-      parameters.push({ name: '@tier', value: query.tier });
+    // Filter by category
+    if (query.category) {
+      sqlQuery += ' AND c.plan.category = @category';
+      parameters.push({ name: '@category', value: query.category });
     }
 
     // Filter by state

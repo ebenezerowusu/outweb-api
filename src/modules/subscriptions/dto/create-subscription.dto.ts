@@ -7,38 +7,40 @@ import { IsString, IsEnum, IsOptional, IsUrl } from 'class-validator';
  */
 export class CreateCheckoutSessionDto {
   @ApiProperty({
-    description: 'Subscription tier',
-    enum: ['basic', 'pro', 'enterprise'],
-    example: 'pro',
+    description: 'Subscription plan category',
+    enum: ['cashoffer', 'dealer_wholesale', 'dealer_advertising'],
+    example: 'cashoffer',
   })
-  @IsEnum(['basic', 'pro', 'enterprise'])
-  tier: 'basic' | 'pro' | 'enterprise';
+  @IsEnum(['cashoffer', 'dealer_wholesale', 'dealer_advertising'])
+  category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
 
   @ApiProperty({
-    description: 'Billing interval',
-    enum: ['monthly', 'yearly'],
+    description: 'Billing interval (currently only monthly is supported)',
+    enum: ['monthly'],
     example: 'monthly',
+    default: 'monthly',
   })
-  @IsEnum(['monthly', 'yearly'])
-  interval: 'monthly' | 'yearly';
+  @IsEnum(['monthly'])
+  interval: 'monthly';
 
   @ApiProperty({
     description: 'Seller ID to associate with subscription',
     required: false,
+    example: 'seller_123abc',
   })
   @IsString()
   @IsOptional()
   sellerId?: string;
 
   @ApiProperty({
-    description: 'Success redirect URL',
+    description: 'Success redirect URL after checkout',
     example: 'https://onlyusedtesla.com/dashboard?session_id={CHECKOUT_SESSION_ID}',
   })
   @IsUrl()
   successUrl: string;
 
   @ApiProperty({
-    description: 'Cancel redirect URL',
+    description: 'Cancel redirect URL if checkout is cancelled',
     example: 'https://onlyusedtesla.com/pricing',
   })
   @IsUrl()
@@ -52,7 +54,7 @@ export class CreateCheckoutSessionDto {
 export class CreateSubscriptionFromWebhookDto {
   userId: string;
   sellerId: string | null;
-  tier: 'basic' | 'pro' | 'enterprise';
+  category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
   interval: 'monthly' | 'yearly';
   productId: string;
   priceId: string;
