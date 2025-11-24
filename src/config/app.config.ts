@@ -9,6 +9,7 @@ export const AppConfigSchema = z.object({
   nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
   port: z.coerce.number().min(1).max(65535).default(3000),
   appName: z.string().default('OnlyUsedTesla-API'),
+  apiVersion: z.string().default('v2'),
 
   // Azure Cosmos DB
   cosmosEndpoint: z.string().url(),
@@ -66,6 +67,7 @@ export function loadConfig(): AppConfig {
     nodeEnv: process.env.NODE_ENV,
     port: process.env.PORT,
     appName: process.env.APP_NAME,
+    apiVersion: process.env.API_VERSION,
 
     cosmosEndpoint: process.env.COSMOS_ENDPOINT,
     cosmosKey: process.env.COSMOS_KEY,
