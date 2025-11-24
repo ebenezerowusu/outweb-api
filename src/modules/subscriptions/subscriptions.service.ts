@@ -256,7 +256,7 @@ export class SubscriptionsService {
       userId: dto.userId,
       sellerId: dto.sellerId,
       plan: {
-        tier: dto.tier,
+        category: dto.category,
         interval: dto.interval,
         productId: dto.productId,
         priceId: dto.priceId,
@@ -285,7 +285,7 @@ export class SubscriptionsService {
         autoRenew: true,
         scheduledChanges: null,
       },
-      features: this.getPlanFeatures(dto.tier),
+      features: this.getPlanFeatures(dto.category),
       usage: {
         currentListings: 0,
         listingsThisPeriod: 0,
@@ -338,8 +338,8 @@ export class SubscriptionsService {
       });
     }
 
-    const newPriceId = this.getPriceId(dto.tier, dto.interval);
-    const newProductId = this.getProductId(dto.tier);
+    const newPriceId = this.getPriceId(dto.category, dto.interval);
+    const newProductId = this.getProductId(dto.category);
 
     // TODO: Update subscription in Stripe
     // const stripe = new Stripe(this.configService.get('stripeSecretKey'), { apiVersion: '2023-10-16' });
@@ -352,11 +352,11 @@ export class SubscriptionsService {
     // });
 
     // Update subscription document
-    subscription.plan.tier = dto.tier;
+    subscription.plan.category = dto.category;
     subscription.plan.interval = dto.interval;
     subscription.plan.priceId = newPriceId;
     subscription.plan.productId = newProductId;
-    subscription.features = this.getPlanFeatures(dto.tier);
+    subscription.features = this.getPlanFeatures(dto.category);
     subscription.audit.updatedAt = new Date().toISOString();
     subscription.audit.updatedBy = userId;
 
