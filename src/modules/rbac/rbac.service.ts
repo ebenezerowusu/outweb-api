@@ -118,8 +118,20 @@ export class RbacService {
         roleId,
         roleId,
       );
+
+      if (!role) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: 'Not Found',
+          message: `Role with ID '${roleId}' not found`,
+        });
+      }
+
       return this.toPublicRole(role);
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new NotFoundException({
         statusCode: 404,
         error: 'Not Found',
@@ -407,8 +419,20 @@ export class RbacService {
         permissionId,
         permissionId,
       );
+
+      if (!permission) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: 'Not Found',
+          message: `Permission with ID '${permissionId}' not found`,
+        });
+      }
+
       return this.toPublicPermission(permission);
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new NotFoundException({
         statusCode: 404,
         error: 'Not Found',
