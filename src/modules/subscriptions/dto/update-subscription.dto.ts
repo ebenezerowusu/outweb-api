@@ -7,20 +7,21 @@ import { IsEnum, IsBoolean, IsOptional } from 'class-validator';
  */
 export class UpdateSubscriptionPlanDto {
   @ApiProperty({
-    description: 'New subscription tier',
-    enum: ['basic', 'pro', 'enterprise'],
-    example: 'enterprise',
+    description: 'New subscription category',
+    enum: ['cashoffer', 'dealer_wholesale', 'dealer_advertising'],
+    example: 'dealer_wholesale',
   })
-  @IsEnum(['basic', 'pro', 'enterprise'])
-  tier: 'basic' | 'pro' | 'enterprise';
+  @IsEnum(['cashoffer', 'dealer_wholesale', 'dealer_advertising'])
+  category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
 
   @ApiProperty({
-    description: 'New billing interval',
-    enum: ['monthly', 'yearly'],
-    example: 'yearly',
+    description: 'New billing interval (currently only monthly is supported)',
+    enum: ['monthly'],
+    example: 'monthly',
+    default: 'monthly',
   })
-  @IsEnum(['monthly', 'yearly'])
-  interval: 'monthly' | 'yearly';
+  @IsEnum(['monthly'])
+  interval: 'monthly';
 
   @ApiProperty({
     description: 'Prorate the change (charge/credit immediately)',

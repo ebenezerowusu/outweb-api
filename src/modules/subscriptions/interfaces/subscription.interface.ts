@@ -20,7 +20,7 @@ export interface SubscriptionDocument {
  * Subscription Plan
  */
 export interface SubscriptionPlan {
-  tier: 'basic' | 'pro' | 'enterprise';
+  category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
   interval: 'monthly' | 'yearly';
   productId: string;
   priceId: string;
@@ -83,7 +83,7 @@ export type PaymentStatus = 'pending' | 'succeeded' | 'failed';
  * Scheduled Change (for upgrades/downgrades)
  */
 export interface ScheduledChange {
-  newTier: 'basic' | 'pro' | 'enterprise';
+  newCategory: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
   newInterval: 'monthly' | 'yearly';
   newPriceId: string;
   effectiveDate: string;
