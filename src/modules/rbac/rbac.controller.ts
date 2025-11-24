@@ -2,6 +2,9 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
+  Param,
   Body,
   Query,
   HttpCode,
@@ -12,15 +15,25 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
 } from '@nestjs/swagger';
 import { RbacService } from './rbac.service';
-import { CheckPermissionDto, CheckPermissionsBatchDto } from './dto/check-permission.dto';
-import { SuggestPermissionsDto, SuggestRolesDto } from './dto/suggest.dto';
-import { CurrentUser, RequirePermissions } from '@/common/decorators/auth.decorators';
+import {
+  CreateRoleDto,
+  UpdateRoleDto,
+  QueryRolesDto,
+  AttachPermissionsDto,
+} from './dto/role.dto';
+import {
+  CreatePermissionDto,
+  UpdatePermissionDto,
+  QueryPermissionsDto,
+} from './dto/permission.dto';
+import { RequirePermissions } from '@/common/decorators/auth.decorators';
 
 /**
  * RBAC Controller
- * Handles permission checking, role management, and suggestions
+ * Handles roles and permissions management
  */
 @ApiTags('RBAC')
 @Controller('rbac')
@@ -28,67 +41,206 @@ import { CurrentUser, RequirePermissions } from '@/common/decorators/auth.decora
 export class RbacController {
   constructor(private readonly rbacService: RbacService) {}
 
+  // ==================== ROLES ENDPOINTS ====================
+
   /**
-   * Check if a user has a specific permission
+   * List roles
    */
-  @Post('check')
-  @HttpCode(HttpStatus.OK)
+  @Get('roles')
   @RequirePermissions('perm_manage_users')
-  @ApiOperation({ summary: 'Check if a user has a specific permission (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Permission check result' })
+  @ApiOperation({ summary: 'List roles (filter by scope/name, paginate)' })
+  @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async checkPermission(@Body() checkPermissionDto: CheckPermissionDto) {
-    return this.rbacService.checkPermission(checkPermissionDto);
+  async findAllRoles(@Query() query: QueryRolesDto) {
+    return this.rbacService.findAllRoles(query);
   }
 
   /**
-   * Check multiple permissions for a user (batch)
+   * Create a new role
    */
-  @Post('check/batch')
-  @HttpCode(HttpStatus.OK)
+  @Post('roles')
   @RequirePermissions('perm_manage_users')
-  @ApiOperation({ summary: 'Check multiple permissions for a user (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Batch permission check results' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async checkPermissionsBatch(@Body() checkBatchDto: CheckPermissionsBatchDto) {
-    return this.rbacService.checkPermissionsBatch(checkBatchDto);
+  @ApiOperation({ summary: 'Create a new role' })
+  @ApiResponse({ status: 201, description: 'Role created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 409, description: 'Conflict - role name already exists' })
+  async createRole(@Body() createRoleDto: CreateRoleDto) {
+    return this.rbacService.createRole(createRoleDto);
   }
 
   /**
-   * Get effective permissions for current user
+   * Get a single role by ID
    */
-  @Get('me')
-  @ApiOperation({ summary: 'Get effective permissions for current user' })
-  @ApiResponse({ status: 200, description: 'Effective permissions retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async getMyEffectivePermissions(@CurrentUser() user: any) {
-    return this.rbacService.getEffectivePermissions(user.sub);
+  @Get('roles/:roleId')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'Get a single role by id' })
+  @ApiParam({ name: 'roleId', description: 'Role ID', example: 'role_dealer' })
+  @ApiResponse({ status: 200, description: 'Role retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async findRoleById(@Param('roleId') roleId: string) {
+    return this.rbacService.findRoleById(roleId);
   }
 
   /**
-   * Suggest permissions based on search query
+   * Update a role
    */
-  @Get('permissions/suggest')
+  @Patch('roles/:roleId')
   @RequirePermissions('perm_manage_users')
-  @ApiOperation({ summary: 'Get permission suggestions (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Permission suggestions retrieved successfully' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-  async suggestPermissions(@Query() suggestDto: SuggestPermissionsDto) {
-    return this.rbacService.suggestPermissions(suggestDto);
+  @ApiOperation({ summary: 'Update role fields (description, permissions, etc)' })
+  @ApiParam({ name: 'roleId', description: 'Role ID', example: 'role_dealer' })
+  @ApiResponse({ status: 200, description: 'Role updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async updateRole(
+    @Param('roleId') roleId: string,
+    @Body() updateRoleDto: UpdateRoleDto,
+  ) {
+    return this.rbacService.updateRole(roleId, updateRoleDto);
   }
 
   /**
-   * Suggest roles based on search query
+   * Delete a role
    */
-  @Get('roles/suggest')
+  @Delete('roles/:roleId')
   @RequirePermissions('perm_manage_users')
-  @ApiOperation({ summary: 'Get role suggestions (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Role suggestions retrieved successfully' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a role (non-critical/custom roles only)' })
+  @ApiParam({ name: 'roleId', description: 'Role ID', example: 'role_moderator' })
+  @ApiResponse({ status: 204, description: 'Role deleted successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot delete protected role' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async deleteRole(@Param('roleId') roleId: string) {
+    await this.rbacService.deleteRole(roleId);
+  }
+
+  /**
+   * Get full permission objects for a role
+   */
+  @Get('roles/:roleId/permissions')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'Get full permission objects for a role' })
+  @ApiParam({ name: 'roleId', description: 'Role ID', example: 'role_dealer' })
+  @ApiResponse({ status: 200, description: 'Permissions retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async getRolePermissions(@Param('roleId') roleId: string) {
+    return this.rbacService.getRolePermissions(roleId);
+  }
+
+  /**
+   * Attach permissions to a role
+   */
+  @Post('roles/:roleId/permissions')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'Attach permissions to a role' })
+  @ApiParam({ name: 'roleId', description: 'Role ID', example: 'role_dealer' })
+  @ApiResponse({ status: 200, description: 'Permissions attached successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid permission IDs' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async attachPermissions(
+    @Param('roleId') roleId: string,
+    @Body() attachPermissionsDto: AttachPermissionsDto,
+  ) {
+    return this.rbacService.attachPermissions(roleId, attachPermissionsDto);
+  }
+
+  /**
+   * Remove a permission from a role
+   */
+  @Delete('roles/:roleId/permissions/:permissionId')
+  @RequirePermissions('perm_manage_users')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a permission from a role' })
+  @ApiParam({ name: 'roleId', description: 'Role ID', example: 'role_dealer' })
+  @ApiParam({ name: 'permissionId', description: 'Permission ID', example: 'perm_create_listing' })
+  @ApiResponse({ status: 204, description: 'Permission removed successfully' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async detachPermission(
+    @Param('roleId') roleId: string,
+    @Param('permissionId') permissionId: string,
+  ) {
+    await this.rbacService.detachPermission(roleId, permissionId);
+  }
+
+  // ==================== PERMISSIONS ENDPOINTS ====================
+
+  /**
+   * List permissions
+   */
+  @Get('permissions')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'List permissions (filter by category)' })
+  @ApiResponse({ status: 200, description: 'Permissions retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-  async suggestRoles(@Query() suggestDto: SuggestRolesDto) {
-    return this.rbacService.suggestRoles(suggestDto);
+  async findAllPermissions(@Query() query: QueryPermissionsDto) {
+    return this.rbacService.findAllPermissions(query);
+  }
+
+  /**
+   * Create a new permission
+   */
+  @Post('permissions')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'Create a new permission' })
+  @ApiResponse({ status: 201, description: 'Permission created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 409, description: 'Conflict - permission name already exists' })
+  async createPermission(@Body() createPermissionDto: CreatePermissionDto) {
+    return this.rbacService.createPermission(createPermissionDto);
+  }
+
+  /**
+   * Get a single permission by ID
+   */
+  @Get('permissions/:permissionId')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'Get a single permission' })
+  @ApiParam({ name: 'permissionId', description: 'Permission ID', example: 'perm_create_listing' })
+  @ApiResponse({ status: 200, description: 'Permission retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Permission not found' })
+  async findPermissionById(@Param('permissionId') permissionId: string) {
+    return this.rbacService.findPermissionById(permissionId);
+  }
+
+  /**
+   * Update a permission
+   */
+  @Patch('permissions/:permissionId')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'Update a permission' })
+  @ApiParam({ name: 'permissionId', description: 'Permission ID', example: 'perm_create_listing' })
+  @ApiResponse({ status: 200, description: 'Permission updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 404, description: 'Permission not found' })
+  async updatePermission(
+    @Param('permissionId') permissionId: string,
+    @Body() updatePermissionDto: UpdatePermissionDto,
+  ) {
+    return this.rbacService.updatePermission(permissionId, updatePermissionDto);
+  }
+
+  /**
+   * Delete a permission
+   */
+  @Delete('permissions/:permissionId')
+  @RequirePermissions('perm_manage_users')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a permission (if not used in roles)' })
+  @ApiParam({ name: 'permissionId', description: 'Permission ID', example: 'perm_create_listing' })
+  @ApiResponse({ status: 204, description: 'Permission deleted successfully' })
+  @ApiResponse({ status: 409, description: 'Permission still in use by roles' })
+  @ApiResponse({ status: 404, description: 'Permission not found' })
+  async deletePermission(@Param('permissionId') permissionId: string) {
+    await this.rbacService.deletePermission(permissionId);
+  }
+
+  /**
+   * Get distinct permission categories
+   */
+  @Get('permissions/categories')
+  @RequirePermissions('perm_manage_users')
+  @ApiOperation({ summary: 'List distinct permission categories (e.g. listings, admin, dealer)' })
+  @ApiResponse({ status: 200, description: 'Categories retrieved successfully' })
+  async getPermissionCategories() {
+    return this.rbacService.getPermissionCategories();
   }
 }

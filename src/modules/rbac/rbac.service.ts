@@ -1,361 +1,587 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { UserDocument } from '@/modules/auth/interfaces/user.interface';
-import { CheckPermissionDto, CheckPermissionsBatchDto } from './dto/check-permission.dto';
-import { SuggestPermissionsDto, SuggestRolesDto } from './dto/suggest.dto';
 import {
-  PermissionCheckResponse,
-  BatchPermissionCheckResponse,
-  EffectivePermissionsResponse,
-  PermissionSuggestion,
-  RoleSuggestion,
-} from './interfaces/rbac-response.interface';
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
+import { CosmosService } from '@/common/services/cosmos.service';
+import { PaginatedResponse } from '@/common/types/pagination.type';
+import { RoleDocument, PublicRole } from './interfaces/role.interface';
+import { PermissionDocument, PublicPermission } from './interfaces/permission.interface';
+import {
+  CreateRoleDto,
+  UpdateRoleDto,
+  QueryRolesDto,
+  AttachPermissionsDto,
+} from './dto/role.dto';
+import {
+  CreatePermissionDto,
+  UpdatePermissionDto,
+  QueryPermissionsDto,
+} from './dto/permission.dto';
 
 /**
  * RBAC Service
- * Handles permission checking, role management, and suggestions
+ * Handles roles and permissions management
  */
 @Injectable()
 export class RbacService {
-  private readonly USERS_CONTAINER = 'users';
+  private readonly ROLES_CONTAINER = 'roles';
+  private readonly PERMISSIONS_CONTAINER = 'permissions';
 
-  // Predefined permissions catalog
-  private readonly PERMISSIONS_CATALOG: PermissionSuggestion[] = [
-    // User Management
-    { id: 'perm_manage_users', name: 'Manage Users', description: 'Create, update, and delete users', category: 'users' },
-    { id: 'perm_view_users', name: 'View Users', description: 'View user profiles and information', category: 'users' },
-    { id: 'perm_assign_roles', name: 'Assign Roles', description: 'Assign and modify user roles', category: 'users' },
-
-    // Seller Management
-    { id: 'perm_manage_sellers', name: 'Manage Sellers', description: 'Create, update, and manage sellers', category: 'sellers' },
-    { id: 'perm_verify_sellers', name: 'Verify Sellers', description: 'Verify and approve seller applications', category: 'sellers' },
-    { id: 'perm_view_sellers', name: 'View Sellers', description: 'View seller profiles and information', category: 'sellers' },
-
-    // Listing Management
-    { id: 'perm_manage_listings', name: 'Manage Listings', description: 'Create, update, and delete vehicle listings', category: 'listings' },
-    { id: 'perm_publish_listings', name: 'Publish Listings', description: 'Publish and unpublish vehicle listings', category: 'listings' },
-    { id: 'perm_view_listings', name: 'View Listings', description: 'View vehicle listings', category: 'listings' },
-    { id: 'perm_feature_listings', name: 'Feature Listings', description: 'Mark listings as featured', category: 'listings' },
-
-    // Order Management
-    { id: 'perm_manage_orders', name: 'Manage Orders', description: 'Create, update, and manage orders', category: 'orders' },
-    { id: 'perm_view_orders', name: 'View Orders', description: 'View order information', category: 'orders' },
-    { id: 'perm_process_refunds', name: 'Process Refunds', description: 'Process order refunds', category: 'orders' },
-
-    // Payment Management
-    { id: 'perm_manage_payments', name: 'Manage Payments', description: 'Manage payment settings and subscriptions', category: 'payments' },
-    { id: 'perm_view_payments', name: 'View Payments', description: 'View payment information', category: 'payments' },
-
-    // Review Management
-    { id: 'perm_moderate_reviews', name: 'Moderate Reviews', description: 'Approve, reject, or flag reviews', category: 'reviews' },
-    { id: 'perm_view_reviews', name: 'View Reviews', description: 'View seller reviews', category: 'reviews' },
-
-    // Analytics & Reporting
-    { id: 'perm_view_analytics', name: 'View Analytics', description: 'Access analytics and reports', category: 'analytics' },
-    { id: 'perm_export_data', name: 'Export Data', description: 'Export system data', category: 'analytics' },
-
-    // System Management
-    { id: 'perm_manage_taxonomies', name: 'Manage Taxonomies', description: 'Manage vehicle classifications and taxonomies', category: 'system' },
-    { id: 'perm_manage_settings', name: 'Manage Settings', description: 'Manage system settings', category: 'system' },
-    { id: 'perm_view_logs', name: 'View Logs', description: 'View system logs and audit trails', category: 'system' },
-  ];
-
-  // Predefined roles catalog
-  private readonly ROLES_CATALOG: RoleSuggestion[] = [
-    {
-      id: 'role_super_admin',
-      name: 'Super Admin',
-      description: 'Full system access with all permissions',
-      permissionCount: 21,
-      permissions: this.PERMISSIONS_CATALOG.map(p => p.id),
-    },
-    {
-      id: 'role_admin',
-      name: 'Admin',
-      description: 'Administrative access to most features',
-      permissionCount: 15,
-      permissions: [
-        'perm_manage_users',
-        'perm_view_users',
-        'perm_manage_sellers',
-        'perm_verify_sellers',
-        'perm_view_sellers',
-        'perm_manage_listings',
-        'perm_view_listings',
-        'perm_manage_orders',
-        'perm_view_orders',
-        'perm_moderate_reviews',
-        'perm_view_reviews',
-        'perm_view_analytics',
-        'perm_manage_taxonomies',
-        'perm_manage_settings',
-        'perm_view_logs',
-      ],
-    },
-    {
-      id: 'role_dealer',
-      name: 'Dealer',
-      description: 'Dealer seller with listing management',
-      permissionCount: 5,
-      permissions: [
-        'perm_manage_listings',
-        'perm_publish_listings',
-        'perm_view_listings',
-        'perm_view_orders',
-        'perm_view_reviews',
-      ],
-    },
-    {
-      id: 'role_dealer_staff',
-      name: 'Dealer Staff',
-      description: 'Dealer staff member with limited access',
-      permissionCount: 3,
-      permissions: [
-        'perm_manage_listings',
-        'perm_view_listings',
-        'perm_view_orders',
-      ],
-    },
-    {
-      id: 'role_private_seller',
-      name: 'Private Seller',
-      description: 'Private seller with basic listing management',
-      permissionCount: 3,
-      permissions: [
-        'perm_manage_listings',
-        'perm_view_listings',
-        'perm_view_orders',
-      ],
-    },
-    {
-      id: 'role_buyer',
-      name: 'Buyer',
-      description: 'Regular buyer with view access',
-      permissionCount: 2,
-      permissions: [
-        'perm_view_listings',
-        'perm_view_sellers',
-      ],
-    },
-    {
-      id: 'role_moderator',
-      name: 'Moderator',
-      description: 'Content moderator for reviews and listings',
-      permissionCount: 5,
-      permissions: [
-        'perm_view_listings',
-        'perm_moderate_reviews',
-        'perm_view_reviews',
-        'perm_view_sellers',
-        'perm_view_users',
-      ],
-    },
-  ];
+  // Protected system roles that cannot be deleted
+  private readonly PROTECTED_ROLES = ['admin', 'dealer', 'seller'];
 
   constructor(private readonly cosmosService: CosmosService) {}
 
+  // ==================== ROLES ====================
+
   /**
-   * Check if a user has a specific permission
+   * List roles with filters
    */
-  async checkPermission(dto: CheckPermissionDto): Promise<PermissionCheckResponse> {
-    const user = await this.cosmosService.readItem<UserDocument>(
-      this.USERS_CONTAINER,
-      dto.userId,
-      dto.userId,
+  async findAllRoles(query: QueryRolesDto): Promise<PaginatedResponse<PublicRole>> {
+    let sqlQuery = 'SELECT * FROM c WHERE c.type = "role"';
+    const parameters: any[] = [];
+
+    if (query.scope) {
+      sqlQuery += ' AND c.scope = @scope';
+      parameters.push({ name: '@scope', value: query.scope });
+    }
+
+    if (query.name) {
+      sqlQuery += ' AND CONTAINS(LOWER(c.name), LOWER(@name))';
+      parameters.push({ name: '@name', value: query.name });
+    }
+
+    sqlQuery += ' ORDER BY c.createdAt DESC';
+
+    const { items, continuationToken } = await this.cosmosService.queryItems<RoleDocument>(
+      this.ROLES_CONTAINER,
+      sqlQuery,
+      parameters,
+      query.limit,
+      query.cursor,
     );
 
-    if (!user) {
+    return {
+      items: items.map((role) => this.toPublicRole(role)),
+      count: items.length,
+      nextCursor: continuationToken || null,
+    };
+  }
+
+  /**
+   * Create a new role
+   */
+  async createRole(dto: CreateRoleDto): Promise<PublicRole> {
+    const now = new Date().toISOString();
+    const roleId = dto.id || this.generateRoleId(dto.name);
+
+    // Validate that permission IDs exist
+    if (dto.permissions && dto.permissions.length > 0) {
+      await this.validatePermissions(dto.permissions.map((p) => p.key));
+    }
+
+    const role: RoleDocument = {
+      id: roleId,
+      type: 'role',
+      scope: dto.scope,
+      name: dto.name,
+      description: dto.description || '',
+      permissions: dto.permissions || [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    try {
+      const created = await this.cosmosService.createItem(this.ROLES_CONTAINER, role);
+      return this.toPublicRole(created);
+    } catch (error: any) {
+      if (error.code === 409) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          message: `Role with name '${dto.name}' already exists`,
+        });
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get a single role by ID
+   */
+  async findRoleById(roleId: string): Promise<PublicRole> {
+    try {
+      const role = await this.cosmosService.readItem<RoleDocument>(
+        this.ROLES_CONTAINER,
+        roleId,
+        roleId,
+      );
+      return this.toPublicRole(role);
+    } catch (error) {
       throw new NotFoundException({
         statusCode: 404,
         error: 'Not Found',
-        message: 'User not found',
+        message: `Role with ID '${roleId}' not found`,
+      });
+    }
+  }
+
+  /**
+   * Update a role
+   */
+  async updateRole(roleId: string, dto: UpdateRoleDto): Promise<PublicRole> {
+    const role = await this.cosmosService.readItem<RoleDocument>(
+      this.ROLES_CONTAINER,
+      roleId,
+      roleId,
+    );
+
+    if (!role) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Role with ID '${roleId}' not found`,
       });
     }
 
-    // Check custom permissions first
-    if (user.customPermissions?.includes(dto.permission)) {
+    // Validate permissions if provided
+    if (dto.permissions && dto.permissions.length > 0) {
+      await this.validatePermissions(dto.permissions.map((p) => p.key));
+    }
+
+    if (dto.description !== undefined) {
+      role.description = dto.description;
+    }
+
+    if (dto.permissions !== undefined) {
+      role.permissions = dto.permissions;
+    }
+
+    role.updatedAt = new Date().toISOString();
+
+    const updated = await this.cosmosService.updateItem(
+      this.ROLES_CONTAINER,
+      role,
+      role.id,
+    );
+
+    return this.toPublicRole(updated);
+  }
+
+  /**
+   * Delete a role
+   */
+  async deleteRole(roleId: string): Promise<void> {
+    const role = await this.cosmosService.readItem<RoleDocument>(
+      this.ROLES_CONTAINER,
+      roleId,
+      roleId,
+    );
+
+    if (!role) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Role with ID '${roleId}' not found`,
+      });
+    }
+
+    // Protect system roles
+    if (role.scope === 'system' && this.PROTECTED_ROLES.includes(role.name)) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Cannot delete protected system role '${role.name}'`,
+      });
+    }
+
+    await this.cosmosService.deleteItem(this.ROLES_CONTAINER, roleId, roleId);
+  }
+
+  /**
+   * Get full permission objects for a role
+   */
+  async getRolePermissions(roleId: string): Promise<{
+    role: { id: string; name: string };
+    permissions: PublicPermission[];
+  }> {
+    const role = await this.cosmosService.readItem<RoleDocument>(
+      this.ROLES_CONTAINER,
+      roleId,
+      roleId,
+    );
+
+    if (!role) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Role with ID '${roleId}' not found`,
+      });
+    }
+
+    const permissionKeys = role.permissions.map((p) => p.key);
+
+    if (permissionKeys.length === 0) {
       return {
-        userId: dto.userId,
-        permission: dto.permission,
-        hasPermission: true,
-        source: 'direct',
+        role: { id: role.id, name: role.name },
+        permissions: [],
       };
     }
 
-    // Check role-based permissions
-    if (user.roles && user.roles.length > 0) {
-      for (const userRole of user.roles) {
-        const role = this.ROLES_CATALOG.find(r => r.id === userRole.roleId);
-        if (role && role.permissions.includes(dto.permission)) {
-          return {
-            userId: dto.userId,
-            permission: dto.permission,
-            hasPermission: true,
-            source: 'role',
-            roleId: role.id,
-          };
-        }
-      }
-    }
+    // Query permissions container for full permission objects
+    const sqlQuery = `SELECT * FROM c WHERE c.type = "permission" AND c.id IN (${permissionKeys.map((_, i) => `@id${i}`).join(',')})`;
+    const parameters = permissionKeys.map((key, i) => ({ name: `@id${i}`, value: key }));
+
+    const { items } = await this.cosmosService.queryItems<PermissionDocument>(
+      this.PERMISSIONS_CONTAINER,
+      sqlQuery,
+      parameters,
+    );
 
     return {
-      userId: dto.userId,
-      permission: dto.permission,
-      hasPermission: false,
-      source: 'none',
+      role: { id: role.id, name: role.name },
+      permissions: items.map((p) => this.toPublicPermission(p)),
     };
   }
 
   /**
-   * Check multiple permissions for a user (batch)
+   * Attach permissions to a role
    */
-  async checkPermissionsBatch(dto: CheckPermissionsBatchDto): Promise<BatchPermissionCheckResponse> {
-    const user = await this.cosmosService.readItem<UserDocument>(
-      this.USERS_CONTAINER,
-      dto.userId,
-      dto.userId,
+  async attachPermissions(roleId: string, dto: AttachPermissionsDto): Promise<PublicRole> {
+    const role = await this.cosmosService.readItem<RoleDocument>(
+      this.ROLES_CONTAINER,
+      roleId,
+      roleId,
     );
 
-    if (!user) {
+    if (!role) {
       throw new NotFoundException({
         statusCode: 404,
         error: 'Not Found',
-        message: 'User not found',
+        message: `Role with ID '${roleId}' not found`,
       });
     }
 
-    const result: BatchPermissionCheckResponse = {
-      userId: dto.userId,
-      permissions: {},
-    };
+    // Validate that all permission IDs exist
+    await this.validatePermissions(dto.permissionIds);
 
-    for (const permission of dto.permissions) {
-      // Check custom permissions
-      if (user.customPermissions?.includes(permission)) {
-        result.permissions[permission] = {
-          hasPermission: true,
-          source: 'direct',
-        };
-        continue;
-      }
+    // Get permission descriptions
+    const sqlQuery = `SELECT * FROM c WHERE c.type = "permission" AND c.id IN (${dto.permissionIds.map((_, i) => `@id${i}`).join(',')})`;
+    const parameters = dto.permissionIds.map((id, i) => ({ name: `@id${i}`, value: id }));
 
-      // Check role-based permissions
-      let found = false;
-      if (user.roles && user.roles.length > 0) {
-        for (const userRole of user.roles) {
-          const role = this.ROLES_CATALOG.find(r => r.id === userRole.roleId);
-          if (role && role.permissions.includes(permission)) {
-            result.permissions[permission] = {
-              hasPermission: true,
-              source: 'role',
-              roleId: role.id,
-            };
-            found = true;
-            break;
-          }
-        }
-      }
+    const { items: permissions } = await this.cosmosService.queryItems<PermissionDocument>(
+      this.PERMISSIONS_CONTAINER,
+      sqlQuery,
+      parameters,
+    );
 
-      if (!found) {
-        result.permissions[permission] = {
-          hasPermission: false,
-          source: 'none',
-        };
-      }
+    // Create a map of existing permissions
+    const existingPermissionsMap = new Map(
+      role.permissions.map((p) => [p.key, p]),
+    );
+
+    // Add new permissions
+    for (const permission of permissions) {
+      existingPermissionsMap.set(permission.id, {
+        key: permission.id,
+        description: permission.description,
+      });
     }
 
-    return result;
+    role.permissions = Array.from(existingPermissionsMap.values());
+    role.updatedAt = new Date().toISOString();
+
+    const updated = await this.cosmosService.updateItem(
+      this.ROLES_CONTAINER,
+      role,
+      role.id,
+    );
+
+    return this.toPublicRole(updated);
   }
 
   /**
-   * Get effective permissions for current user
+   * Remove a permission from a role
    */
-  async getEffectivePermissions(userId: string): Promise<EffectivePermissionsResponse> {
-    const user = await this.cosmosService.readItem<UserDocument>(
-      this.USERS_CONTAINER,
-      userId,
-      userId,
+  async detachPermission(roleId: string, permissionId: string): Promise<void> {
+    const role = await this.cosmosService.readItem<RoleDocument>(
+      this.ROLES_CONTAINER,
+      roleId,
+      roleId,
     );
 
-    if (!user) {
+    if (!role) {
       throw new NotFoundException({
         statusCode: 404,
         error: 'Not Found',
-        message: 'User not found',
+        message: `Role with ID '${roleId}' not found`,
       });
     }
 
-    const effectivePermissions = new Set<string>();
-    const roles: Array<{ id: string; name: string; permissions: string[] }> = [];
+    role.permissions = role.permissions.filter((p) => p.key !== permissionId);
+    role.updatedAt = new Date().toISOString();
 
-    // Collect permissions from roles
-    if (user.roles && user.roles.length > 0) {
-      for (const userRole of user.roles) {
-        const role = this.ROLES_CATALOG.find(r => r.id === userRole.roleId);
-        if (role) {
-          roles.push({
-            id: role.id,
-            name: role.name,
-            permissions: role.permissions,
-          });
-          role.permissions.forEach(p => effectivePermissions.add(p));
-        }
-      }
+    await this.cosmosService.updateItem(this.ROLES_CONTAINER, role, role.id);
+  }
+
+  // ==================== PERMISSIONS ====================
+
+  /**
+   * List permissions with filters
+   */
+  async findAllPermissions(query: QueryPermissionsDto): Promise<PaginatedResponse<PublicPermission>> {
+    let sqlQuery = 'SELECT * FROM c WHERE c.type = "permission"';
+    const parameters: any[] = [];
+
+    if (query.category) {
+      sqlQuery += ' AND c.category = @category';
+      parameters.push({ name: '@category', value: query.category });
     }
 
-    // Add custom permissions
-    if (user.customPermissions && user.customPermissions.length > 0) {
-      user.customPermissions.forEach(p => effectivePermissions.add(p));
+    if (query.name) {
+      sqlQuery += ' AND STARTSWITH(LOWER(c.name), LOWER(@name))';
+      parameters.push({ name: '@name', value: query.name });
     }
+
+    sqlQuery += ' ORDER BY c.createdAt DESC';
+
+    const { items, continuationToken } = await this.cosmosService.queryItems<PermissionDocument>(
+      this.PERMISSIONS_CONTAINER,
+      sqlQuery,
+      parameters,
+      query.limit,
+      query.cursor,
+    );
 
     return {
-      userId: userId,
-      permissions: Array.from(effectivePermissions),
-      roles: roles,
-      customPermissions: user.customPermissions || [],
+      items: items.map((permission) => this.toPublicPermission(permission)),
+      count: items.length,
+      nextCursor: continuationToken || null,
     };
   }
 
   /**
-   * Suggest permissions based on search query
+   * Create a new permission
    */
-  async suggestPermissions(dto: SuggestPermissionsDto): Promise<PermissionSuggestion[]> {
-    let permissions = [...this.PERMISSIONS_CATALOG];
+  async createPermission(dto: CreatePermissionDto): Promise<PublicPermission> {
+    const now = new Date().toISOString();
+    const permissionId = dto.id || this.generatePermissionId(dto.name);
 
-    // Filter by query if provided
-    if (dto.query) {
-      const query = dto.query.toLowerCase();
-      permissions = permissions.filter(
-        p =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.id.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query),
+    const permission: PermissionDocument = {
+      id: permissionId,
+      type: 'permission',
+      category: dto.category,
+      name: dto.name,
+      description: dto.description,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    try {
+      const created = await this.cosmosService.createItem(
+        this.PERMISSIONS_CONTAINER,
+        permission,
       );
+      return this.toPublicPermission(created);
+    } catch (error: any) {
+      if (error.code === 409) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          message: `Permission with name '${dto.name}' already exists`,
+        });
+      }
+      throw error;
     }
-
-    // Limit results
-    return permissions.slice(0, dto.limit);
   }
 
   /**
-   * Suggest roles based on search query
+   * Get a single permission by ID
    */
-  async suggestRoles(dto: SuggestRolesDto): Promise<RoleSuggestion[]> {
-    let roles = [...this.ROLES_CATALOG];
-
-    // Filter by query if provided
-    if (dto.query) {
-      const query = dto.query.toLowerCase();
-      roles = roles.filter(
-        r =>
-          r.name.toLowerCase().includes(query) ||
-          r.description.toLowerCase().includes(query) ||
-          r.id.toLowerCase().includes(query),
+  async findPermissionById(permissionId: string): Promise<PublicPermission> {
+    try {
+      const permission = await this.cosmosService.readItem<PermissionDocument>(
+        this.PERMISSIONS_CONTAINER,
+        permissionId,
+        permissionId,
       );
+      return this.toPublicPermission(permission);
+    } catch (error) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Permission with ID '${permissionId}' not found`,
+      });
+    }
+  }
+
+  /**
+   * Update a permission
+   */
+  async updatePermission(
+    permissionId: string,
+    dto: UpdatePermissionDto,
+  ): Promise<PublicPermission> {
+    const permission = await this.cosmosService.readItem<PermissionDocument>(
+      this.PERMISSIONS_CONTAINER,
+      permissionId,
+      permissionId,
+    );
+
+    if (!permission) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Permission with ID '${permissionId}' not found`,
+      });
     }
 
-    // Limit results
-    return roles.slice(0, dto.limit);
+    if (dto.category !== undefined) {
+      permission.category = dto.category;
+    }
+
+    if (dto.name !== undefined) {
+      permission.name = dto.name;
+    }
+
+    if (dto.description !== undefined) {
+      permission.description = dto.description;
+    }
+
+    permission.updatedAt = new Date().toISOString();
+
+    const updated = await this.cosmosService.updateItem(
+      this.PERMISSIONS_CONTAINER,
+      permission,
+      permission.id,
+    );
+
+    return this.toPublicPermission(updated);
+  }
+
+  /**
+   * Delete a permission
+   */
+  async deletePermission(permissionId: string): Promise<void> {
+    const permission = await this.cosmosService.readItem<PermissionDocument>(
+      this.PERMISSIONS_CONTAINER,
+      permissionId,
+      permissionId,
+    );
+
+    if (!permission) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Permission with ID '${permissionId}' not found`,
+      });
+    }
+
+    // Check if permission is used in any roles
+    const rolesUsingPermission = await this.findRolesUsingPermission(permissionId);
+
+    if (rolesUsingPermission.length > 0) {
+      throw new ConflictException({
+        statusCode: 409,
+        error: 'Conflict',
+        message: `Permission in use by roles: ${rolesUsingPermission.map((r) => r.name).join(', ')}`,
+      });
+    }
+
+    await this.cosmosService.deleteItem(
+      this.PERMISSIONS_CONTAINER,
+      permissionId,
+      permissionId,
+    );
+  }
+
+  /**
+   * Get distinct permission categories
+   */
+  async getPermissionCategories(): Promise<{ data: string[] }> {
+    const sqlQuery = 'SELECT DISTINCT c.category FROM c WHERE c.type = "permission"';
+    const { items } = await this.cosmosService.queryItems<{ category: string }>(
+      this.PERMISSIONS_CONTAINER,
+      sqlQuery,
+    );
+
+    return {
+      data: items.map((item) => item.category).sort(),
+    };
+  }
+
+  // ==================== HELPER METHODS ====================
+
+  /**
+   * Validate that permission IDs exist
+   */
+  private async validatePermissions(permissionIds: string[]): Promise<void> {
+    if (permissionIds.length === 0) return;
+
+    const sqlQuery = `SELECT c.id FROM c WHERE c.type = "permission" AND c.id IN (${permissionIds.map((_, i) => `@id${i}`).join(',')})`;
+    const parameters = permissionIds.map((id, i) => ({ name: `@id${i}`, value: id }));
+
+    const { items } = await this.cosmosService.queryItems<{ id: string }>(
+      this.PERMISSIONS_CONTAINER,
+      sqlQuery,
+      parameters,
+    );
+
+    const foundIds = new Set(items.map((item) => item.id));
+    const missingIds = permissionIds.filter((id) => !foundIds.has(id));
+
+    if (missingIds.length > 0) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Invalid permission IDs: ${missingIds.join(', ')}`,
+      });
+    }
+  }
+
+  /**
+   * Find roles that use a specific permission
+   */
+  private async findRolesUsingPermission(permissionId: string): Promise<RoleDocument[]> {
+    const sqlQuery = `SELECT * FROM c WHERE c.type = "role" AND ARRAY_CONTAINS(c.permissions, {"key": @permissionId}, true)`;
+    const parameters = [{ name: '@permissionId', value: permissionId }];
+
+    const { items } = await this.cosmosService.queryItems<RoleDocument>(
+      this.ROLES_CONTAINER,
+      sqlQuery,
+      parameters,
+    );
+
+    return items;
+  }
+
+  /**
+   * Generate role ID from name
+   */
+  private generateRoleId(name: string): string {
+    return `role_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+  }
+
+  /**
+   * Generate permission ID from name
+   */
+  private generatePermissionId(name: string): string {
+    return `perm_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+  }
+
+  /**
+   * Convert RoleDocument to PublicRole
+   */
+  private toPublicRole(role: RoleDocument): PublicRole {
+    return role;
+  }
+
+  /**
+   * Convert PermissionDocument to PublicPermission
+   */
+  private toPublicPermission(permission: PermissionDocument): PublicPermission {
+    return permission;
   }
 }
