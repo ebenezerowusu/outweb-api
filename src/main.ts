@@ -91,11 +91,6 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
 
-    // Remove schemas section from Swagger documentation
-    if (document.components?.schemas) {
-      delete document.components.schemas;
-    }
-
     // Apply security globally to all endpoints except health endpoints
     for (const path in document.paths) {
       // Skip security for health endpoints (they use @SkipAuth and @SkipCountryGuard)

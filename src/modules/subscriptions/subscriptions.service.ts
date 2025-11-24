@@ -14,7 +14,7 @@ import {
   PublicInvoice,
   SubscriptionFeatures,
 } from './interfaces/subscription.interface';
-import { CreateCheckoutSessionDto, CreateSubscriptionFromWebhookDto } from './dto/create-subscription.dto';
+import { CreateCheckoutSessionDto, CreateOneTimeCheckoutDto, CreateSubscriptionFromWebhookDto } from './dto/create-subscription.dto';
 import {
   UpdateSubscriptionPlanDto,
   CancelSubscriptionDto,
@@ -160,6 +160,65 @@ export class SubscriptionsService {
     // Placeholder response
     return {
       sessionId: 'cs_test_placeholder',
+      url: dto.successUrl,
+    };
+  }
+
+  /**
+   * Create Stripe checkout session for one-time payment
+   */
+  async createOneTimeCheckout(
+    dto: CreateOneTimeCheckoutDto,
+    userId: string,
+  ): Promise<{ sessionId: string; url: string }> {
+    // Map product type to Stripe IDs
+    const productIdMap: Record<string, string> = {
+      featured_listing: this.configService.get('stripeProductIdFeaturedListing') || 'prod_featured',
+      bump_listing: this.configService.get('stripeProductIdBumpListing') || 'prod_bump',
+      highlight_listing: this.configService.get('stripeProductIdHighlightListing') || 'prod_highlight',
+    };
+
+    const priceIdMap: Record<string, string> = {
+      featured_listing: this.configService.get('stripePriceIdFeaturedListing') || 'price_featured',
+      bump_listing: this.configService.get('stripePriceIdBumpListing') || 'price_bump',
+      highlight_listing: this.configService.get('stripePriceIdHighlightListing') || 'price_highlight',
+    };
+
+    const productId = productIdMap[dto.productType];
+    const priceId = priceIdMap[dto.productType];
+
+    if (!productId || !priceId) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Product or price ID not configured for ${dto.productType}`,
+      });
+    }
+
+    // TODO: Integrate with Stripe SDK
+    // const stripe = new Stripe(this.configService.get('stripeSecretKey'), { apiVersion: '2023-10-16' });
+    // const session = await stripe.checkout.sessions.create({
+    //   mode: 'payment',  // One-time payment (not subscription)
+    //   payment_method_types: ['card'],
+    //   line_items: [{
+    //     price: priceId,
+    //     quantity: 1,
+    //   }],
+    //   customer_email: user.email,
+    //   metadata: {
+    //     userId: userId,
+    //     sellerId: dto.sellerId || '',
+    //     listingId: dto.listingId,
+    //     productType: dto.productType,
+    //     paymentType: 'one_time',
+    //   },
+    //   success_url: dto.successUrl,
+    //   cancel_url: dto.cancelUrl,
+    // });
+
+    // Placeholder response
+    return {
+      sessionId: 'cs_test_onetime_placeholder',
       url: dto.successUrl,
     };
   }
