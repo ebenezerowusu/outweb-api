@@ -20,7 +20,7 @@ export const AppConfigSchema = z.object({
   azureStorageConnectionString: z.string().min(1),
   azureStorageContainer: z.string().default('uploads'),
 
-  // Stripe
+  // Stripe - Subscriptions
   stripeSecretKey: z.string().startsWith('sk_'),
   stripeWebhookSecret: z.string().startsWith('whsec_'),
   stripeProductIdBasic: z.string().startsWith('prod_').optional(),
@@ -32,6 +32,14 @@ export const AppConfigSchema = z.object({
   stripePriceIdProYearly: z.string().startsWith('price_').optional(),
   stripePriceIdEnterpriseMonthly: z.string().startsWith('price_').optional(),
   stripePriceIdEnterpriseYearly: z.string().startsWith('price_').optional(),
+
+  // Stripe - One-time Payments
+  stripeProductIdFeaturedListing: z.string().startsWith('prod_').optional(),
+  stripePriceIdFeaturedListing: z.string().startsWith('price_').optional(),
+  stripeProductIdBumpListing: z.string().startsWith('prod_').optional(),
+  stripePriceIdBumpListing: z.string().startsWith('price_').optional(),
+  stripeProductIdHighlightListing: z.string().startsWith('prod_').optional(),
+  stripePriceIdHighlightListing: z.string().startsWith('price_').optional(),
 
   // SendGrid
   sendgridApiKey: z.string().startsWith('SG.'),
@@ -87,6 +95,13 @@ export function loadConfig(): AppConfig {
     stripePriceIdProYearly: process.env.STRIPE_PRICE_ID_PRO_YEARLY,
     stripePriceIdEnterpriseMonthly: process.env.STRIPE_PRICE_ID_ENTERPRISE_MONTHLY,
     stripePriceIdEnterpriseYearly: process.env.STRIPE_PRICE_ID_ENTERPRISE_YEARLY,
+
+    stripeProductIdFeaturedListing: process.env.STRIPE_PRODUCT_ID_FEATURED_LISTING,
+    stripePriceIdFeaturedListing: process.env.STRIPE_PRICE_ID_FEATURED_LISTING,
+    stripeProductIdBumpListing: process.env.STRIPE_PRODUCT_ID_BUMP_LISTING,
+    stripePriceIdBumpListing: process.env.STRIPE_PRICE_ID_BUMP_LISTING,
+    stripeProductIdHighlightListing: process.env.STRIPE_PRODUCT_ID_HIGHLIGHT_LISTING,
+    stripePriceIdHighlightListing: process.env.STRIPE_PRICE_ID_HIGHLIGHT_LISTING,
 
     sendgridApiKey: process.env.SENDGRID_API_KEY,
     sendgridFromEmail: process.env.SENDGRID_FROM_EMAIL,

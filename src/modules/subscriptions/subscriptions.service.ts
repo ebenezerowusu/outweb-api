@@ -541,7 +541,9 @@ export class SubscriptionsService {
   async processWebhook(event: any): Promise<void> {
     // TODO: Implement webhook processing
     // Handle events like:
-    // - checkout.session.completed
+    // - checkout.session.completed (for both subscriptions and one-time payments)
+    //   * For subscriptions: create subscription document in 'subscriptions' container
+    //   * For one-time payments (featured/bump/highlight): create billing document in 'billings' container
     // - customer.subscription.created
     // - customer.subscription.updated
     // - customer.subscription.deleted
@@ -549,6 +551,15 @@ export class SubscriptionsService {
     // - invoice.payment_failed
     // - payment_intent.succeeded
     // - payment_intent.payment_failed
+    //
+    // To distinguish between subscription and one-time payment checkouts:
+    // - Check session.mode: 'subscription' vs 'payment'
+    // - Check session.metadata.paymentType: 'subscription' vs 'one_time'
+    //
+    // One-time payment products:
+    // - featured_listing (stripeProductIdFeaturedListing)
+    // - bump_listing (stripeProductIdBumpListing)
+    // - highlight_listing (stripeProductIdHighlightListing)
 
     console.log('Webhook received:', event.type);
   }
