@@ -91,11 +91,6 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
 
-    // Remove schemas section from Swagger documentation
-    if (document.components?.schemas) {
-      delete document.components.schemas;
-    }
-
     // Apply security globally to all endpoints except health endpoints
     for (const path in document.paths) {
       // Skip security for health endpoints (they use @SkipAuth and @SkipCountryGuard)
@@ -121,9 +116,11 @@ async function bootstrap() {
       customCss: `
         .topbar-wrapper img { content: url('https://onlyusedtesla.com/assets/icon_512x512.24a82d.png'); width: 40px; height: auto; }
         .topbar { background-color: #1a1a2e; }
+        section.models { display: none !important; }
       `,
       swaggerOptions: {
         persistAuthorization: true, // Persist auth tokens across browser sessions
+        defaultModelsExpandDepth: -1, // Hide schemas section
       },
     });
 

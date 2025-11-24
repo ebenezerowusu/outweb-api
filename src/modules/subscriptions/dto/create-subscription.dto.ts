@@ -48,6 +48,50 @@ export class CreateCheckoutSessionDto {
 }
 
 /**
+ * Create One-Time Payment Checkout DTO
+ * Used for POST /subscriptions/checkout/one-time
+ */
+export class CreateOneTimeCheckoutDto {
+  @ApiProperty({
+    description: 'One-time payment product type',
+    enum: ['featured_listing', 'bump_listing', 'highlight_listing'],
+    example: 'featured_listing',
+  })
+  @IsEnum(['featured_listing', 'bump_listing', 'highlight_listing'])
+  productType: 'featured_listing' | 'bump_listing' | 'highlight_listing';
+
+  @ApiProperty({
+    description: 'Listing ID to apply the payment to',
+    example: 'listing_123abc',
+  })
+  @IsString()
+  listingId: string;
+
+  @ApiProperty({
+    description: 'Seller ID associated with the listing',
+    required: false,
+    example: 'seller_123abc',
+  })
+  @IsString()
+  @IsOptional()
+  sellerId?: string;
+
+  @ApiProperty({
+    description: 'Success redirect URL after checkout',
+    example: 'https://onlyusedtesla.com/listings/{LISTING_ID}?payment=success',
+  })
+  @IsUrl()
+  successUrl: string;
+
+  @ApiProperty({
+    description: 'Cancel redirect URL if checkout is cancelled',
+    example: 'https://onlyusedtesla.com/listings/{LISTING_ID}',
+  })
+  @IsUrl()
+  cancelUrl: string;
+}
+
+/**
  * Create Subscription DTO (from webhook)
  * Internal use only for processing Stripe webhooks
  */

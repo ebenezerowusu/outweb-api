@@ -20,7 +20,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { SubscriptionsService } from './subscriptions.service';
-import { CreateCheckoutSessionDto } from './dto/create-subscription.dto';
+import { CreateCheckoutSessionDto, CreateOneTimeCheckoutDto } from './dto/create-subscription.dto';
 import {
   UpdateSubscriptionPlanDto,
   CancelSubscriptionDto,
@@ -43,7 +43,7 @@ export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   /**
-   * Create Stripe checkout session
+   * Create Stripe checkout session for subscription
    */
   @Post('checkout')
   @HttpCode(HttpStatus.OK)
@@ -56,6 +56,22 @@ export class SubscriptionsController {
     @CurrentUser() user: any,
   ) {
     return this.subscriptionsService.createCheckoutSession(createCheckoutDto, user.sub);
+  }
+
+  /**
+   * Create Stripe checkout session for one-time payment
+   */
+  @Post('checkout/one-time')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Create Stripe checkout session for one-time payment (featured/bump/highlight listing)' })
+  @ApiResponse({ status: 200, description: 'One-time checkout session created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async createOneTimeCheckout(
+    @Body() createOneTimeDto: CreateOneTimeCheckoutDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.subscriptionsService.createOneTimeCheckout(createOneTimeDto, user.sub);
   }
 
   /**
