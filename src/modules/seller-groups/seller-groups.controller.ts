@@ -69,7 +69,6 @@ export class SellerGroupsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Create new seller group (Admin only)' })
   @ApiResponse({ status: 201, description: 'Seller group created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
@@ -86,7 +85,6 @@ export class SellerGroupsController {
    */
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Update seller group profile (Admin only)' })
   @ApiParam({ name: 'id', description: 'Seller Group ID' })
   @ApiResponse({ status: 200, description: 'Seller group updated successfully' })
@@ -106,7 +104,6 @@ export class SellerGroupsController {
    */
   @Patch(':id/settings')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Update seller group settings (Admin only)' })
   @ApiParam({ name: 'id', description: 'Seller Group ID' })
   @ApiResponse({ status: 200, description: 'Seller group settings updated successfully' })
@@ -126,7 +123,6 @@ export class SellerGroupsController {
    */
   @Patch(':id/members')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Update seller group members (Admin only)' })
   @ApiParam({ name: 'id', description: 'Seller Group ID' })
   @ApiResponse({ status: 200, description: 'Seller group members updated successfully' })
@@ -146,7 +142,6 @@ export class SellerGroupsController {
    */
   @Patch(':id/meta')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Update seller group metadata (Admin only)' })
   @ApiParam({ name: 'id', description: 'Seller Group ID' })
   @ApiResponse({ status: 200, description: 'Seller group metadata updated successfully' })

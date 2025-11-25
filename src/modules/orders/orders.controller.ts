@@ -94,7 +94,6 @@ export class OrdersController {
    */
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_orders')
   @ApiOperation({ summary: 'Update order status (Seller/Admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 200, description: 'Order status updated successfully' })
@@ -133,7 +132,6 @@ export class OrdersController {
    */
   @Post(':id/inspection/schedule')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_orders')
   @ApiOperation({ summary: 'Schedule inspection (Seller/Admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 200, description: 'Inspection scheduled successfully' })
@@ -152,7 +150,6 @@ export class OrdersController {
    */
   @Post(':id/inspection/complete')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_orders')
   @ApiOperation({ summary: 'Complete inspection (Inspector/Admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 200, description: 'Inspection completed successfully' })
@@ -171,7 +168,6 @@ export class OrdersController {
    */
   @Patch(':id/delivery')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_orders')
   @ApiOperation({ summary: 'Update delivery information (Seller/Admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 200, description: 'Delivery updated successfully' })
@@ -208,7 +204,6 @@ export class OrdersController {
    */
   @Post(':id/documents')
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermissions('perm_manage_orders')
   @ApiOperation({ summary: 'Add document to order (Seller/Admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 201, description: 'Document added successfully' })
@@ -226,7 +221,6 @@ export class OrdersController {
    * List transactions with filters
    */
   @Get('transactions/all')
-  @RequirePermissions('perm_manage_orders')
   @ApiOperation({ summary: 'List transactions with filters (Admin only)' })
   @ApiResponse({ status: 200, description: 'Transactions retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
@@ -255,7 +249,6 @@ export class OrdersController {
    */
   @Post('transactions')
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermissions('perm_manage_orders')
   @ApiOperation({ summary: 'Create transaction (Internal/Admin)' })
   @ApiResponse({ status: 201, description: 'Transaction created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })

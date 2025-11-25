@@ -76,7 +76,6 @@ export class ListingOffersController {
    * Get offers for a specific listing
    */
   @Get('listing/:listingId')
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Get offers for a listing (Seller/Admin)' })
   @ApiParam({ name: 'listingId', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Offers retrieved successfully' })
@@ -93,7 +92,6 @@ export class ListingOffersController {
    * Get offer statistics for a listing
    */
   @Get('listing/:listingId/statistics')
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Get offer statistics for a listing (Seller/Admin)' })
   @ApiParam({ name: 'listingId', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
@@ -120,7 +118,6 @@ export class ListingOffersController {
    */
   @Post(':id/accept')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Accept offer (Seller)' })
   @ApiParam({ name: 'id', description: 'Offer ID' })
   @ApiResponse({ status: 200, description: 'Offer accepted successfully' })
@@ -140,7 +137,6 @@ export class ListingOffersController {
    */
   @Post(':id/reject')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Reject offer (Seller)' })
   @ApiParam({ name: 'id', description: 'Offer ID' })
   @ApiResponse({ status: 200, description: 'Offer rejected successfully' })
@@ -160,7 +156,6 @@ export class ListingOffersController {
    */
   @Post(':id/counter')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Make counter-offer (Seller)' })
   @ApiParam({ name: 'id', description: 'Offer ID' })
   @ApiResponse({ status: 200, description: 'Counter-offer created successfully' })

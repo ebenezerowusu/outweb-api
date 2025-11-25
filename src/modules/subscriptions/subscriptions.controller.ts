@@ -78,7 +78,6 @@ export class SubscriptionsController {
    * List subscriptions
    */
   @Get()
-  @RequirePermissions('perm_manage_users')
   @ApiOperation({ summary: 'List subscriptions (Admin only)' })
   @ApiResponse({ status: 200, description: 'Subscriptions retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })

@@ -98,7 +98,6 @@ export class TaxonomiesController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermissions('perm_manage_taxonomies')
   @ApiOperation({ summary: 'Create new taxonomy (Admin only)' })
   @ApiResponse({ status: 201, description: 'Taxonomy created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
@@ -116,7 +115,6 @@ export class TaxonomiesController {
    */
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_taxonomies')
   @ApiOperation({ summary: 'Update taxonomy (Admin only)' })
   @ApiParam({ name: 'id', description: 'Taxonomy ID' })
   @ApiResponse({ status: 200, description: 'Taxonomy updated successfully' })
@@ -136,7 +134,6 @@ export class TaxonomiesController {
    */
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_taxonomies')
   @ApiOperation({ summary: 'Update taxonomy status (Admin only)' })
   @ApiParam({ name: 'id', description: 'Taxonomy ID' })
   @ApiResponse({ status: 200, description: 'Taxonomy status updated successfully' })
@@ -154,7 +151,6 @@ export class TaxonomiesController {
    */
   @Patch('bulk')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_taxonomies')
   @ApiOperation({ summary: 'Bulk update taxonomies (Admin only)' })
   @ApiResponse({ status: 200, description: 'Taxonomies updated successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
@@ -167,7 +163,6 @@ export class TaxonomiesController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RequirePermissions('perm_manage_taxonomies')
   @ApiOperation({ summary: 'Delete taxonomy (Admin only)' })
   @ApiParam({ name: 'id', description: 'Taxonomy ID' })
   @ApiResponse({ status: 204, description: 'Taxonomy deleted successfully' })
