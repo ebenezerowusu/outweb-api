@@ -30,7 +30,6 @@ import {
 import { QueryOrdersDto, QueryOrderTransactionsDto } from './dto/query-order.dto';
 import {
   CurrentUser,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**

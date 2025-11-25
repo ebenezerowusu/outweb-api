@@ -27,7 +27,6 @@ import {
 import { QuerySellerReviewsDto } from './dto/query-seller-reviews.dto';
 import {
   CurrentUser,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**

@@ -26,7 +26,6 @@ import {
 import { QueryListingOffersDto } from './dto/query-listing-offer.dto';
 import {
   CurrentUser,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**

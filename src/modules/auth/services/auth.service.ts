@@ -194,7 +194,7 @@ export class AuthService {
           isPrimary: true,
         },
       ],
-      roles: [{ roleId: 'role_buyer' }],
+      roles: [{ roleId: 'role_private' }],
       customPermissions: [],
       preferences: {
         language: 'en-US',
@@ -403,7 +403,7 @@ export class AuthService {
           isPrimary: true,
         },
       ],
-      roles: [{ roleId: 'role_seller' }],
+      roles: [{ roleId: 'role_dealer' }],
       customPermissions: ['perm_manage_inventory'],
       preferences: {
         language: 'en-US',

@@ -28,7 +28,6 @@ import {
 import { QuerySubscriptionsDto, QueryInvoicesDto } from './dto/query-subscription.dto';
 import {
   CurrentUser,
-  RequirePermissions,
   SkipAuth,
 } from '@/common/decorators/auth.decorators';
 

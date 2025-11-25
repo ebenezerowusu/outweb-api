@@ -22,7 +22,6 @@ import { UpdateUserPermissionsDto } from './dto/user-permissions.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
 import {
   CurrentUser,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**
