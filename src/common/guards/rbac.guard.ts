@@ -49,6 +49,13 @@ export class RbacGuard implements CanActivate {
     // Get user from request (set by JWT auth middleware)
     const user = (request as any).user;
 
+    // Debug logging
+    console.log('[RBAC Guard] Checking user on request:', {
+      hasUser: !!user,
+      requestKeys: Object.keys(request).slice(0, 10),
+      userKeys: user ? Object.keys(user) : 'no user',
+    });
+
     if (!user) {
       throw new UnauthorizedException({
         statusCode: 401,
