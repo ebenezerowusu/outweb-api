@@ -41,27 +41,27 @@ export const AppConfigSchema = z.object({
   stripeProductIdHighlightListing: z.string().startsWith('prod_').optional(),
   stripePriceIdHighlightListing: z.string().startsWith('price_').optional(),
 
-  // SendGrid (optional - for production use)
-  sendgridApiKey: z.string().startsWith('SG.').optional(),
-  sendgridFromEmail: z.string().email().optional(),
+  // SendGrid
+  sendgridApiKey: z.string().startsWith('SG.'),
+  sendgridFromEmail: z.string().email(),
   sendgridFromName: z.string().default('OnlyUsedTesla'),
 
-  // SendGrid Email Templates (optional - for production use)
-  sendgridTmplVerifyEmail: z.string().min(1).optional(),
-  sendgridTmplWelcomePrivate: z.string().min(1).optional(),
-  sendgridTmplWelcomeDealer: z.string().min(1).optional(),
-  sendgridTmplResetPassword: z.string().min(1).optional(),
-  sendgridTmplMfaCodeEmail: z.string().min(1).optional(),
-  sendgridTmplChangeEmailVerify: z.string().min(1).optional(),
-  sendgridTmplNewLoginAlert: z.string().min(1).optional(),
-  sendgridTmplDealerAppReceived: z.string().min(1).optional(),
-  sendgridTmplDealerAppApproved: z.string().min(1).optional(),
-  sendgridTmplDealerAppRejected: z.string().min(1).optional(),
-  sendgridTmplKycApproved: z.string().min(1).optional(),
-  sendgridTmplKycRejected: z.string().min(1).optional(),
-  sendgridTmplDealerStaffInvite: z.string().min(1).optional(),
-  sendgridTmplRoleChanged: z.string().min(1).optional(),
-  sendgridTmplCashOfferAlert: z.string().min(1).optional(),
+  // SendGrid Email Templates
+  sendgridTmplVerifyEmail: z.string().min(1),
+  sendgridTmplWelcomePrivate: z.string().min(1),
+  sendgridTmplWelcomeDealer: z.string().min(1),
+  sendgridTmplResetPassword: z.string().min(1),
+  sendgridTmplMfaCodeEmail: z.string().min(1),
+  sendgridTmplChangeEmailVerify: z.string().min(1),
+  sendgridTmplNewLoginAlert: z.string().min(1),
+  sendgridTmplDealerAppReceived: z.string().min(1),
+  sendgridTmplDealerAppApproved: z.string().min(1),
+  sendgridTmplDealerAppRejected: z.string().min(1),
+  sendgridTmplKycApproved: z.string().min(1),
+  sendgridTmplKycRejected: z.string().min(1),
+  sendgridTmplDealerStaffInvite: z.string().min(1),
+  sendgridTmplRoleChanged: z.string().min(1),
+  sendgridTmplCashOfferAlert: z.string().min(1),
 
   // Twilio
   twilioAccountSid: z.string().startsWith('AC'),
