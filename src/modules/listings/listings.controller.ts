@@ -30,7 +30,6 @@ import {
   CurrentUser,
   Country,
   SkipAuth,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**

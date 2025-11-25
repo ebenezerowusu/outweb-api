@@ -27,7 +27,6 @@ import {
 import { QuerySellerGroupsDto } from './dto/query-seller-groups.dto';
 import {
   CurrentUser,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**

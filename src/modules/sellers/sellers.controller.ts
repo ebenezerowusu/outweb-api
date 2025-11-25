@@ -28,7 +28,6 @@ import { QuerySellersDto } from './dto/query-sellers.dto';
 import {
   CurrentUser,
   Country,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**
