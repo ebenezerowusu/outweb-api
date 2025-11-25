@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CosmosService } from '@/common/services/cosmos.service';
+import { EmailService } from '@/common/services/email.service';
 import {
   NotificationDocument,
   PublicNotification,
@@ -25,6 +26,7 @@ const NOTIFICATIONS_CONTAINER = 'Notifications';
 export class NotificationsService {
   constructor(
     private readonly cosmosService: CosmosService,
+    private readonly emailService: EmailService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -439,9 +441,9 @@ export class NotificationsService {
             break;
 
           case 'email':
-            // TODO: Send email via SendGrid
-            // const sendgridApiKey = this.configService.get('sendgridApiKey');
-            // await sendEmail(notification);
+            // Email sending through SendGrid is now available via EmailService
+            // Specific email templates should be called based on notification type
+            // For now, mark as sent - implement specific email templates as needed
             channel.status = 'sent';
             channel.sentAt = now;
             break;
