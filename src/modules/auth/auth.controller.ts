@@ -5,6 +5,9 @@ import { SignInDto } from './dto/signin.dto';
 import { SignUpPrivateDto } from './dto/signup-private.dto';
 import { SignUpDealerDto } from './dto/signup-dealer.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RequestEmailVerificationDto, ConfirmEmailVerificationDto } from './dto/verify-email.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
+import { Setup2FaDto, Disable2FaDto } from './dto/two-factor.dto';
 import { SkipAuth, CurrentUser, Country } from '@/common/decorators/auth.decorators';
 
 /**
@@ -115,12 +118,8 @@ export class AuthController {
   @SkipAuth()
   @ApiOperation({ summary: 'Request email verification link' })
   @ApiResponse({ status: 202, description: 'Verification email sent if account exists' })
-  async requestEmailVerification(@Body() body: { email: string }) {
-    // TODO: Implement email verification
-    return {
-      statusCode: 202,
-      message: 'Verification email sent if the account exists',
-    };
+  async requestEmailVerification(@Body() dto: RequestEmailVerificationDto) {
+    return this.authService.requestEmailVerification(dto);
   }
 
   /**
@@ -132,12 +131,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Confirm email verification with token' })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or expired token' })
-  async confirmEmailVerification(@Body() body: { token: string }) {
-    // TODO: Implement email verification confirmation
-    return {
-      statusCode: 200,
-      message: 'Email verified successfully',
-    };
+  async confirmEmailVerification(@Body() dto: ConfirmEmailVerificationDto) {
+    return this.authService.confirmEmailVerification(dto);
   }
 
   /**
@@ -148,12 +143,8 @@ export class AuthController {
   @SkipAuth()
   @ApiOperation({ summary: 'Request password reset link' })
   @ApiResponse({ status: 202, description: 'Password reset link sent if account exists' })
-  async forgotPassword(@Body() body: { email: string }) {
-    // TODO: Implement password reset email
-    return {
-      statusCode: 202,
-      message: 'Password reset link sent if the account exists',
-    };
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
   }
 
   /**
@@ -166,14 +157,8 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Password updated successfully' })
   @ApiResponse({ status: 401, description: 'Invalid or expired token' })
   @ApiResponse({ status: 422, description: 'Validation failed' })
-  async resetPassword(
-    @Body() body: { token: string; newPassword: string; confirmPassword: string },
-  ) {
-    // TODO: Implement password reset
-    return {
-      statusCode: 200,
-      message: 'Password updated successfully',
-    };
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   /**
@@ -185,12 +170,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Enable two-factor authentication' })
   @ApiResponse({ status: 200, description: '2FA enabled successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async setup2FA(@Body() body: { method: string }, @CurrentUser() user: any) {
-    // TODO: Implement 2FA setup
-    return {
-      statusCode: 200,
-      message: 'Two-factor authentication enabled',
-    };
+  async setup2FA(@Body() dto: Setup2FaDto, @CurrentUser() user: any) {
+    return this.authService.setup2FA(dto, user.sub);
   }
 
   /**
@@ -202,11 +183,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Disable two-factor authentication' })
   @ApiResponse({ status: 200, description: '2FA disabled successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async disable2FA(@CurrentUser() user: any) {
-    // TODO: Implement 2FA disable
-    return {
-      statusCode: 200,
-      message: 'Two-factor authentication disabled',
-    };
+  async disable2FA(@Body() dto: Disable2FaDto, @CurrentUser() user: any) {
+    return this.authService.disable2FA(dto, user.sub);
   }
 }

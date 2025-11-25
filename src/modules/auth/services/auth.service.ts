@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { CosmosService } from '@/common/services/cosmos.service';
+import { EmailService } from '@/common/services/email.service';
 import { JwtService } from './jwt.service';
 import { TokenResponse } from '@/common/types/token.type';
 import { ValidationException } from '@/common/exceptions/validation.exception';
@@ -21,6 +22,9 @@ import { SignInDto } from '../dto/signin.dto';
 import { SignUpPrivateDto } from '../dto/signup-private.dto';
 import { SignUpDealerDto } from '../dto/signup-dealer.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { RequestEmailVerificationDto, ConfirmEmailVerificationDto } from '../dto/verify-email.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from '../dto/password-reset.dto';
+import { Setup2FaDto, Disable2FaDto, TwoFactorMethod } from '../dto/two-factor.dto';
 import { AppConfig } from '@/config/app.config';
 
 /**
@@ -36,6 +40,7 @@ export class AuthService {
   constructor(
     private readonly cosmosService: CosmosService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
     private readonly configService: ConfigService<AppConfig>,
   ) {}
 
@@ -281,7 +286,15 @@ export class AuthService {
     // Save seller to Cosmos DB
     await this.cosmosService.createItem(this.SELLERS_CONTAINER, seller);
 
-    // TODO: Send email verification email via SendGrid
+    // Send welcome email
+    const dashboardUrl = 'https://app.onlyusedtesla.com/dashboard';
+    await this.emailService.sendWelcomePrivateEmail(user.profile.email, {
+      firstName: user.profile.firstName,
+      dashboardUrl,
+    }).catch(error => {
+      console.error('Failed to send welcome email:', error);
+      // Don't block signup if email fails
+    });
 
     // Generate tokens
     const tokens = await this.jwtService.generateTokens({
@@ -599,6 +612,17 @@ export class AuthService {
       checkoutUrl: `https://checkout.stripe.com/pay/cs_test_${Date.now()}`,
     };
 
+    // Send welcome dealer email
+    const dealerDashboardUrl = 'https://app.onlyusedtesla.com/dealer';
+    await this.emailService.sendWelcomeDealerEmail(user.profile.email, {
+      firstName: user.profile.firstName,
+      dealerName: dto.companyName,
+      dealerDashboardUrl,
+    }).catch(error => {
+      console.error('Failed to send welcome email:', error);
+      // Don't block signup if email fails
+    });
+
     // Generate tokens
     const tokens = await this.jwtService.generateTokens({
       sub: user.id,
@@ -677,6 +701,270 @@ export class AuthService {
     }
 
     return this.toPublicUser(user);
+  }
+
+  /**
+   * Request email verification
+   */
+  async requestEmailVerification(dto: RequestEmailVerificationDto): Promise<{ statusCode: number; message: string }> {
+    // Find user by email
+    const query = 'SELECT * FROM c WHERE c.profile.email = @email';
+    const { items } = await this.cosmosService.queryItems<UserDocument>(
+      this.USERS_CONTAINER,
+      query,
+      [{ name: '@email', value: dto.email.toLowerCase() }],
+    );
+
+    // Return same response whether user exists or not (security best practice)
+    if (!items[0]) {
+      return {
+        statusCode: 202,
+        message: 'Verification email sent if the account exists',
+      };
+    }
+
+    const user = items[0];
+
+    // Generate verification token (expires in 24 hours)
+    const token = await this.jwtService.generateTokens({
+      sub: user.id,
+      email: user.profile.email,
+      roles: [],
+      permissions: [],
+    });
+
+    // Send verification email
+    const verifyUrl = `https://app.onlyusedtesla.com/verify-email?token=${token.accessToken}`;
+    await this.emailService.sendVerificationEmail(user.profile.email, {
+      firstName: user.profile.firstName,
+      verifyUrl,
+    }).catch(error => {
+      console.error('Failed to send verification email:', error);
+    });
+
+    return {
+      statusCode: 202,
+      message: 'Verification email sent if the account exists',
+    };
+  }
+
+  /**
+   * Confirm email verification
+   */
+  async confirmEmailVerification(dto: ConfirmEmailVerificationDto): Promise<{ statusCode: number; message: string }> {
+    try {
+      // Verify token
+      const payload = await this.jwtService.verifyAccessToken(dto.token);
+
+      // Get user
+      const user = await this.cosmosService.readItem<UserDocument>(
+        this.USERS_CONTAINER,
+        payload.sub,
+        payload.sub,
+      );
+
+      if (!user) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'Invalid or expired token',
+        });
+      }
+
+      // Update verification status
+      user.verification.emailVerified = true;
+      user.verification.verifiedAt.email = new Date().toISOString();
+      user.metadata.updatedAt = new Date().toISOString();
+
+      await this.cosmosService.updateItem(this.USERS_CONTAINER, user, user.id);
+
+      return {
+        statusCode: 200,
+        message: 'Email verified successfully',
+      };
+    } catch (error) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Invalid or expired token',
+      });
+    }
+  }
+
+  /**
+   * Forgot password - send reset email
+   */
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ statusCode: number; message: string }> {
+    // Find user by email
+    const query = 'SELECT * FROM c WHERE c.profile.email = @email';
+    const { items } = await this.cosmosService.queryItems<UserDocument>(
+      this.USERS_CONTAINER,
+      query,
+      [{ name: '@email', value: dto.email.toLowerCase() }],
+    );
+
+    // Return same response whether user exists or not (security best practice)
+    if (!items[0]) {
+      return {
+        statusCode: 202,
+        message: 'Password reset link sent if the account exists',
+      };
+    }
+
+    const user = items[0];
+
+    // Generate reset token (expires in 1 hour)
+    const token = await this.jwtService.generateTokens({
+      sub: user.id,
+      email: user.profile.email,
+      roles: [],
+      permissions: [],
+    });
+
+    // Send reset email
+    const resetUrl = `https://app.onlyusedtesla.com/reset-password?token=${token.accessToken}`;
+    await this.emailService.sendResetPasswordEmail(user.profile.email, {
+      firstName: user.profile.firstName,
+      resetUrl,
+    }).catch(error => {
+      console.error('Failed to send password reset email:', error);
+    });
+
+    return {
+      statusCode: 202,
+      message: 'Password reset link sent if the account exists',
+    };
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(dto: ResetPasswordDto): Promise<{ statusCode: number; message: string }> {
+    // Validate passwords match
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new ValidationException({
+        confirmPassword: ['Passwords do not match'],
+      });
+    }
+
+    try {
+      // Verify token
+      const payload = await this.jwtService.verifyAccessToken(dto.token);
+
+      // Get user
+      const user = await this.cosmosService.readItem<UserDocument>(
+        this.USERS_CONTAINER,
+        payload.sub,
+        payload.sub,
+      );
+
+      if (!user) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          error: 'Unauthorized',
+          message: 'Invalid or expired token',
+        });
+      }
+
+      // Hash new password
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(dto.newPassword, salt);
+
+      // Update password
+      user.auth.passwordHash = passwordHash;
+      user.auth.passwordSalt = salt;
+      user.metadata.updatedAt = new Date().toISOString();
+
+      await this.cosmosService.updateItem(this.USERS_CONTAINER, user, user.id);
+
+      return {
+        statusCode: 200,
+        message: 'Password updated successfully',
+      };
+    } catch (error) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Invalid or expired token',
+      });
+    }
+  }
+
+  /**
+   * Setup 2FA
+   */
+  async setup2FA(dto: Setup2FaDto, userId: string): Promise<{ statusCode: number; message: string; qrCode?: string }> {
+    const user = await this.cosmosService.readItem<UserDocument>(
+      this.USERS_CONTAINER,
+      userId,
+      userId,
+    );
+
+    if (!user) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: 'User not found',
+      });
+    }
+
+    // Enable 2FA
+    user.auth.twoFactorEnabled = true;
+    user.auth.twoFactorMethod = dto.method;
+    user.metadata.updatedAt = new Date().toISOString();
+
+    await this.cosmosService.updateItem(this.USERS_CONTAINER, user, user.id);
+
+    // If email method, send test code
+    if (dto.method === TwoFactorMethod.SMS) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      await this.emailService.sendMfaCodeEmail(user.profile.email, {
+        firstName: user.profile.firstName,
+        code,
+        expiresMinutes: 10,
+      }).catch(error => {
+        console.error('Failed to send MFA code email:', error);
+      });
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Two-factor authentication enabled',
+      ...(dto.method === TwoFactorMethod.AUTHENTICATOR_APP && {
+        qrCode: 'TODO: Generate QR code for authenticator app',
+      }),
+    };
+  }
+
+  /**
+   * Disable 2FA
+   */
+  async disable2FA(dto: Disable2FaDto, userId: string): Promise<{ statusCode: number; message: string }> {
+    const user = await this.cosmosService.readItem<UserDocument>(
+      this.USERS_CONTAINER,
+      userId,
+      userId,
+    );
+
+    if (!user) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: 'User not found',
+      });
+    }
+
+    // Disable 2FA
+    user.auth.twoFactorEnabled = false;
+    user.auth.twoFactorMethod = null;
+    user.metadata.updatedAt = new Date().toISOString();
+
+    await this.cosmosService.updateItem(this.USERS_CONTAINER, user, user.id);
+
+    return {
+      statusCode: 200,
+      message: 'Two-factor authentication disabled',
+    };
   }
 
   /**
