@@ -13,6 +13,7 @@ import { SellerGroupsModule } from './modules/seller-groups/seller-groups.module
 import { SellerReviewsModule } from './modules/seller-reviews/seller-reviews.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module';
+import { SeoModule } from './modules/seo/seo.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { OrdersModule } from './modules/orders/orders.module';
@@ -36,6 +37,7 @@ import { ListingOffersModule } from './modules/listing-offers/listing-offers.mod
     SellerReviewsModule,
     RbacModule,
     TaxonomiesModule,
+    SeoModule,
     ListingsModule,
     SubscriptionsModule,
     OrdersModule,
