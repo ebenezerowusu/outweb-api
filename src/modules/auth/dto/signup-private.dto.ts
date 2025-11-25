@@ -16,7 +16,7 @@ import {
 export class SignUpPrivateDto {
   @ApiProperty({
     description: 'First name',
-    example: 'Jane',
+    example: 'Akua',
     minLength: 1,
     maxLength: 100,
   })
@@ -28,7 +28,7 @@ export class SignUpPrivateDto {
 
   @ApiProperty({
     description: 'Last name',
-    example: 'Doe',
+    example: 'Mensah',
     minLength: 1,
     maxLength: 100,
   })
@@ -40,7 +40,7 @@ export class SignUpPrivateDto {
 
   @ApiProperty({
     description: 'Email address',
-    example: 'jane.doe@example.com',
+    example: 'akua.mensah@gmail.com',
   })
   @IsEmail({}, { message: 'Invalid email format' })
   @MaxLength(254)
@@ -49,7 +49,7 @@ export class SignUpPrivateDto {
 
   @ApiProperty({
     description: 'Phone number (E.164 or international format)',
-    example: '+15551234567',
+    example: '+233244123456',
   })
   @IsString()
   @MinLength(5)

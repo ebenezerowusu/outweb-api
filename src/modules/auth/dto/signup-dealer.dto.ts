@@ -20,7 +20,7 @@ import {
 export class SignUpDealerDto {
   @ApiProperty({
     description: 'First name',
-    example: 'John',
+    example: 'Kwame',
   })
   @IsString()
   @MinLength(1)
@@ -30,7 +30,7 @@ export class SignUpDealerDto {
 
   @ApiProperty({
     description: 'Last name',
-    example: 'Smith',
+    example: 'Boateng',
   })
   @IsString()
   @MinLength(1)
@@ -40,7 +40,7 @@ export class SignUpDealerDto {
 
   @ApiProperty({
     description: 'Email address',
-    example: 'john.smith@dealers.com',
+    example: 'kwame.boateng@accramotors.com',
   })
   @IsEmail({}, { message: 'Invalid email format' })
   @MaxLength(254)
@@ -49,7 +49,7 @@ export class SignUpDealerDto {
 
   @ApiProperty({
     description: 'Phone number',
-    example: '+15559876543',
+    example: '+233302123456',
   })
   @IsString()
   @MinLength(5)
@@ -59,7 +59,7 @@ export class SignUpDealerDto {
 
   @ApiProperty({
     description: 'Business address',
-    example: '123 Main Street, City, State',
+    example: 'Independence Avenue, Accra, Greater Accra',
   })
   @IsString()
   @MinLength(5)
@@ -95,7 +95,7 @@ export class SignUpDealerDto {
 
   @ApiProperty({
     description: 'Group name (required when representing dealer_group)',
-    example: 'Premium EV Dealers Group',
+    example: 'Accra Premium Auto Group',
     required: false,
   })
   @IsString()
@@ -123,7 +123,7 @@ export class SignUpDealerDto {
 
   @ApiProperty({
     description: 'Company name',
-    example: 'Premium Used Tesla',
+    example: 'Accra Motors',
   })
   @IsString()
   @MinLength(1)
@@ -151,7 +151,7 @@ export class SignUpDealerDto {
 
   @ApiProperty({
     description: 'Business site locations (1-20 locations)',
-    example: ['Downtown branch - 123 Main Street', 'Airport branch - Terminal Road'],
+    example: ['Osu branch - Oxford Street, Accra', 'Airport City branch - Liberation Road'],
     type: [String],
   })
   @IsArray()
