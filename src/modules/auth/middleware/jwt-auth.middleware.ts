@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { JwtService } from '../services/jwt.service';
 
@@ -8,6 +8,8 @@ import { JwtService } from '../services/jwt.service';
  */
 @Injectable()
 export class JwtAuthMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(JwtAuthMiddleware.name);
+
   constructor(private readonly jwtService: JwtService) {}
 
   async use(req: FastifyRequest['raw'], res: FastifyReply['raw'], next: () => void) {
@@ -24,8 +26,11 @@ export class JwtAuthMiddleware implements NestMiddleware {
         const payload = await this.jwtService.verifyAccessToken(token);
         request.user = payload;
       } catch (error) {
-        // Don't throw here, let RbacGuard handle it
+        // Log the error for debugging but don't throw
         // This allows @SkipAuth() routes to work
+        this.logger.warn(
+          `JWT verification failed for ${request.method} ${request.url}: ${error.message}`,
+        );
       }
     }
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SignJWT, jwtVerify } from 'jose';
 import { AppConfig } from '@/config/app.config';
@@ -10,6 +10,7 @@ import { JwtPayload, TokenResponse } from '@/common/types/token.type';
  */
 @Injectable()
 export class JwtService {
+  private readonly logger = new Logger(JwtService.name);
   private accessSecret: Uint8Array;
   private refreshSecret: Uint8Array;
   private accessExpiresIn: number;
@@ -33,6 +34,8 @@ export class JwtService {
     this.refreshExpiresIn = this.configService.get('jwtRefreshExpiresIn', {
       infer: true,
     }) || 604800;
+
+    this.logger.log('JWT Service initialized');
   }
 
   /**
@@ -71,7 +74,8 @@ export class JwtService {
       const { payload } = await jwtVerify(token, this.accessSecret);
       return payload as unknown as JwtPayload;
     } catch (error) {
-      throw new Error('Invalid or expired access token');
+      this.logger.debug(`Access token verification failed: ${error.message}`);
+      throw new Error(`Invalid or expired access token: ${error.message}`);
     }
   }
 
