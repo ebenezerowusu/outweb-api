@@ -5,19 +5,29 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { CosmosService } from '@/common/services/cosmos.service';
-import { PaginatedResponse } from '@/common/types/pagination.type';
-import { TaxonomyDocument, PublicTaxonomy, TaxonomyCategory } from './interfaces/taxonomy.interface';
-import { CreateTaxonomyDto } from './dto/create-taxonomy.dto';
+import {
+  TaxonomyDocument,
+  TaxonomyOption,
+  PublicTaxonomy,
+  TaxonomySummary,
+} from './interfaces/taxonomy.interface';
+import {
+  QueryTaxonomiesDto,
+  GetTaxonomyOptionsDto,
+  BulkGetTaxonomiesDto,
+} from './dto/query-taxonomy.dto';
+import {
+  CreateTaxonomyDto,
+  AddTaxonomyOptionsDto,
+} from './dto/create-taxonomy.dto';
 import {
   UpdateTaxonomyDto,
-  UpdateTaxonomyStatusDto,
-  BulkUpdateTaxonomiesDto,
+  UpdateTaxonomyOptionDto,
 } from './dto/update-taxonomy.dto';
-import { QueryTaxonomiesDto, SuggestTaxonomiesDto } from './dto/query-taxonomy.dto';
 
 /**
  * Taxonomies Service
- * Handles vehicle classifications and attributes
+ * Handles taxonomy categories and options for vehicle classifications
  */
 @Injectable()
 export class TaxonomiesService {
@@ -26,515 +36,456 @@ export class TaxonomiesService {
   constructor(private readonly cosmosService: CosmosService) {}
 
   /**
-   * Generate URL-friendly slug from name
+   * GET /taxonomies
+   * List all taxonomy categories (lightweight)
    */
-  private generateSlug(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+  async findAll(query: QueryTaxonomiesDto): Promise<{ data: TaxonomySummary[] }> {
+    // Query all taxonomies
+    const sqlQuery = 'SELECT c.id, c.category, c.order, ARRAY_LENGTH(c.options) as optionCount FROM c';
+
+    const { items } = await this.cosmosService.queryItems<{
+      id: string;
+      category: string;
+      order: number;
+      optionCount: number;
+    }>(this.TAXONOMIES_CONTAINER, sqlQuery, [], 1000);
+
+    // Filter out empty if needed
+    let taxonomies = items;
+    if (!query.includeEmpty) {
+      taxonomies = items.filter((t) => t.optionCount > 0);
+    }
+
+    // Sort
+    if (query.sortBy === 'order') {
+      taxonomies.sort((a, b) => a.order - b.order);
+    } else {
+      taxonomies.sort((a, b) => a.id.localeCompare(b.id));
+    }
+
+    return { data: taxonomies };
   }
 
   /**
-   * List taxonomies with filters and pagination
+   * GET /taxonomies/:categoryId
+   * Get a single taxonomy (full object + options)
    */
-  async findAll(query: QueryTaxonomiesDto): Promise<PaginatedResponse<PublicTaxonomy>> {
-    let sqlQuery = 'SELECT * FROM c WHERE 1=1';
-    const parameters: any[] = [];
-
-    // Filter by category
-    if (query.category) {
-      sqlQuery += ' AND c.category = @category';
-      parameters.push({ name: '@category', value: query.category });
-    }
-
-    // Filter by parent ID
-    if (query.parentId) {
-      sqlQuery += ' AND c.parent.id = @parentId';
-      parameters.push({ name: '@parentId', value: query.parentId });
-    }
-
-    // Search by name or slug
-    if (query.search) {
-      sqlQuery += ' AND (CONTAINS(LOWER(c.name), @search) OR CONTAINS(LOWER(c.slug), @search))';
-      parameters.push({ name: '@search', value: query.search.toLowerCase() });
-    }
-
-    // Filter by active status
-    if (query.isActive !== undefined) {
-      sqlQuery += ' AND c.status.isActive = @isActive';
-      parameters.push({ name: '@isActive', value: query.isActive });
-    }
-
-    // Filter by visibility status
-    if (query.isVisible !== undefined) {
-      sqlQuery += ' AND c.status.isVisible = @isVisible';
-      parameters.push({ name: '@isVisible', value: query.isVisible });
-    }
-
-    // Filter by popular status
-    if (query.isPopular !== undefined) {
-      sqlQuery += ' AND c.attributes.isPopular = @isPopular';
-      parameters.push({ name: '@isPopular', value: query.isPopular });
-    }
-
-    // Order by display order, then name
-    sqlQuery += ' ORDER BY c.attributes.displayOrder ASC, c.name ASC';
-
-    const { items, continuationToken } = await this.cosmosService.queryItems<TaxonomyDocument>(
-      this.TAXONOMIES_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
-
-    return {
-      items: items.map((taxonomy) => this.toPublicTaxonomy(taxonomy)),
-      count: items.length,
-      nextCursor: continuationToken || null,
-    };
-  }
-
-  /**
-   * Get single taxonomy by ID
-   */
-  async findOne(id: string): Promise<PublicTaxonomy> {
-    const taxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
-      this.TAXONOMIES_CONTAINER,
-      id,
-      id,
-    );
-
-    if (!taxonomy) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: 'Not Found',
-        message: 'Taxonomy not found',
-      });
-    }
-
-    return this.toPublicTaxonomy(taxonomy);
-  }
-
-  /**
-   * Get taxonomy by slug
-   */
-  async findBySlug(category: string, slug: string): Promise<PublicTaxonomy> {
-    const query = 'SELECT * FROM c WHERE c.category = @category AND c.slug = @slug';
-    const parameters = [
-      { name: '@category', value: category },
-      { name: '@slug', value: slug },
-    ];
-
-    const { items } = await this.cosmosService.queryItems<TaxonomyDocument>(
-      this.TAXONOMIES_CONTAINER,
-      query,
-      parameters,
-      1,
-    );
-
-    if (items.length === 0) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: 'Not Found',
-        message: 'Taxonomy not found',
-      });
-    }
-
-    return this.toPublicTaxonomy(items[0]);
-  }
-
-  /**
-   * Create new taxonomy
-   */
-  async create(dto: CreateTaxonomyDto, createdBy: string): Promise<PublicTaxonomy> {
-    // Generate slug if not provided
-    const slug = dto.slug || this.generateSlug(dto.name);
-
-    // Check for duplicate slug within the same category
-    const duplicateQuery = 'SELECT * FROM c WHERE c.category = @category AND c.slug = @slug';
-    const { items: duplicates } = await this.cosmosService.queryItems<TaxonomyDocument>(
-      this.TAXONOMIES_CONTAINER,
-      duplicateQuery,
-      [
-        { name: '@category', value: dto.category },
-        { name: '@slug', value: slug },
-      ],
-      1,
-    );
-
-    if (duplicates.length > 0) {
-      throw new ConflictException({
-        statusCode: 409,
-        error: 'Conflict',
-        message: `Taxonomy with slug '${slug}' already exists in category '${dto.category}'`,
-      });
-    }
-
-    // Handle parent taxonomy if provided
-    let parent: { id: string; name: string; slug: string; category: TaxonomyCategory } | null = null;
-    let hierarchyLevel = 0;
-    let hierarchyPath: string[] = [];
-
-    if (dto.parentId) {
-      const parentTaxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
-        this.TAXONOMIES_CONTAINER,
-        dto.parentId,
-        dto.parentId,
-      );
-
-      if (!parentTaxonomy) {
-        throw new BadRequestException({
-          statusCode: 400,
-          error: 'Bad Request',
-          message: 'Parent taxonomy not found',
-        });
-      }
-
-      parent = {
-        id: parentTaxonomy.id,
-        name: parentTaxonomy.name,
-        slug: parentTaxonomy.slug,
-        category: parentTaxonomy.category,
-      };
-
-      hierarchyLevel = parentTaxonomy.hierarchy.level + 1;
-      hierarchyPath = [...parentTaxonomy.hierarchy.path, parentTaxonomy.id];
-    }
-
-    const now = new Date().toISOString();
-    const taxonomyId = this.cosmosService.generateId();
-
-    const taxonomy: TaxonomyDocument = {
-      id: taxonomyId,
-      type: 'taxonomy',
-      category: dto.category,
-      name: dto.name,
-      slug: slug,
-      description: dto.description || null,
-      parent: parent,
-      hierarchy: {
-        level: hierarchyLevel,
-        path: hierarchyPath,
-        hasChildren: false,
-        childCount: 0,
-      },
-      attributes: {
-        displayOrder: dto.displayOrder ?? 0,
-        isPopular: dto.isPopular ?? false,
-        usageCount: 0,
-        metadata: dto.metadata || {},
-      },
-      seo: {
-        metaTitle: dto.metaTitle || null,
-        metaDescription: dto.metaDescription || null,
-        metaKeywords: dto.metaKeywords || null,
-      },
-      status: {
-        isActive: true,
-        isVisible: true,
-      },
-      audit: {
-        createdAt: now,
-        updatedAt: now,
-        createdBy: createdBy,
-        updatedBy: createdBy,
-      },
-    };
-
-    const createdTaxonomy = await this.cosmosService.createItem(
-      this.TAXONOMIES_CONTAINER,
-      taxonomy,
-    );
-
-    // Update parent's child count if applicable
-    if (parent) {
-      await this.updateParentChildCount(parent.id);
-    }
-
-    return this.toPublicTaxonomy(createdTaxonomy);
-  }
-
-  /**
-   * Update taxonomy
-   */
-  async update(
-    id: string,
-    dto: UpdateTaxonomyDto,
-    updatedBy: string,
+  async findOne(
+    categoryId: string,
+    query: GetTaxonomyOptionsDto,
   ): Promise<PublicTaxonomy> {
     const taxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
       this.TAXONOMIES_CONTAINER,
-      id,
-      id,
+      categoryId,
+      categoryId,
     );
 
     if (!taxonomy) {
       throw new NotFoundException({
         statusCode: 404,
         error: 'Not Found',
-        message: 'Taxonomy not found',
+        message: `Taxonomy '${categoryId}' not found`,
       });
     }
 
-    // Update fields
-    if (dto.name !== undefined) {
-      taxonomy.name = dto.name;
-      // Regenerate slug if name changes and no custom slug provided
-      if (!dto.slug) {
-        taxonomy.slug = this.generateSlug(dto.name);
-      }
+    // Filter and sort options
+    let options = taxonomy.options;
+
+    // Filter by activeOnly
+    if (query.activeOnly) {
+      options = options.filter((opt) => opt.isActive);
     }
 
-    if (dto.slug !== undefined) {
-      // Check for duplicate slug
-      const duplicateQuery = 'SELECT * FROM c WHERE c.category = @category AND c.slug = @slug AND c.id != @id';
-      const { items: duplicates } = await this.cosmosService.queryItems<TaxonomyDocument>(
-        this.TAXONOMIES_CONTAINER,
-        duplicateQuery,
-        [
-          { name: '@category', value: taxonomy.category },
-          { name: '@slug', value: dto.slug },
-          { name: '@id', value: id },
-        ],
-        1,
+    // Filter by make (for model taxonomy)
+    if (query.make && categoryId === 'model') {
+      options = options.filter((opt) => opt.make === query.make);
+    }
+
+    // Search by query
+    if (query.q) {
+      const searchTerm = query.q.toLowerCase();
+      options = options.filter((opt) =>
+        opt.label.toLowerCase().includes(searchTerm),
       );
-
-      if (duplicates.length > 0) {
-        throw new ConflictException({
-          statusCode: 409,
-          error: 'Conflict',
-          message: `Taxonomy with slug '${dto.slug}' already exists in category '${taxonomy.category}'`,
-        });
-      }
-
-      taxonomy.slug = dto.slug;
     }
 
-    if (dto.description !== undefined) {
-      taxonomy.description = dto.description;
+    // Sort
+    if (query.sortBy === 'label') {
+      options.sort((a, b) => a.label.localeCompare(b.label));
+    } else {
+      options.sort((a, b) => a.order - b.order);
     }
 
-    if (dto.displayOrder !== undefined) {
-      taxonomy.attributes.displayOrder = dto.displayOrder;
+    // Limit results
+    if (query.limit) {
+      options = options.slice(0, query.limit);
     }
 
-    if (dto.isPopular !== undefined) {
-      taxonomy.attributes.isPopular = dto.isPopular;
-    }
-
-    if (dto.metaTitle !== undefined) {
-      taxonomy.seo.metaTitle = dto.metaTitle;
-    }
-
-    if (dto.metaDescription !== undefined) {
-      taxonomy.seo.metaDescription = dto.metaDescription;
-    }
-
-    if (dto.metaKeywords !== undefined) {
-      taxonomy.seo.metaKeywords = dto.metaKeywords;
-    }
-
-    if (dto.metadata !== undefined) {
-      taxonomy.attributes.metadata = { ...taxonomy.attributes.metadata, ...dto.metadata };
-    }
-
-    taxonomy.audit.updatedAt = new Date().toISOString();
-    taxonomy.audit.updatedBy = updatedBy;
-
-    const updatedTaxonomy = await this.cosmosService.updateItem(
-      this.TAXONOMIES_CONTAINER,
-      taxonomy,
-      taxonomy.id,
-    );
-
-    return this.toPublicTaxonomy(updatedTaxonomy);
+    return {
+      ...taxonomy,
+      options,
+    };
   }
 
   /**
-   * Update taxonomy status
+   * GET /taxonomies/:categoryId/options
+   * Get options for a taxonomy (for select dropdowns)
    */
-  async updateStatus(id: string, dto: UpdateTaxonomyStatusDto): Promise<PublicTaxonomy> {
-    const taxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
-      this.TAXONOMIES_CONTAINER,
-      id,
-      id,
-    );
+  async findOptions(
+    categoryId: string,
+    query: GetTaxonomyOptionsDto,
+  ): Promise<{
+    data: TaxonomyOption[];
+    meta: {
+      categoryId: string;
+      categoryLabel: string;
+      limit: number;
+      cursor: string | null;
+    };
+  }> {
+    const taxonomy = await this.findOne(categoryId, query);
 
-    if (!taxonomy) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: 'Not Found',
-        message: 'Taxonomy not found',
-      });
-    }
-
-    if (dto.isActive !== undefined) {
-      taxonomy.status.isActive = dto.isActive;
-    }
-
-    if (dto.isVisible !== undefined) {
-      taxonomy.status.isVisible = dto.isVisible;
-    }
-
-    taxonomy.audit.updatedAt = new Date().toISOString();
-
-    const updatedTaxonomy = await this.cosmosService.updateItem(
-      this.TAXONOMIES_CONTAINER,
-      taxonomy,
-      taxonomy.id,
-    );
-
-    return this.toPublicTaxonomy(updatedTaxonomy);
+    return {
+      data: taxonomy.options,
+      meta: {
+        categoryId: taxonomy.id,
+        categoryLabel: this.getCategoryLabel(taxonomy.category),
+        limit: query.limit || 100,
+        cursor: null,
+      },
+    };
   }
 
   /**
-   * Bulk update taxonomies
+   * GET /taxonomies/bulk
+   * Fetch multiple categories in one call
    */
-  async bulkUpdate(dto: BulkUpdateTaxonomiesDto): Promise<{ updated: number }> {
-    let updateCount = 0;
+  async findBulk(
+    query: BulkGetTaxonomiesDto,
+  ): Promise<{ data: Record<string, PublicTaxonomy> }> {
+    const categories = query.categories.split(',').map((c) => c.trim());
+    const result: Record<string, PublicTaxonomy> = {};
 
-    for (const id of dto.ids) {
+    for (const categoryId of categories) {
       try {
-        const taxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
-          this.TAXONOMIES_CONTAINER,
-          id,
-          id,
-        );
-
-        if (taxonomy) {
-          if (dto.isActive !== undefined) {
-            taxonomy.status.isActive = dto.isActive;
-          }
-          if (dto.isVisible !== undefined) {
-            taxonomy.status.isVisible = dto.isVisible;
-          }
-          if (dto.isPopular !== undefined) {
-            taxonomy.attributes.isPopular = dto.isPopular;
-          }
-
-          taxonomy.audit.updatedAt = new Date().toISOString();
-
-          await this.cosmosService.updateItem(
-            this.TAXONOMIES_CONTAINER,
-            taxonomy,
-            taxonomy.id,
-          );
-
-          updateCount++;
-        }
+        const taxonomy = await this.findOne(categoryId, {
+          activeOnly: query.activeOnly,
+          sortBy: 'order',
+          limit: 1000,
+        });
+        result[categoryId] = taxonomy;
       } catch (error) {
-        // Continue with next item on error
+        // Skip missing taxonomies
         continue;
       }
     }
 
-    return { updated: updateCount };
+    return { data: result };
   }
 
   /**
-   * Delete taxonomy
+   * POST /taxonomies
+   * Create a new taxonomy category (admin)
    */
-  async delete(id: string): Promise<void> {
+  async create(dto: CreateTaxonomyDto): Promise<PublicTaxonomy> {
+    // Validate that id equals category
+    if (dto.id !== dto.category) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Taxonomy id must equal category',
+      });
+    }
+
+    // Check if taxonomy already exists
+    const existing = await this.cosmosService.readItem<TaxonomyDocument>(
+      this.TAXONOMIES_CONTAINER,
+      dto.id,
+      dto.category,
+    );
+
+    if (existing) {
+      throw new ConflictException({
+        statusCode: 409,
+        error: 'Conflict',
+        message: `Taxonomy '${dto.id}' already exists`,
+      });
+    }
+
+    // Validate option IDs are unique
+    const optionIds = dto.options.map((opt) => opt.id);
+    const uniqueIds = new Set(optionIds);
+    if (optionIds.length !== uniqueIds.size) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Option IDs must be unique within taxonomy',
+      });
+    }
+
+    // Validate option values are unique
+    const optionValues = dto.options.map((opt) => opt.value);
+    const uniqueValues = new Set(optionValues);
+    if (optionValues.length !== uniqueValues.size) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Option values must be unique within taxonomy',
+      });
+    }
+
+    // Validate option slugs are unique (if provided)
+    const optionSlugs = dto.options
+      .filter((opt) => opt.slug)
+      .map((opt) => opt.slug);
+    const uniqueSlugs = new Set(optionSlugs);
+    if (optionSlugs.length !== uniqueSlugs.size) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Option slugs must be unique within taxonomy',
+      });
+    }
+
+    const taxonomy: TaxonomyDocument = {
+      id: dto.id,
+      category: dto.category,
+      order: dto.order,
+      options: dto.options,
+    };
+
+    const created = await this.cosmosService.createItem(
+      this.TAXONOMIES_CONTAINER,
+      taxonomy,
+    );
+
+    return created;
+  }
+
+  /**
+   * PATCH /taxonomies/:categoryId
+   * Update taxonomy metadata or replace full options
+   */
+  async update(
+    categoryId: string,
+    dto: UpdateTaxonomyDto,
+  ): Promise<PublicTaxonomy> {
     const taxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
       this.TAXONOMIES_CONTAINER,
-      id,
-      id,
+      categoryId,
+      categoryId,
     );
 
     if (!taxonomy) {
       throw new NotFoundException({
         statusCode: 404,
         error: 'Not Found',
-        message: 'Taxonomy not found',
+        message: `Taxonomy '${categoryId}' not found`,
       });
     }
 
-    // Check if taxonomy has children
-    if (taxonomy.hierarchy.hasChildren && taxonomy.hierarchy.childCount > 0) {
-      throw new BadRequestException({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Cannot delete taxonomy with children',
+    // Update order if provided
+    if (dto.order !== undefined) {
+      taxonomy.order = dto.order;
+    }
+
+    // Replace options if provided
+    if (dto.options !== undefined) {
+      // Validate option IDs are unique
+      const optionIds = dto.options.map((opt) => opt.id);
+      const uniqueIds = new Set(optionIds);
+      if (optionIds.length !== uniqueIds.size) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Option IDs must be unique within taxonomy',
+        });
+      }
+
+      // Validate option values are unique
+      const optionValues = dto.options.map((opt) => opt.value);
+      const uniqueValues = new Set(optionValues);
+      if (optionValues.length !== uniqueValues.size) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Option values must be unique within taxonomy',
+        });
+      }
+
+      taxonomy.options = dto.options;
+    }
+
+    const updated = await this.cosmosService.updateItem(
+      this.TAXONOMIES_CONTAINER,
+      taxonomy,
+      categoryId,
+    );
+
+    return updated;
+  }
+
+  /**
+   * POST /taxonomies/:categoryId/options
+   * Add one or more options to a taxonomy
+   */
+  async addOptions(
+    categoryId: string,
+    dto: AddTaxonomyOptionsDto,
+  ): Promise<PublicTaxonomy> {
+    const taxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
+      this.TAXONOMIES_CONTAINER,
+      categoryId,
+      categoryId,
+    );
+
+    if (!taxonomy) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Taxonomy '${categoryId}' not found`,
       });
     }
 
-    // TODO: Implement delete in CosmosService
-    // await this.cosmosService.deleteItem(this.TAXONOMIES_CONTAINER, id, id);
-
-    // Update parent's child count if applicable
-    if (taxonomy.parent) {
-      await this.updateParentChildCount(taxonomy.parent.id);
-    }
-  }
-
-  /**
-   * Autocomplete/suggest taxonomies
-   */
-  async suggest(dto: SuggestTaxonomiesDto): Promise<PublicTaxonomy[]> {
-    let sqlQuery = 'SELECT * FROM c WHERE c.category = @category AND c.status.isActive = true AND c.status.isVisible = true';
-    const parameters: any[] = [{ name: '@category', value: dto.category }];
-
-    // Add search filter
-    sqlQuery += ' AND (STARTSWITH(LOWER(c.name), @query) OR CONTAINS(LOWER(c.name), @query))';
-    parameters.push({ name: '@query', value: dto.query.toLowerCase() });
-
-    // Filter by parent if provided
-    if (dto.parentId) {
-      sqlQuery += ' AND c.parent.id = @parentId';
-      parameters.push({ name: '@parentId', value: dto.parentId });
+    // Validate new option IDs don't conflict with existing
+    const existingIds = new Set(taxonomy.options.map((opt) => opt.id));
+    const newIds = dto.options.map((opt) => opt.id);
+    const conflicts = newIds.filter((id) => existingIds.has(id));
+    if (conflicts.length > 0) {
+      throw new ConflictException({
+        statusCode: 409,
+        error: 'Conflict',
+        message: `Option IDs already exist: ${conflicts.join(', ')}`,
+      });
     }
 
-    // Order by popularity and usage
-    sqlQuery += ' ORDER BY c.attributes.isPopular DESC, c.attributes.usageCount DESC, c.name ASC';
+    // Validate new option values don't conflict
+    const existingValues = new Set(taxonomy.options.map((opt) => opt.value));
+    const newValues = dto.options.map((opt) => opt.value);
+    const valueConflicts = newValues.filter((val) => existingValues.has(val));
+    if (valueConflicts.length > 0) {
+      throw new ConflictException({
+        statusCode: 409,
+        error: 'Conflict',
+        message: `Option values already exist: ${valueConflicts.join(', ')}`,
+      });
+    }
 
-    const { items } = await this.cosmosService.queryItems<TaxonomyDocument>(
+    // Add new options
+    taxonomy.options = [...taxonomy.options, ...dto.options];
+
+    const updated = await this.cosmosService.updateItem(
       this.TAXONOMIES_CONTAINER,
-      sqlQuery,
-      parameters,
-      dto.limit,
+      taxonomy,
+      categoryId,
     );
 
-    return items.map((taxonomy) => this.toPublicTaxonomy(taxonomy));
+    return updated;
   }
 
   /**
-   * Update parent taxonomy's child count
+   * PATCH /taxonomies/:categoryId/options/:optionId
+   * Update a single option (label, slug, isActive, etc.)
    */
-  private async updateParentChildCount(parentId: string): Promise<void> {
-    const parent = await this.cosmosService.readItem<TaxonomyDocument>(
+  async updateOption(
+    categoryId: string,
+    optionId: number,
+    dto: UpdateTaxonomyOptionDto,
+  ): Promise<PublicTaxonomy> {
+    const taxonomy = await this.cosmosService.readItem<TaxonomyDocument>(
       this.TAXONOMIES_CONTAINER,
-      parentId,
-      parentId,
+      categoryId,
+      categoryId,
     );
 
-    if (parent) {
-      // Count children
-      const query = 'SELECT VALUE COUNT(1) FROM c WHERE c.parent.id = @parentId';
-      const { items } = await this.cosmosService.queryItems<number>(
-        this.TAXONOMIES_CONTAINER,
-        query,
-        [{ name: '@parentId', value: parentId }],
-        1,
-      );
-
-      const childCount = items[0] || 0;
-      parent.hierarchy.childCount = childCount;
-      parent.hierarchy.hasChildren = childCount > 0;
-
-      await this.cosmosService.updateItem(
-        this.TAXONOMIES_CONTAINER,
-        parent,
-        parent.id,
-      );
+    if (!taxonomy) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Taxonomy '${categoryId}' not found`,
+      });
     }
+
+    // Find the option
+    const optionIndex = taxonomy.options.findIndex((opt) => opt.id === optionId);
+    if (optionIndex === -1) {
+      throw new NotFoundException({
+        statusCode: 404,
+        error: 'Not Found',
+        message: `Option with ID ${optionId} not found in taxonomy '${categoryId}'`,
+      });
+    }
+
+    // Update option fields
+    const option = taxonomy.options[optionIndex];
+    if (dto.label !== undefined) option.label = dto.label;
+    if (dto.value !== undefined) option.value = dto.value;
+    if (dto.slug !== undefined) option.slug = dto.slug;
+    if (dto.order !== undefined) option.order = dto.order;
+    if (dto.isActive !== undefined) option.isActive = dto.isActive;
+    if (dto.make !== undefined) option.make = dto.make;
+
+    // Update any additional fields
+    Object.keys(dto).forEach((key) => {
+      if (!['label', 'value', 'slug', 'order', 'isActive', 'make'].includes(key)) {
+        option[key] = dto[key];
+      }
+    });
+
+    taxonomy.options[optionIndex] = option;
+
+    const updated = await this.cosmosService.updateItem(
+      this.TAXONOMIES_CONTAINER,
+      taxonomy,
+      categoryId,
+    );
+
+    return updated;
   }
 
   /**
-   * Helper: Convert TaxonomyDocument to PublicTaxonomy
+   * DELETE /taxonomies/:categoryId/options/:optionId
+   * Soft-delete / disable an option (set isActive = false)
    */
-  private toPublicTaxonomy(taxonomy: TaxonomyDocument): PublicTaxonomy {
-    return taxonomy;
+  async deleteOption(categoryId: string, optionId: number): Promise<void> {
+    await this.updateOption(categoryId, optionId, { isActive: false });
+  }
+
+  /**
+   * Helper: Get category label
+   */
+  private getCategoryLabel(category: string): string {
+    const labels: Record<string, string> = {
+      listingStatus: 'Listing Status',
+      saleTypes: 'Sale Types',
+      sellerType: 'Seller Type',
+      make: 'Make',
+      model: 'Model',
+      color: 'Color',
+      condition: 'Condition',
+      country: 'Country',
+      trim: 'Trim',
+      autopilotPackage: 'Autopilot Package',
+      dealerBrand: 'Dealer Brand',
+      wheelType: 'Wheel Type',
+      interiorColor: 'Interior Color',
+      exteriorColor: 'Exterior Color',
+      drivetrain: 'Drivetrain',
+      bodyStyle: 'Body Style',
+      insuranceCategory: 'Insurance Category',
+      feature: 'Feature',
+      whoYouRepresenting: 'Who You Representing',
+      businessType: 'Business Type',
+      syndicationSystem: 'Syndication System',
+      publishTypes: 'Publish Types',
+      chargingConnector: 'Charging Connector',
+      vehicleCondition: 'Vehicle Condition',
+      vehicleHistoryReport: 'Vehicle History Report',
+      vehicleModel: 'Vehicle Model',
+      batterySize: 'Battery Size',
+      hardwareVersion: 'Hardware Version',
+    };
+
+    return labels[category] || category;
   }
 }

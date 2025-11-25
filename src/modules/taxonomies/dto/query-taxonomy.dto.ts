@@ -2,112 +2,100 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsOptional,
   IsString,
-  IsEnum,
   IsBoolean,
+  IsEnum,
   IsInt,
   Min,
   Max,
+  Length,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { TaxonomyCategory } from '../interfaces/taxonomy.interface';
+import { Type, Transform } from 'class-transformer';
 
 /**
- * Query Taxonomies DTO
- * Used for filtering and pagination in GET /taxonomies
+ * Query Taxonomies DTO (GET /taxonomies)
+ * List all taxonomy categories (lightweight)
  */
 export class QueryTaxonomiesDto {
   @ApiProperty({
-    description: 'Filter by taxonomy category',
-    enum: [
-      'make',
-      'model',
-      'trim',
-      'year',
-      'color',
-      'interior_color',
-      'body_type',
-      'drivetrain',
-      'battery_size',
-      'feature',
-      'condition',
-    ],
+    description: 'Include empty categories (with no options)',
     required: false,
+    default: true,
   })
-  @IsEnum([
-    'make',
-    'model',
-    'trim',
-    'year',
-    'color',
-    'interior_color',
-    'body_type',
-    'drivetrain',
-    'battery_size',
-    'feature',
-    'condition',
-  ])
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
   @IsOptional()
-  category?: TaxonomyCategory;
+  includeEmpty?: boolean = true;
 
   @ApiProperty({
-    description: 'Filter by parent taxonomy ID',
+    description: 'Sort by field',
+    enum: ['order', 'id'],
+    required: false,
+    default: 'order',
+  })
+  @IsEnum(['order', 'id'])
+  @IsOptional()
+  sortBy?: 'order' | 'id' = 'order';
+}
+
+/**
+ * Get Taxonomy Options DTO (GET /taxonomies/:categoryId/options)
+ */
+export class GetTaxonomyOptionsDto {
+  @ApiProperty({
+    description: 'Return only active options',
+    required: false,
+    default: true,
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  @IsOptional()
+  activeOnly?: boolean = true;
+
+  @ApiProperty({
+    description: 'Sort options by field',
+    enum: ['order', 'label'],
+    required: false,
+    default: 'order',
+  })
+  @IsEnum(['order', 'label'])
+  @IsOptional()
+  sortBy?: 'order' | 'label' = 'order';
+
+  @ApiProperty({
+    description: 'Filter models by make (only for model taxonomy)',
     required: false,
   })
   @IsString()
   @IsOptional()
-  parentId?: string;
+  make?: string;
 
   @ApiProperty({
-    description: 'Search by name or slug',
+    description: 'Search query (case-insensitive search in label)',
     required: false,
+    minLength: 1,
+    maxLength: 64,
   })
   @IsString()
+  @Length(1, 64)
   @IsOptional()
-  search?: string;
+  q?: string;
 
   @ApiProperty({
-    description: 'Filter by active status',
+    description: 'Limit number of results',
     required: false,
-  })
-  @Type(() => Boolean)
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
-
-  @ApiProperty({
-    description: 'Filter by visibility status',
-    required: false,
-  })
-  @Type(() => Boolean)
-  @IsBoolean()
-  @IsOptional()
-  isVisible?: boolean;
-
-  @ApiProperty({
-    description: 'Filter by popular status',
-    required: false,
-  })
-  @Type(() => Boolean)
-  @IsBoolean()
-  @IsOptional()
-  isPopular?: boolean;
-
-  @ApiProperty({
-    description: 'Number of items per page (1-100)',
-    example: 20,
-    required: false,
+    default: 100,
     minimum: 1,
-    maximum: 100,
+    maximum: 1000,
   })
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(1000)
   @IsOptional()
-  limit?: number = 20;
+  limit?: number = 100;
 
   @ApiProperty({
-    description: 'Continuation token from previous page',
+    description: 'Cursor for pagination',
     required: false,
   })
   @IsString()
@@ -116,67 +104,24 @@ export class QueryTaxonomiesDto {
 }
 
 /**
- * Autocomplete/Suggest Taxonomies DTO
- * Used for GET /taxonomies/suggest
+ * Bulk Get Taxonomies DTO (GET /taxonomies/bulk)
  */
-export class SuggestTaxonomiesDto {
+export class BulkGetTaxonomiesDto {
   @ApiProperty({
-    description: 'Category to search within',
-    enum: [
-      'make',
-      'model',
-      'trim',
-      'year',
-      'color',
-      'interior_color',
-      'body_type',
-      'drivetrain',
-      'battery_size',
-      'feature',
-      'condition',
-    ],
-  })
-  @IsEnum([
-    'make',
-    'model',
-    'trim',
-    'year',
-    'color',
-    'interior_color',
-    'body_type',
-    'drivetrain',
-    'battery_size',
-    'feature',
-    'condition',
-  ])
-  category: TaxonomyCategory;
-
-  @ApiProperty({
-    description: 'Search query',
-    example: 'tes',
+    description: 'Comma-separated list of category IDs',
+    example: 'make,model,color,bodyStyle,drivetrain',
+    required: true,
   })
   @IsString()
-  query: string;
+  categories: string;
 
   @ApiProperty({
-    description: 'Parent taxonomy ID (for hierarchical filtering)',
+    description: 'Return only active options',
     required: false,
+    default: true,
   })
-  @IsString()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
   @IsOptional()
-  parentId?: string;
-
-  @ApiProperty({
-    description: 'Limit number of suggestions',
-    example: 10,
-    minimum: 1,
-    maximum: 50,
-    required: false,
-  })
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(50)
-  @IsOptional()
-  limit?: number = 10;
+  activeOnly?: boolean = true;
 }

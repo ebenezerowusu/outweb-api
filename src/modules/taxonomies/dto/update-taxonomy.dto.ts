@@ -1,109 +1,102 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
+  IsNumber,
   IsOptional,
   IsBoolean,
-  IsInt,
   IsArray,
-  IsObject,
+  ValidateNested,
+  Length,
   Min,
+  ArrayMinSize,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateTaxonomyOptionDto } from './create-taxonomy.dto';
 
 /**
- * Update Taxonomy DTO
- * Used for PATCH /taxonomies/:id
+ * Update Taxonomy DTO (PATCH /taxonomies/:categoryId)
+ * Can update order or replace entire options array
  */
 export class UpdateTaxonomyDto {
-  @ApiProperty({ description: 'Taxonomy name', required: false })
-  @IsString()
+  @ApiProperty({
+    description: 'Display order',
+    required: false,
+    minimum: 1,
+  })
+  @IsNumber()
+  @Min(1)
   @IsOptional()
-  name?: string;
+  order?: number;
 
-  @ApiProperty({ description: 'URL-friendly slug', required: false })
+  @ApiProperty({
+    description: 'Replace entire options array',
+    type: [CreateTaxonomyOptionDto],
+    required: false,
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => CreateTaxonomyOptionDto)
+  @IsOptional()
+  options?: CreateTaxonomyOptionDto[];
+}
+
+/**
+ * Update Taxonomy Option DTO (PATCH /taxonomies/:categoryId/options/:optionId)
+ */
+export class UpdateTaxonomyOptionDto {
+  @ApiProperty({
+    description: 'Option label',
+    required: false,
+  })
   @IsString()
+  @Length(1, 100)
+  @IsOptional()
+  label?: string;
+
+  @ApiProperty({
+    description: 'Option value',
+    required: false,
+  })
+  @IsString()
+  @Length(1, 100)
+  @IsOptional()
+  value?: string;
+
+  @ApiProperty({
+    description: 'URL-friendly slug',
+    required: false,
+  })
+  @IsString()
+  @Length(1, 100)
   @IsOptional()
   slug?: string;
 
-  @ApiProperty({ description: 'Taxonomy description', required: false })
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  @ApiProperty({ description: 'Display order for sorting', required: false })
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  displayOrder?: number;
-
-  @ApiProperty({ description: 'Mark as popular', required: false })
-  @IsBoolean()
-  @IsOptional()
-  isPopular?: boolean;
-
-  @ApiProperty({ description: 'SEO meta title', required: false })
-  @IsString()
-  @IsOptional()
-  metaTitle?: string;
-
-  @ApiProperty({ description: 'SEO meta description', required: false })
-  @IsString()
-  @IsOptional()
-  metaDescription?: string;
-
-  @ApiProperty({ description: 'SEO meta keywords', type: [String], required: false })
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  metaKeywords?: string[];
-
-  @ApiProperty({ description: 'Additional metadata', required: false })
-  @IsObject()
-  @IsOptional()
-  metadata?: Record<string, any>;
-}
-
-/**
- * Update Taxonomy Status DTO
- * Used for PATCH /taxonomies/:id/status
- */
-export class UpdateTaxonomyStatusDto {
-  @ApiProperty({ description: 'Active status', required: false })
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
-
-  @ApiProperty({ description: 'Visibility status', required: false })
-  @IsBoolean()
-  @IsOptional()
-  isVisible?: boolean;
-}
-
-/**
- * Bulk Update Taxonomies DTO
- * Used for PATCH /taxonomies/bulk
- */
-export class BulkUpdateTaxonomiesDto {
   @ApiProperty({
-    description: 'Array of taxonomy IDs to update',
-    type: [String],
-    example: ['tax_123', 'tax_456'],
+    description: 'Display order',
+    required: false,
   })
-  @IsArray()
-  @IsString({ each: true })
-  ids: string[];
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  order?: number;
 
-  @ApiProperty({ description: 'Active status', required: false })
+  @ApiProperty({
+    description: 'Is option active',
+    required: false,
+  })
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
 
-  @ApiProperty({ description: 'Visibility status', required: false })
-  @IsBoolean()
+  @ApiProperty({
+    description: 'Make (for model taxonomy)',
+    required: false,
+  })
+  @IsString()
   @IsOptional()
-  isVisible?: boolean;
+  make?: string;
 
-  @ApiProperty({ description: 'Mark as popular', required: false })
-  @IsBoolean()
-  @IsOptional()
-  isPopular?: boolean;
+  // Allow additional fields
+  [key: string]: any;
 }
