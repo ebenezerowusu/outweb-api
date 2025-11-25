@@ -1,137 +1,115 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
-  IsEnum,
-  IsOptional,
-  IsBoolean,
-  IsInt,
+  IsNumber,
   IsArray,
-  IsObject,
-  MinLength,
+  IsBoolean,
+  IsOptional,
+  ValidateNested,
+  Length,
   Min,
+  ArrayMinSize,
 } from 'class-validator';
-import { TaxonomyCategory } from '../interfaces/taxonomy.interface';
+import { Type } from 'class-transformer';
 
 /**
- * Create Taxonomy DTO
- * Used for POST /taxonomies
+ * Create Taxonomy Option DTO
  */
-export class CreateTaxonomyDto {
-  @ApiProperty({
-    description: 'Taxonomy category',
-    enum: [
-      'make',
-      'model',
-      'trim',
-      'year',
-      'color',
-      'interior_color',
-      'body_type',
-      'drivetrain',
-      'battery_size',
-      'feature',
-      'condition',
-    ],
-    example: 'make',
-  })
-  @IsEnum([
-    'make',
-    'model',
-    'trim',
-    'year',
-    'color',
-    'interior_color',
-    'body_type',
-    'drivetrain',
-    'battery_size',
-    'feature',
-    'condition',
-  ])
-  category: TaxonomyCategory;
+export class CreateTaxonomyOptionDto {
+  @ApiProperty({ description: 'Option ID (unique within taxonomy)', example: 1 })
+  @IsNumber()
+  @Min(1)
+  id: number;
 
-  @ApiProperty({ description: 'Taxonomy name', example: 'Tesla' })
+  @ApiProperty({ description: 'Option label', example: 'Tesla' })
   @IsString()
-  @MinLength(1)
-  name: string;
+  @Length(1, 100)
+  label: string;
+
+  @ApiProperty({ description: 'Option value', example: 'Tesla' })
+  @IsString()
+  @Length(1, 100)
+  value: string;
 
   @ApiProperty({
-    description: 'URL-friendly slug (auto-generated if not provided)',
+    description: 'URL-friendly slug',
     example: 'tesla',
     required: false,
   })
   @IsString()
+  @Length(1, 100)
   @IsOptional()
   slug?: string;
 
-  @ApiProperty({
-    description: 'Taxonomy description',
-    example: 'American electric vehicle manufacturer',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  description?: string;
+  @ApiProperty({ description: 'Display order', example: 1 })
+  @IsNumber()
+  @Min(1)
+  order: number;
 
-  @ApiProperty({
-    description: 'Parent taxonomy ID (for hierarchical relationships)',
-    example: 'tax_make_tesla',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  parentId?: string;
-
-  @ApiProperty({
-    description: 'Display order for sorting',
-    example: 1,
-    required: false,
-  })
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  displayOrder?: number;
-
-  @ApiProperty({
-    description: 'Mark as popular',
-    example: true,
-    required: false,
-  })
+  @ApiProperty({ description: 'Is option active', example: true })
   @IsBoolean()
-  @IsOptional()
-  isPopular?: boolean;
+  isActive: boolean;
 
   @ApiProperty({
-    description: 'SEO meta title',
+    description: 'Make (for model taxonomy)',
+    example: 'Tesla',
     required: false,
   })
   @IsString()
   @IsOptional()
-  metaTitle?: string;
+  make?: string;
 
+  // Allow additional fields
+  [key: string]: any;
+}
+
+/**
+ * Create Taxonomy DTO (POST /taxonomies)
+ */
+export class CreateTaxonomyDto {
   @ApiProperty({
-    description: 'SEO meta description',
-    required: false,
+    description: 'Taxonomy ID (must equal category)',
+    example: 'make',
   })
   @IsString()
-  @IsOptional()
-  metaDescription?: string;
+  @Length(1, 64)
+  id: string;
 
   @ApiProperty({
-    description: 'SEO meta keywords',
-    type: [String],
-    required: false,
+    description: 'Taxonomy category (must equal id)',
+    example: 'make',
+  })
+  @IsString()
+  @Length(1, 64)
+  category: string;
+
+  @ApiProperty({ description: 'Display order', example: 1, minimum: 1 })
+  @IsNumber()
+  @Min(1)
+  order: number;
+
+  @ApiProperty({
+    description: 'Taxonomy options',
+    type: [CreateTaxonomyOptionDto],
   })
   @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  metaKeywords?: string[];
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => CreateTaxonomyOptionDto)
+  options: CreateTaxonomyOptionDto[];
+}
 
+/**
+ * Add Taxonomy Options DTO (POST /taxonomies/:categoryId/options)
+ */
+export class AddTaxonomyOptionsDto {
   @ApiProperty({
-    description: 'Additional metadata as key-value pairs',
-    example: { manufacturer: 'Tesla, Inc.', founded: '2003' },
-    required: false,
+    description: 'Options to add',
+    type: [CreateTaxonomyOptionDto],
   })
-  @IsObject()
-  @IsOptional()
-  metadata?: Record<string, any>;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => CreateTaxonomyOptionDto)
+  options: CreateTaxonomyOptionDto[];
 }
