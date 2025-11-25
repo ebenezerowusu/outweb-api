@@ -45,7 +45,6 @@ export class SellersController {
    * List sellers with filters
    */
   @Get()
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'List sellers with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Sellers list retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
@@ -108,7 +107,6 @@ export class SellersController {
    */
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Update seller verification and approval status (Admin only)' })
   @ApiParam({ name: 'id', description: 'Seller ID' })
   @ApiResponse({ status: 200, description: 'Seller status updated successfully' })
@@ -126,7 +124,6 @@ export class SellersController {
    */
   @Patch(':id/meta')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Update seller metadata (Admin only)' })
   @ApiParam({ name: 'id', description: 'Seller ID' })
   @ApiResponse({ status: 200, description: 'Seller metadata updated successfully' })

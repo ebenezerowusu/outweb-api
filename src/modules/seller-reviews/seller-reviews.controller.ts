@@ -150,7 +150,6 @@ export class SellerReviewsController {
    */
   @Patch(':id/moderation')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_sellers')
   @ApiOperation({ summary: 'Update review moderation status (Admin only)' })
   @ApiParam({ name: 'sellerId', description: 'Seller ID' })
   @ApiParam({ name: 'id', description: 'Review ID' })

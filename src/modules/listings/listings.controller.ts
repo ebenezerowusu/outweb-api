@@ -72,7 +72,6 @@ export class ListingsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Create new listing (Seller or Admin)' })
   @ApiResponse({ status: 201, description: 'Listing created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
@@ -90,7 +89,6 @@ export class ListingsController {
    */
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Update listing (Seller or Admin)' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Listing updated successfully' })
@@ -110,7 +108,6 @@ export class ListingsController {
    */
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_listings', 'perm_publish_listings')
   @ApiOperation({ summary: 'Update listing status (Seller or Admin)' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Listing status updated successfully' })
@@ -129,7 +126,6 @@ export class ListingsController {
    */
   @Patch(':id/visibility')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Update listing visibility (Seller or Admin)' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Listing visibility updated successfully' })
@@ -148,7 +144,6 @@ export class ListingsController {
    */
   @Post(':id/feature')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_feature_listings')
   @ApiOperation({ summary: 'Feature a listing (Admin only)' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Listing featured successfully' })
@@ -166,7 +161,6 @@ export class ListingsController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RequirePermissions('perm_manage_listings')
   @ApiOperation({ summary: 'Delete listing (Seller or Admin)' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
   @ApiResponse({ status: 204, description: 'Listing deleted successfully' })
