@@ -15,6 +15,8 @@ import {
   UserDocument,
   PublicUser,
 } from '../interfaces/user.interface';
+import { SellerDocument } from '@/modules/sellers/interfaces/seller.interface';
+import { SellerGroupDocument } from '@/modules/seller-groups/interfaces/seller-group.interface';
 import { SignInDto } from '../dto/signin.dto';
 import { SignUpPrivateDto } from '../dto/signup-private.dto';
 import { SignUpDealerDto } from '../dto/signup-dealer.dto';
@@ -28,6 +30,8 @@ import { AppConfig } from '@/config/app.config';
 @Injectable()
 export class AuthService {
   private readonly USERS_CONTAINER = 'users';
+  private readonly SELLERS_CONTAINER = 'sellers';
+  private readonly SELLER_GROUPS_CONTAINER = 'sellerGroups';
 
   constructor(
     private readonly cosmosService: CosmosService,
@@ -140,6 +144,7 @@ export class AuthService {
     // Create user document
     const now = new Date().toISOString();
     const userId = this.generateUserId();
+    const sellerId = this.generateSellerId();
 
     const user: UserDocument = {
       id: userId,
@@ -182,7 +187,13 @@ export class AuthService {
         lastLoginAt: null,
         isActive: true,
       },
-      sellerMemberships: [],
+      sellerMemberships: [
+        {
+          sellerId: sellerId,
+          role: 'owner',
+          isPrimary: true,
+        },
+      ],
       roles: [{ roleId: 'role_buyer' }],
       customPermissions: [],
       preferences: {
@@ -206,8 +217,69 @@ export class AuthService {
       },
     };
 
-    // Save to Cosmos DB
+    // Save user to Cosmos DB
     await this.cosmosService.createItem(this.USERS_CONTAINER, user);
+
+    // Create seller document for private seller
+    const seller: SellerDocument = {
+      id: sellerId,
+      sellerType: 'private',
+      profile: {
+        email: dto.email.toLowerCase(),
+        phone: dto.phone,
+        address: {
+          street: '',
+          city: '',
+          state: '',
+          country: country,
+        },
+      },
+      market: {
+        country: country,
+        allowedCountries: [country],
+        source: 'user',
+      },
+      dealerDetails: null,
+      privateDetails: {
+        fullName: `${dto.firstName} ${dto.lastName}`,
+        idVerificationPhoto: null,
+      },
+      users: [
+        {
+          userId: userId,
+          role: 'owner',
+          joinedAt: now,
+          invitedBy: 'system',
+        },
+      ],
+      listings: [],
+      status: {
+        verified: false,
+        approved: false,
+        blocked: false,
+        blockedReason: null,
+      },
+      meta: {
+        rating: null,
+        reviewsCount: 0,
+        tags: [],
+        totalListings: 0,
+        activeListings: 0,
+        soldListings: 0,
+        averageRating: 0,
+        totalReviews: 0,
+        totalSales: 0,
+      },
+      audit: {
+        createdAt: now,
+        updatedAt: now,
+        createdBy: userId,
+        updatedBy: userId,
+      },
+    };
+
+    // Save seller to Cosmos DB
+    await this.cosmosService.createItem(this.SELLERS_CONTAINER, seller);
 
     // TODO: Send email verification email via SendGrid
 
@@ -357,7 +429,167 @@ export class AuthService {
     // Save user to Cosmos DB
     await this.cosmosService.createItem(this.USERS_CONTAINER, user);
 
-    // TODO: Create seller document in sellers container
+    // Create seller document for dealer
+    // Build businessSite object from businessSiteLocations array
+    const businessSite: { [key: string]: string } = {};
+    dto.businessSiteLocations.forEach((location, index) => {
+      businessSite[`site${index + 1}`] = location;
+    });
+
+    const seller: SellerDocument = {
+      id: sellerId,
+      sellerType: 'dealer',
+      profile: {
+        email: dto.email.toLowerCase(),
+        phone: dto.phone,
+        address: {
+          street: dto.address,
+          city: '',
+          state: '',
+          country: country,
+        },
+      },
+      market: {
+        country: country,
+        allowedCountries: [country],
+        source: 'user|phone|kyc',
+      },
+      dealerDetails: {
+        companyName: dto.companyName,
+        media: {
+          logo: null,
+          banner: null,
+        },
+        dealerType: dto.whoAreYouRepresenting,
+        dealerGroupId: null, // Will be set if creating a dealer group
+        businessType: dto.businessType,
+        licensePhoto: null,
+        licenseNumber: null,
+        licenseExpiration: null,
+        licenseStatus: null,
+        resaleCertificatePhoto: null,
+        sellersPermitPhoto: null,
+        owner: {
+          isOwner: dto.owner,
+          name: `${dto.firstName} ${dto.lastName}`,
+          email: dto.email.toLowerCase(),
+        },
+        insuranceDetails: {
+          provider: null,
+          policyNumber: null,
+          expirationDate: null,
+        },
+        syndicationSystem: dto.syndicationSystem,
+        syndicationApiKey: null,
+        businessSite: businessSite,
+        businessSiteLocations: dto.businessSiteLocations,
+      },
+      privateDetails: null,
+      users: [
+        {
+          userId: userId,
+          role: 'owner',
+          joinedAt: now,
+          invitedBy: 'system',
+        },
+      ],
+      listings: [],
+      status: {
+        verified: false,
+        approved: false,
+        blocked: false,
+        blockedReason: null,
+      },
+      meta: {
+        rating: null,
+        reviewsCount: 0,
+        tags: [],
+        totalListings: 0,
+        activeListings: 0,
+        soldListings: 0,
+        averageRating: 0,
+        totalReviews: 0,
+        totalSales: 0,
+      },
+      audit: {
+        createdAt: now,
+        updatedAt: now,
+        createdBy: userId,
+        updatedBy: userId,
+      },
+    };
+
+    // Save seller to Cosmos DB
+    await this.cosmosService.createItem(this.SELLERS_CONTAINER, seller);
+
+    // Create seller group if representing a dealer group
+    if (dto.whoAreYouRepresenting === 'dealer_group' && dto.groupName) {
+      const sellerGroupId = this.generateSellerGroupId();
+
+      const sellerGroup: SellerGroupDocument = {
+        id: sellerGroupId,
+        type: 'seller_group',
+        profile: {
+          name: dto.groupName,
+          description: null,
+          media: {
+            logo: null,
+            banner: null,
+          },
+          website: null,
+          phone: dto.phone,
+          email: dto.email.toLowerCase(),
+        },
+        headquarters: {
+          address: {
+            street: dto.address,
+            city: '',
+            state: '',
+            zipCode: '',
+            country: country,
+          },
+          contactPerson: `${dto.firstName} ${dto.lastName}`,
+          contactEmail: dto.email.toLowerCase(),
+          contactPhone: dto.phone,
+        },
+        members: [
+          {
+            sellerId: sellerId,
+            role: 'primary',
+            joinedAt: now,
+            addedBy: userId,
+          },
+        ],
+        settings: {
+          sharedInventory: false,
+          sharedPricing: false,
+          sharedBranding: false,
+          allowCrossLocationTransfers: false,
+          centralizedPayments: false,
+        },
+        meta: {
+          totalLocations: dto.rooftop ? parseInt(dto.rooftop, 10) : 1,
+          totalListings: 0,
+          totalSales: 0,
+          averageRating: 0,
+          totalReviews: 0,
+        },
+        audit: {
+          createdAt: now,
+          updatedAt: now,
+          createdBy: userId,
+          updatedBy: userId,
+        },
+      };
+
+      // Save seller group to Cosmos DB
+      await this.cosmosService.createItem(this.SELLER_GROUPS_CONTAINER, sellerGroup);
+
+      // Update seller's dealerGroupId to reference the group
+      seller.dealerDetails!.dealerGroupId = sellerGroupId;
+      await this.cosmosService.updateItem(this.SELLERS_CONTAINER, seller, sellerId);
+    }
+
     // TODO: Create Stripe checkout session for subscriptions
 
     // Mock Stripe response for now
@@ -480,6 +712,13 @@ export class AuthService {
    */
   private generateSellerId(): string {
     return `dealer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+
+  /**
+   * Helper: Generate seller group ID
+   */
+  private generateSellerGroupId(): string {
+    return `group_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
