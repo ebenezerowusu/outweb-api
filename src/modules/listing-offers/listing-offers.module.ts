@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { ListingOffersController } from './listing-offers.controller';
-import { ListingOffersService } from './listing-offers.service';
-import { CosmosService } from '@/common/services/cosmos.service';
+import { Module } from "@nestjs/common";
+import { ListingOffersController } from "./listing-offers.controller";
+import { ListingOffersService } from "./listing-offers.service";
+import { CosmosService } from "@/common/services/cosmos.service";
 
 /**
  * Listing Offers Module

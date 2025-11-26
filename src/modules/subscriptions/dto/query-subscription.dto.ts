@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsEnum, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsOptional, IsString, IsEnum, IsInt, Min, Max } from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Query Subscriptions DTO
@@ -8,7 +8,7 @@ import { Type } from 'class-transformer';
  */
 export class QuerySubscriptionsDto {
   @ApiProperty({
-    description: 'Filter by user ID',
+    description: "Filter by user ID",
     required: false,
   })
   @IsString()
@@ -16,7 +16,7 @@ export class QuerySubscriptionsDto {
   userId?: string;
 
   @ApiProperty({
-    description: 'Filter by seller ID',
+    description: "Filter by seller ID",
     required: false,
   })
   @IsString()
@@ -24,25 +24,48 @@ export class QuerySubscriptionsDto {
   sellerId?: string;
 
   @ApiProperty({
-    description: 'Filter by subscription category',
-    enum: ['cashoffer', 'dealer_wholesale', 'dealer_advertising'],
+    description: "Filter by subscription category",
+    enum: ["cashoffer", "dealer_wholesale", "dealer_advertising"],
     required: false,
   })
-  @IsEnum(['cashoffer', 'dealer_wholesale', 'dealer_advertising'])
+  @IsEnum(["cashoffer", "dealer_wholesale", "dealer_advertising"])
   @IsOptional()
-  category?: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
+  category?: "cashoffer" | "dealer_wholesale" | "dealer_advertising";
 
   @ApiProperty({
-    description: 'Filter by subscription state',
-    enum: ['incomplete', 'incomplete_expired', 'trialing', 'active', 'past_due', 'canceled', 'unpaid'],
+    description: "Filter by subscription state",
+    enum: [
+      "incomplete",
+      "incomplete_expired",
+      "trialing",
+      "active",
+      "past_due",
+      "canceled",
+      "unpaid",
+    ],
     required: false,
   })
-  @IsEnum(['incomplete', 'incomplete_expired', 'trialing', 'active', 'past_due', 'canceled', 'unpaid'])
+  @IsEnum([
+    "incomplete",
+    "incomplete_expired",
+    "trialing",
+    "active",
+    "past_due",
+    "canceled",
+    "unpaid",
+  ])
   @IsOptional()
-  state?: 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid';
+  state?:
+    | "incomplete"
+    | "incomplete_expired"
+    | "trialing"
+    | "active"
+    | "past_due"
+    | "canceled"
+    | "unpaid";
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     example: 20,
     required: false,
   })
@@ -54,7 +77,7 @@ export class QuerySubscriptionsDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token from previous page',
+    description: "Continuation token from previous page",
     required: false,
   })
   @IsString()
@@ -68,16 +91,16 @@ export class QuerySubscriptionsDto {
  */
 export class QueryInvoicesDto {
   @ApiProperty({
-    description: 'Filter by payment status',
-    enum: ['draft', 'open', 'paid', 'uncollectible', 'void'],
+    description: "Filter by payment status",
+    enum: ["draft", "open", "paid", "uncollectible", "void"],
     required: false,
   })
-  @IsEnum(['draft', 'open', 'paid', 'uncollectible', 'void'])
+  @IsEnum(["draft", "open", "paid", "uncollectible", "void"])
   @IsOptional()
-  status?: 'draft' | 'open' | 'paid' | 'uncollectible' | 'void';
+  status?: "draft" | "open" | "paid" | "uncollectible" | "void";
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     example: 20,
     required: false,
   })
@@ -89,7 +112,7 @@ export class QueryInvoicesDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token from previous page',
+    description: "Continuation token from previous page",
     required: false,
   })
   @IsString()

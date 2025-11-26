@@ -4,21 +4,21 @@ import {
   ExecutionContext,
   ForbiddenException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { FastifyRequest } from 'fastify';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { FastifyRequest } from "fastify";
 
 /**
  * RBAC Metadata Keys
  */
-export const REQUIRED_PERMISSIONS_KEY = 'requiredPermissions';
-export const REQUIRED_ROLES_KEY = 'requiredRoles';
-export const SKIP_AUTH_KEY = 'skipAuth';
+export const REQUIRED_PERMISSIONS_KEY = "requiredPermissions";
+export const REQUIRED_ROLES_KEY = "requiredRoles";
+export const SKIP_AUTH_KEY = "skipAuth";
 
 /**
  * Permission Operator
  */
-export type PermissionOperator = 'AND' | 'OR';
+export type PermissionOperator = "AND" | "OR";
 
 /**
  * RBAC Guard
@@ -48,13 +48,13 @@ export class RbacGuard implements CanActivate {
 
     // Get user from request (set by JWT auth middleware)
     // In NestJS with Fastify, the user is set on the raw request
-    const user = (request as any).user || ((request as any).raw?.user);
+    const user = (request as any).user || (request as any).raw?.user;
 
     if (!user) {
       throw new UnauthorizedException({
         statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Authentication required',
+        error: "Unauthorized",
+        message: "Authentication required",
       });
     }
 
@@ -83,8 +83,8 @@ export class RbacGuard implements CanActivate {
       if (!hasRole) {
         throw new ForbiddenException({
           statusCode: 403,
-          error: 'Forbidden',
-          message: 'Insufficient permissions',
+          error: "Forbidden",
+          message: "Insufficient permissions",
         });
       }
     }
@@ -101,8 +101,8 @@ export class RbacGuard implements CanActivate {
       if (!hasAllPermissions) {
         throw new ForbiddenException({
           statusCode: 403,
-          error: 'Forbidden',
-          message: 'Insufficient permissions',
+          error: "Forbidden",
+          message: "Insufficient permissions",
         });
       }
     }

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsString,
   IsEnum,
@@ -10,25 +10,26 @@ import {
   Matches,
   ArrayMinSize,
   ArrayMaxSize,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Permission reference DTO
  */
 export class RolePermissionDto {
   @ApiProperty({
-    description: 'Permission ID',
-    example: 'perm_create_listing',
+    description: "Permission ID",
+    example: "perm_create_listing",
   })
   @IsString()
   @Length(1, 64)
   key: string;
 
   @ApiProperty({
-    description: 'Permission description (optional, will be populated from permission if missing)',
+    description:
+      "Permission description (optional, will be populated from permission if missing)",
     required: false,
-    example: 'Allows user to create a car listing',
+    example: "Allows user to create a car listing",
   })
   @IsString()
   @MaxLength(255)
@@ -41,30 +42,30 @@ export class RolePermissionDto {
  */
 export class CreateRoleDto {
   @ApiProperty({
-    description: 'Role ID (optional, will be generated if not provided)',
-    example: 'role_moderator',
+    description: "Role ID (optional, will be generated if not provided)",
+    example: "role_moderator",
     required: false,
-    pattern: '^role_[a-z0-9_]+$',
+    pattern: "^role_[a-z0-9_]+$",
   })
   @IsString()
   @MaxLength(64)
   @Matches(/^role_[a-z0-9_]+$/, {
-    message: 'Role ID must match pattern: role_[a-z0-9_]+',
+    message: "Role ID must match pattern: role_[a-z0-9_]+",
   })
   @IsOptional()
   id?: string;
 
   @ApiProperty({
-    description: 'Role scope',
-    enum: ['system'],
-    example: 'system',
+    description: "Role scope",
+    enum: ["system"],
+    example: "system",
   })
-  @IsEnum(['system'])
-  scope: 'system';
+  @IsEnum(["system"])
+  scope: "system";
 
   @ApiProperty({
-    description: 'Role name (must be unique)',
-    example: 'moderator',
+    description: "Role name (must be unique)",
+    example: "moderator",
     minLength: 3,
     maxLength: 50,
   })
@@ -73,8 +74,8 @@ export class CreateRoleDto {
   name: string;
 
   @ApiProperty({
-    description: 'Role description',
-    example: 'Can moderate listings and chats',
+    description: "Role description",
+    example: "Can moderate listings and chats",
     required: false,
     maxLength: 255,
   })
@@ -84,7 +85,7 @@ export class CreateRoleDto {
   description?: string;
 
   @ApiProperty({
-    description: 'Permissions assigned to this role',
+    description: "Permissions assigned to this role",
     type: [RolePermissionDto],
     required: false,
   })
@@ -100,7 +101,7 @@ export class CreateRoleDto {
  */
 export class UpdateRoleDto {
   @ApiProperty({
-    description: 'Updated role description',
+    description: "Updated role description",
     required: false,
     maxLength: 255,
   })
@@ -110,7 +111,7 @@ export class UpdateRoleDto {
   description?: string;
 
   @ApiProperty({
-    description: 'Updated permissions for the role',
+    description: "Updated permissions for the role",
     type: [RolePermissionDto],
     required: false,
   })
@@ -126,25 +127,25 @@ export class UpdateRoleDto {
  */
 export class QueryRolesDto {
   @ApiProperty({
-    description: 'Filter by role scope',
+    description: "Filter by role scope",
     required: false,
-    enum: ['system'],
+    enum: ["system"],
   })
-  @IsEnum(['system'])
+  @IsEnum(["system"])
   @IsOptional()
-  scope?: 'system';
+  scope?: "system";
 
   @ApiProperty({
-    description: 'Filter by role name (exact or partial match)',
+    description: "Filter by role name (exact or partial match)",
     required: false,
-    example: 'dealer',
+    example: "dealer",
   })
   @IsString()
   @IsOptional()
   name?: string;
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     required: false,
     minimum: 1,
     maximum: 100,
@@ -155,7 +156,7 @@ export class QueryRolesDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token for pagination',
+    description: "Continuation token for pagination",
     required: false,
   })
   @IsString()
@@ -168,8 +169,8 @@ export class QueryRolesDto {
  */
 export class AttachPermissionsDto {
   @ApiProperty({
-    description: 'Permission IDs to attach to the role',
-    example: ['perm_create_listing', 'perm_edit_listing', 'perm_close_listing'],
+    description: "Permission IDs to attach to the role",
+    example: ["perm_create_listing", "perm_edit_listing", "perm_close_listing"],
     minItems: 1,
     maxItems: 100,
   })

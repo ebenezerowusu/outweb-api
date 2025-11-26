@@ -4,7 +4,7 @@
  */
 export interface SellerDocument {
   id: string;
-  sellerType: 'dealer' | 'private';
+  sellerType: "dealer" | "private";
   profile: SellerProfile;
   market: SellerMarket;
   dealerDetails: DealerDetails | null;
@@ -113,6 +113,9 @@ export interface SellerAudit {
 /**
  * Public Seller (excludes sensitive data like syndicationApiKey and syndicationSystem)
  */
-export type PublicSeller = Omit<SellerDocument, 'dealerDetails'> & {
-  dealerDetails: Omit<DealerDetails, 'syndicationSystem' | 'syndicationApiKey'> | null;
+export type PublicSeller = Omit<SellerDocument, "dealerDetails"> & {
+  dealerDetails: Omit<
+    DealerDetails,
+    "syndicationSystem" | "syndicationApiKey"
+  > | null;
 };

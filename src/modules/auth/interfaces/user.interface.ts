@@ -4,7 +4,7 @@
  */
 export interface UserDocument {
   id: string;
-  type: 'user';
+  type: "user";
   profile: UserProfile;
   market: UserMarket;
   auth: UserAuth;
@@ -41,7 +41,7 @@ export interface UserAuth {
   passwordSalt: string;
   authProvider: string;
   twoFactorEnabled: boolean;
-  twoFactorMethod: 'sms' | 'authenticatorApp' | null;
+  twoFactorMethod: "sms" | "authenticatorApp" | null;
 }
 
 export interface UserVerification {
@@ -99,7 +99,7 @@ export interface UserMetadata {
  */
 export interface PublicUser {
   id: string;
-  type: 'user';
+  type: "user";
   profile: UserProfile;
   market: UserMarket;
   verification: UserVerification;
@@ -109,5 +109,5 @@ export interface PublicUser {
   customPermissions: string[];
   preferences: UserPreferences;
   legal: UserLegal;
-  metadata: Omit<UserMetadata, 'createdBy' | 'updatedBy'>;
+  metadata: Omit<UserMetadata, "createdBy" | "updatedBy">;
 }

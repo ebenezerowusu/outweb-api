@@ -7,15 +7,15 @@ import {
   IsObject,
   ValidateNested,
   IsBoolean,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+} from "class-validator";
+import { Type } from "class-transformer";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 /**
  * DTO for accepting an offer
  */
 export class AcceptOfferDto {
-  @ApiPropertyOptional({ description: 'Acceptance message to buyer' })
+  @ApiPropertyOptional({ description: "Acceptance message to buyer" })
   @IsString()
   @IsOptional()
   message?: string;
@@ -25,7 +25,7 @@ export class AcceptOfferDto {
  * DTO for rejecting an offer
  */
 export class RejectOfferDto {
-  @ApiProperty({ description: 'Rejection reason' })
+  @ApiProperty({ description: "Rejection reason" })
   @IsString()
   reason: string;
 }
@@ -34,37 +34,37 @@ export class RejectOfferDto {
  * DTO for offer terms update
  */
 export class UpdateOfferTermsDto {
-  @ApiPropertyOptional({ description: 'Offer contingent on inspection' })
+  @ApiPropertyOptional({ description: "Offer contingent on inspection" })
   @IsBoolean()
   @IsOptional()
   inspectionContingent?: boolean;
 
-  @ApiPropertyOptional({ description: 'Offer contingent on financing' })
+  @ApiPropertyOptional({ description: "Offer contingent on financing" })
   @IsBoolean()
   @IsOptional()
   financingContingent?: boolean;
 
-  @ApiPropertyOptional({ description: 'Trade-in required' })
+  @ApiPropertyOptional({ description: "Trade-in required" })
   @IsBoolean()
   @IsOptional()
   tradeInRequired?: boolean;
 
-  @ApiPropertyOptional({ description: 'Trade-in vehicle details' })
+  @ApiPropertyOptional({ description: "Trade-in vehicle details" })
   @IsString()
   @IsOptional()
   tradeInDetails?: string;
 
-  @ApiPropertyOptional({ description: 'Delivery required' })
+  @ApiPropertyOptional({ description: "Delivery required" })
   @IsBoolean()
   @IsOptional()
   deliveryRequired?: boolean;
 
-  @ApiPropertyOptional({ description: 'Delivery location' })
+  @ApiPropertyOptional({ description: "Delivery location" })
   @IsString()
   @IsOptional()
   deliveryLocation?: string;
 
-  @ApiPropertyOptional({ description: 'Additional terms or conditions' })
+  @ApiPropertyOptional({ description: "Additional terms or conditions" })
   @IsString()
   @IsOptional()
   additionalTerms?: string;
@@ -74,22 +74,25 @@ export class UpdateOfferTermsDto {
  * DTO for making a counter-offer
  */
 export class CounterOfferDto {
-  @ApiProperty({ description: 'Counter-offer amount', example: 44000 })
+  @ApiProperty({ description: "Counter-offer amount", example: 44000 })
   @IsNumber()
   @Min(0)
   amount: number;
 
-  @ApiPropertyOptional({ description: 'Message to buyer' })
+  @ApiPropertyOptional({ description: "Message to buyer" })
   @IsString()
   @IsOptional()
   message?: string;
 
-  @ApiPropertyOptional({ description: 'Counter-offer expiration date (defaults to 7 days)', example: '2024-01-20T00:00:00Z' })
+  @ApiPropertyOptional({
+    description: "Counter-offer expiration date (defaults to 7 days)",
+    example: "2024-01-20T00:00:00Z",
+  })
   @IsISO8601()
   @IsOptional()
   expiresAt?: string;
 
-  @ApiPropertyOptional({ description: 'Modified terms' })
+  @ApiPropertyOptional({ description: "Modified terms" })
   @IsObject()
   @ValidateNested()
   @Type(() => UpdateOfferTermsDto)
@@ -101,7 +104,7 @@ export class CounterOfferDto {
  * DTO for withdrawing an offer
  */
 export class WithdrawOfferDto {
-  @ApiProperty({ description: 'Withdrawal reason' })
+  @ApiProperty({ description: "Withdrawal reason" })
   @IsString()
   reason: string;
 }

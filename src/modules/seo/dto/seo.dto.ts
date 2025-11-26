@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, Length } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsString, IsOptional, Length } from "class-validator";
 
 /**
  * SEO Listing Context DTO (POST /seo/listings/context)
@@ -7,8 +7,8 @@ import { IsString, IsOptional, Length } from 'class-validator';
  */
 export class SeoListingContextDto {
   @ApiProperty({
-    description: 'Make slug',
-    example: 'tesla',
+    description: "Make slug",
+    example: "tesla",
     required: false,
   })
   @IsString()
@@ -17,8 +17,8 @@ export class SeoListingContextDto {
   makeSlug?: string;
 
   @ApiProperty({
-    description: 'Model slug',
-    example: 'model-s',
+    description: "Model slug",
+    example: "model-s",
     required: false,
   })
   @IsString()
@@ -27,8 +27,8 @@ export class SeoListingContextDto {
   modelSlug?: string;
 
   @ApiProperty({
-    description: 'Trim slug',
-    example: 'p100d',
+    description: "Trim slug",
+    example: "p100d",
     required: false,
   })
   @IsString()
@@ -37,8 +37,8 @@ export class SeoListingContextDto {
   trimSlug?: string;
 
   @ApiProperty({
-    description: 'Body style slug',
-    example: 'sedan',
+    description: "Body style slug",
+    example: "sedan",
     required: false,
   })
   @IsString()
@@ -47,8 +47,8 @@ export class SeoListingContextDto {
   bodyStyleSlug?: string;
 
   @ApiProperty({
-    description: 'Country slug',
-    example: 'usa',
+    description: "Country slug",
+    example: "usa",
     required: false,
   })
   @IsString()
@@ -57,8 +57,8 @@ export class SeoListingContextDto {
   countrySlug?: string;
 
   @ApiProperty({
-    description: 'Condition slug',
-    example: 'used',
+    description: "Condition slug",
+    example: "used",
     required: false,
   })
   @IsString()
@@ -67,8 +67,8 @@ export class SeoListingContextDto {
   conditionSlug?: string;
 
   @ApiProperty({
-    description: 'Color slug',
-    example: 'blue-metallic',
+    description: "Color slug",
+    example: "blue-metallic",
     required: false,
   })
   @IsString()
@@ -77,8 +77,8 @@ export class SeoListingContextDto {
   colorSlug?: string;
 
   @ApiProperty({
-    description: 'Vehicle condition slug (new/used/certified)',
-    example: 'used',
+    description: "Vehicle condition slug (new/used/certified)",
+    example: "used",
     required: false,
   })
   @IsString()

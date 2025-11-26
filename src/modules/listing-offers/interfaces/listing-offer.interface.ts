@@ -4,7 +4,7 @@
  */
 export interface ListingOfferDocument {
   id: string;
-  type: 'listing_offer';
+  type: "listing_offer";
 
   // Related entities
   listingId: string;
@@ -53,12 +53,12 @@ export interface OfferStatus {
 }
 
 export type OfferState =
-  | 'pending'      // Waiting for response
-  | 'accepted'     // Accepted by seller
-  | 'rejected'     // Rejected by seller
-  | 'countered'    // Seller made a counter-offer
-  | 'withdrawn'    // Withdrawn by buyer
-  | 'expired';     // Expired without response
+  | "pending" // Waiting for response
+  | "accepted" // Accepted by seller
+  | "rejected" // Rejected by seller
+  | "countered" // Seller made a counter-offer
+  | "withdrawn" // Withdrawn by buyer
+  | "expired"; // Expired without response
 
 /**
  * Offer history entry
@@ -67,20 +67,20 @@ export interface OfferHistoryEntry {
   id: string;
   action: OfferAction;
   performedBy: string;
-  performedByRole: 'buyer' | 'seller';
+  performedByRole: "buyer" | "seller";
   amount: number | null;
   message: string | null;
   timestamp: string;
 }
 
 export type OfferAction =
-  | 'created'
-  | 'viewed'
-  | 'accepted'
-  | 'rejected'
-  | 'countered'
-  | 'withdrawn'
-  | 'expired';
+  | "created"
+  | "viewed"
+  | "accepted"
+  | "rejected"
+  | "countered"
+  | "withdrawn"
+  | "expired";
 
 /**
  * Offer terms (optional conditions)

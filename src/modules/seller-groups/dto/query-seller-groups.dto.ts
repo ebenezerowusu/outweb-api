@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsOptional, IsString, IsInt, Min, Max } from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Query Seller Groups DTO
@@ -8,7 +8,7 @@ import { Type } from 'class-transformer';
  */
 export class QuerySellerGroupsDto {
   @ApiProperty({
-    description: 'Filter by group name (partial match)',
+    description: "Filter by group name (partial match)",
     required: false,
   })
   @IsString()
@@ -16,7 +16,7 @@ export class QuerySellerGroupsDto {
   name?: string;
 
   @ApiProperty({
-    description: 'Filter by email',
+    description: "Filter by email",
     required: false,
   })
   @IsString()
@@ -24,7 +24,7 @@ export class QuerySellerGroupsDto {
   email?: string;
 
   @ApiProperty({
-    description: 'Filter by city',
+    description: "Filter by city",
     required: false,
   })
   @IsString()
@@ -32,7 +32,7 @@ export class QuerySellerGroupsDto {
   city?: string;
 
   @ApiProperty({
-    description: 'Filter by state',
+    description: "Filter by state",
     required: false,
   })
   @IsString()
@@ -40,7 +40,7 @@ export class QuerySellerGroupsDto {
   state?: string;
 
   @ApiProperty({
-    description: 'Filter by country',
+    description: "Filter by country",
     required: false,
   })
   @IsString()
@@ -48,7 +48,7 @@ export class QuerySellerGroupsDto {
   country?: string;
 
   @ApiProperty({
-    description: 'Filter by seller membership (groups that seller belongs to)',
+    description: "Filter by seller membership (groups that seller belongs to)",
     required: false,
   })
   @IsString()
@@ -56,7 +56,7 @@ export class QuerySellerGroupsDto {
   sellerId?: string;
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     example: 20,
     required: false,
     minimum: 1,
@@ -70,7 +70,7 @@ export class QuerySellerGroupsDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token from previous page',
+    description: "Continuation token from previous page",
     required: false,
   })
   @IsString()

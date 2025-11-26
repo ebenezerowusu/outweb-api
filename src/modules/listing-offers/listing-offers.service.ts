@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { CosmosService } from '@/common/services/cosmos.service';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { CosmosService } from "@/common/services/cosmos.service";
 import {
   ListingOfferDocument,
   PublicOffer,
@@ -8,19 +13,19 @@ import {
   OfferHistoryEntry,
   OfferStatistics,
   OfferTerms,
-} from './interfaces/listing-offer.interface';
-import { CreateListingOfferDto } from './dto/create-listing-offer.dto';
+} from "./interfaces/listing-offer.interface";
+import { CreateListingOfferDto } from "./dto/create-listing-offer.dto";
 import {
   AcceptOfferDto,
   RejectOfferDto,
   CounterOfferDto,
   WithdrawOfferDto,
-} from './dto/update-listing-offer.dto';
-import { QueryListingOffersDto } from './dto/query-listing-offer.dto';
-import { ListingDocument } from '../listings/interfaces/listing.interface';
+} from "./dto/update-listing-offer.dto";
+import { QueryListingOffersDto } from "./dto/query-listing-offer.dto";
+import { ListingDocument } from "../listings/interfaces/listing.interface";
 
-const OFFERS_CONTAINER = 'ListingOffers';
-const LISTINGS_CONTAINER = 'listings';
+const OFFERS_CONTAINER = "ListingOffers";
+const LISTINGS_CONTAINER = "listings";
 
 @Injectable()
 export class ListingOffersService {
@@ -32,7 +37,9 @@ export class ListingOffersService {
   /**
    * List offers with filters
    */
-  async findAll(query: QueryListingOffersDto): Promise<{ items: PublicOffer[]; continuationToken?: string }> {
+  async findAll(
+    query: QueryListingOffersDto,
+  ): Promise<{ items: PublicOffer[]; continuationToken?: string }> {
     const {
       listingId,
       buyerId,
@@ -40,8 +47,8 @@ export class ListingOffersService {
       state,
       minAmount,
       maxAmount,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
+      sortBy = "createdAt",
+      sortOrder = "desc",
       limit = 20,
       continuationToken,
     } = query;
@@ -50,46 +57,48 @@ export class ListingOffersService {
     const parameters: Array<{ name: string; value: any }> = [];
 
     if (listingId) {
-      conditions.push('c.listingId = @listingId');
-      parameters.push({ name: '@listingId', value: listingId });
+      conditions.push("c.listingId = @listingId");
+      parameters.push({ name: "@listingId", value: listingId });
     }
 
     if (buyerId) {
-      conditions.push('c.buyerId = @buyerId');
-      parameters.push({ name: '@buyerId', value: buyerId });
+      conditions.push("c.buyerId = @buyerId");
+      parameters.push({ name: "@buyerId", value: buyerId });
     }
 
     if (sellerId) {
-      conditions.push('c.sellerId = @sellerId');
-      parameters.push({ name: '@sellerId', value: sellerId });
+      conditions.push("c.sellerId = @sellerId");
+      parameters.push({ name: "@sellerId", value: sellerId });
     }
 
     if (state) {
-      conditions.push('c.status.state = @state');
-      parameters.push({ name: '@state', value: state });
+      conditions.push("c.status.state = @state");
+      parameters.push({ name: "@state", value: state });
     }
 
     if (minAmount !== undefined) {
-      conditions.push('c.offer.amount >= @minAmount');
-      parameters.push({ name: '@minAmount', value: minAmount });
+      conditions.push("c.offer.amount >= @minAmount");
+      parameters.push({ name: "@minAmount", value: minAmount });
     }
 
     if (maxAmount !== undefined) {
-      conditions.push('c.offer.amount <= @maxAmount');
-      parameters.push({ name: '@maxAmount', value: maxAmount });
+      conditions.push("c.offer.amount <= @maxAmount");
+      parameters.push({ name: "@maxAmount", value: maxAmount });
     }
 
-    const orderByField = sortBy === 'amount' ? 'c.offer.amount' : 'c.audit.createdAt';
+    const orderByField =
+      sortBy === "amount" ? "c.offer.amount" : "c.audit.createdAt";
     const orderByClause = `ORDER BY ${orderByField} ${sortOrder.toUpperCase()}`;
-    const querySpec = `SELECT * FROM c WHERE ${conditions.join(' AND ')} ${orderByClause}`;
+    const querySpec = `SELECT * FROM c WHERE ${conditions.join(" AND ")} ${orderByClause}`;
 
-    const { items, continuationToken: nextToken } = await this.cosmosService.queryItems<ListingOfferDocument>(
-      OFFERS_CONTAINER,
-      querySpec,
-      parameters,
-      limit,
-      continuationToken,
-    );
+    const { items, continuationToken: nextToken } =
+      await this.cosmosService.queryItems<ListingOfferDocument>(
+        OFFERS_CONTAINER,
+        querySpec,
+        parameters,
+        limit,
+        continuationToken,
+      );
 
     return {
       items,
@@ -100,16 +109,30 @@ export class ListingOffersService {
   /**
    * Get offer by ID
    */
-  async findOne(id: string, userId: string, hasAdminPermission: boolean): Promise<PublicOffer> {
-    const offer = await this.cosmosService.getItem<ListingOfferDocument>(OFFERS_CONTAINER, id, id);
+  async findOne(
+    id: string,
+    userId: string,
+    hasAdminPermission: boolean,
+  ): Promise<PublicOffer> {
+    const offer = await this.cosmosService.getItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      id,
+      id,
+    );
 
     if (!offer) {
-      throw new NotFoundException({ message: 'Offer not found' });
+      throw new NotFoundException({ message: "Offer not found" });
     }
 
     // Check ownership: only buyer, seller, or admin can view
-    if (!hasAdminPermission && offer.buyerId !== userId && offer.sellerId !== userId) {
-      throw new ForbiddenException({ message: 'You do not have permission to view this offer' });
+    if (
+      !hasAdminPermission &&
+      offer.buyerId !== userId &&
+      offer.sellerId !== userId
+    ) {
+      throw new ForbiddenException({
+        message: "You do not have permission to view this offer",
+      });
     }
 
     // Mark as viewed by seller if applicable
@@ -119,15 +142,18 @@ export class ListingOffersService {
 
       offer.history.push({
         id: this.cosmosService.generateId(),
-        action: 'viewed',
+        action: "viewed",
         performedBy: userId,
-        performedByRole: 'seller',
+        performedByRole: "seller",
         amount: null,
         message: null,
         timestamp: offer.audit.viewedAt,
       });
 
-      await this.cosmosService.upsertItem<ListingOfferDocument>(OFFERS_CONTAINER, offer);
+      await this.cosmosService.upsertItem<ListingOfferDocument>(
+        OFFERS_CONTAINER,
+        offer,
+      );
     }
 
     return offer;
@@ -136,23 +162,34 @@ export class ListingOffersService {
   /**
    * Create new offer
    */
-  async create(dto: CreateListingOfferDto, userId: string): Promise<PublicOffer> {
+  async create(
+    dto: CreateListingOfferDto,
+    userId: string,
+  ): Promise<PublicOffer> {
     const now = new Date().toISOString();
 
     // Fetch listing to validate and get seller info
-    const listing = await this.cosmosService.getItem<ListingDocument>(LISTINGS_CONTAINER, dto.listingId, dto.listingId);
+    const listing = await this.cosmosService.getItem<ListingDocument>(
+      LISTINGS_CONTAINER,
+      dto.listingId,
+      dto.listingId,
+    );
     if (!listing) {
-      throw new NotFoundException({ message: 'Listing not found' });
+      throw new NotFoundException({ message: "Listing not found" });
     }
 
     // Validate listing is available
-    if (listing.status.state !== 'published') {
-      throw new BadRequestException({ message: 'Cannot make offer on inactive listing' });
+    if (listing.status.state !== "published") {
+      throw new BadRequestException({
+        message: "Cannot make offer on inactive listing",
+      });
     }
 
     // Prevent seller from making offer on their own listing
     if (listing.seller.id === userId) {
-      throw new BadRequestException({ message: 'You cannot make an offer on your own listing' });
+      throw new BadRequestException({
+        message: "You cannot make an offer on your own listing",
+      });
     }
 
     // Check for existing pending offer from this buyer
@@ -163,40 +200,44 @@ export class ListingOffersService {
         AND c.buyerId = @buyerId
         AND c.status.state IN ('pending', 'countered')
     `;
-    const { items: existingOffers } = await this.cosmosService.queryItems<ListingOfferDocument>(
-      OFFERS_CONTAINER,
-      existingQuery,
-      [
-        { name: '@listingId', value: dto.listingId },
-        { name: '@buyerId', value: userId },
-      ],
-      1,
-    );
+    const { items: existingOffers } =
+      await this.cosmosService.queryItems<ListingOfferDocument>(
+        OFFERS_CONTAINER,
+        existingQuery,
+        [
+          { name: "@listingId", value: dto.listingId },
+          { name: "@buyerId", value: userId },
+        ],
+        1,
+      );
 
     if (existingOffers.length > 0) {
       throw new BadRequestException({
-        message: 'You already have a pending offer on this listing. Please withdraw it first if you want to make a new offer.'
+        message:
+          "You already have a pending offer on this listing. Please withdraw it first if you want to make a new offer.",
       });
     }
 
-    const expiresAt = dto.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt =
+      dto.expiresAt ||
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const offer: ListingOfferDocument = {
       id: this.cosmosService.generateId(),
-      type: 'listing_offer',
+      type: "listing_offer",
       listingId: dto.listingId,
       buyerId: userId,
       sellerId: listing.seller.id,
       offer: {
         amount: dto.amount,
-        currency: 'USD',
+        currency: "USD",
         message: dto.message || null,
         isCounterOffer: false,
         parentOfferId: null,
         expiresAt,
       },
       status: {
-        state: 'pending',
+        state: "pending",
         acceptedAt: null,
         rejectedAt: null,
         rejectionReason: null,
@@ -207,9 +248,9 @@ export class ListingOffersService {
       history: [
         {
           id: this.cosmosService.generateId(),
-          action: 'created',
+          action: "created",
           performedBy: userId,
-          performedByRole: 'buyer',
+          performedByRole: "buyer",
           amount: dto.amount,
           message: dto.message || null,
           timestamp: now,
@@ -236,7 +277,10 @@ export class ListingOffersService {
       },
     };
 
-    const created = await this.cosmosService.createItem<ListingOfferDocument>(OFFERS_CONTAINER, offer);
+    const created = await this.cosmosService.createItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      offer,
+    );
 
     // TODO: Send notification to seller
     // await this.notificationsService.create({
@@ -253,41 +297,59 @@ export class ListingOffersService {
   /**
    * Accept offer
    */
-  async accept(id: string, dto: AcceptOfferDto, userId: string): Promise<PublicOffer> {
-    const offer = await this.cosmosService.getItem<ListingOfferDocument>(OFFERS_CONTAINER, id, id);
+  async accept(
+    id: string,
+    dto: AcceptOfferDto,
+    userId: string,
+  ): Promise<PublicOffer> {
+    const offer = await this.cosmosService.getItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      id,
+      id,
+    );
 
     if (!offer) {
-      throw new NotFoundException({ message: 'Offer not found' });
+      throw new NotFoundException({ message: "Offer not found" });
     }
 
     // Only seller can accept
     if (offer.sellerId !== userId) {
-      throw new ForbiddenException({ message: 'Only the seller can accept this offer' });
+      throw new ForbiddenException({
+        message: "Only the seller can accept this offer",
+      });
     }
 
     // Validate offer is pending or countered
-    if (offer.status.state !== 'pending' && offer.status.state !== 'countered') {
-      throw new BadRequestException({ message: 'Only pending or countered offers can be accepted' });
+    if (
+      offer.status.state !== "pending" &&
+      offer.status.state !== "countered"
+    ) {
+      throw new BadRequestException({
+        message: "Only pending or countered offers can be accepted",
+      });
     }
 
     // Check if offer is expired
     if (new Date(offer.offer.expiresAt) < new Date()) {
-      offer.status.state = 'expired';
+      offer.status.state = "expired";
       offer.status.expiredAt = new Date().toISOString();
-      await this.cosmosService.upsertItem<ListingOfferDocument>(OFFERS_CONTAINER, offer);
-      throw new BadRequestException({ message: 'This offer has expired' });
+      await this.cosmosService.upsertItem<ListingOfferDocument>(
+        OFFERS_CONTAINER,
+        offer,
+      );
+      throw new BadRequestException({ message: "This offer has expired" });
     }
 
     const now = new Date().toISOString();
 
-    offer.status.state = 'accepted';
+    offer.status.state = "accepted";
     offer.status.acceptedAt = now;
 
     offer.history.push({
       id: this.cosmosService.generateId(),
-      action: 'accepted',
+      action: "accepted",
       performedBy: userId,
-      performedByRole: 'seller',
+      performedByRole: "seller",
       amount: offer.offer.amount,
       message: dto.message || null,
       timestamp: now,
@@ -296,7 +358,10 @@ export class ListingOffersService {
     offer.audit.updatedAt = now;
     offer.audit.updatedBy = userId;
 
-    const updated = await this.cosmosService.upsertItem<ListingOfferDocument>(OFFERS_CONTAINER, offer);
+    const updated = await this.cosmosService.upsertItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      offer,
+    );
 
     // TODO: Send notification to buyer
     // TODO: Update listing status (mark as sold or under contract)
@@ -307,34 +372,49 @@ export class ListingOffersService {
   /**
    * Reject offer
    */
-  async reject(id: string, dto: RejectOfferDto, userId: string): Promise<PublicOffer> {
-    const offer = await this.cosmosService.getItem<ListingOfferDocument>(OFFERS_CONTAINER, id, id);
+  async reject(
+    id: string,
+    dto: RejectOfferDto,
+    userId: string,
+  ): Promise<PublicOffer> {
+    const offer = await this.cosmosService.getItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      id,
+      id,
+    );
 
     if (!offer) {
-      throw new NotFoundException({ message: 'Offer not found' });
+      throw new NotFoundException({ message: "Offer not found" });
     }
 
     // Only seller can reject
     if (offer.sellerId !== userId) {
-      throw new ForbiddenException({ message: 'Only the seller can reject this offer' });
+      throw new ForbiddenException({
+        message: "Only the seller can reject this offer",
+      });
     }
 
     // Validate offer is pending
-    if (offer.status.state !== 'pending' && offer.status.state !== 'countered') {
-      throw new BadRequestException({ message: 'Only pending or countered offers can be rejected' });
+    if (
+      offer.status.state !== "pending" &&
+      offer.status.state !== "countered"
+    ) {
+      throw new BadRequestException({
+        message: "Only pending or countered offers can be rejected",
+      });
     }
 
     const now = new Date().toISOString();
 
-    offer.status.state = 'rejected';
+    offer.status.state = "rejected";
     offer.status.rejectedAt = now;
     offer.status.rejectionReason = dto.reason;
 
     offer.history.push({
       id: this.cosmosService.generateId(),
-      action: 'rejected',
+      action: "rejected",
       performedBy: userId,
-      performedByRole: 'seller',
+      performedByRole: "seller",
       amount: null,
       message: dto.reason,
       timestamp: now,
@@ -343,7 +423,10 @@ export class ListingOffersService {
     offer.audit.updatedAt = now;
     offer.audit.updatedBy = userId;
 
-    const updated = await this.cosmosService.upsertItem<ListingOfferDocument>(OFFERS_CONTAINER, offer);
+    const updated = await this.cosmosService.upsertItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      offer,
+    );
 
     // TODO: Send notification to buyer
 
@@ -353,33 +436,46 @@ export class ListingOffersService {
   /**
    * Counter offer
    */
-  async counter(id: string, dto: CounterOfferDto, userId: string): Promise<PublicOffer> {
-    const originalOffer = await this.cosmosService.getItem<ListingOfferDocument>(OFFERS_CONTAINER, id, id);
+  async counter(
+    id: string,
+    dto: CounterOfferDto,
+    userId: string,
+  ): Promise<PublicOffer> {
+    const originalOffer =
+      await this.cosmosService.getItem<ListingOfferDocument>(
+        OFFERS_CONTAINER,
+        id,
+        id,
+      );
 
     if (!originalOffer) {
-      throw new NotFoundException({ message: 'Offer not found' });
+      throw new NotFoundException({ message: "Offer not found" });
     }
 
     // Only seller can counter
     if (originalOffer.sellerId !== userId) {
-      throw new ForbiddenException({ message: 'Only the seller can make a counter-offer' });
+      throw new ForbiddenException({
+        message: "Only the seller can make a counter-offer",
+      });
     }
 
     // Validate offer is pending
-    if (originalOffer.status.state !== 'pending') {
-      throw new BadRequestException({ message: 'Only pending offers can be countered' });
+    if (originalOffer.status.state !== "pending") {
+      throw new BadRequestException({
+        message: "Only pending offers can be countered",
+      });
     }
 
     const now = new Date().toISOString();
 
     // Update original offer status
-    originalOffer.status.state = 'countered';
+    originalOffer.status.state = "countered";
 
     originalOffer.history.push({
       id: this.cosmosService.generateId(),
-      action: 'countered',
+      action: "countered",
       performedBy: userId,
-      performedByRole: 'seller',
+      performedByRole: "seller",
       amount: dto.amount,
       message: dto.message || null,
       timestamp: now,
@@ -389,24 +485,26 @@ export class ListingOffersService {
     originalOffer.audit.updatedBy = userId;
 
     // Create new counter-offer
-    const expiresAt = dto.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt =
+      dto.expiresAt ||
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const counterOffer: ListingOfferDocument = {
       id: this.cosmosService.generateId(),
-      type: 'listing_offer',
+      type: "listing_offer",
       listingId: originalOffer.listingId,
       buyerId: originalOffer.buyerId,
       sellerId: originalOffer.sellerId,
       offer: {
         amount: dto.amount,
-        currency: 'USD',
+        currency: "USD",
         message: dto.message || null,
         isCounterOffer: true,
         parentOfferId: originalOffer.id,
         expiresAt,
       },
       status: {
-        state: 'pending',
+        state: "pending",
         acceptedAt: null,
         rejectedAt: null,
         rejectionReason: null,
@@ -417,9 +515,9 @@ export class ListingOffersService {
       history: [
         {
           id: this.cosmosService.generateId(),
-          action: 'countered',
+          action: "countered",
           performedBy: userId,
-          performedByRole: 'seller',
+          performedByRole: "seller",
           amount: dto.amount,
           message: dto.message || null,
           timestamp: now,
@@ -442,8 +540,14 @@ export class ListingOffersService {
     };
 
     // Save both offers
-    await this.cosmosService.upsertItem<ListingOfferDocument>(OFFERS_CONTAINER, originalOffer);
-    const created = await this.cosmosService.createItem<ListingOfferDocument>(OFFERS_CONTAINER, counterOffer);
+    await this.cosmosService.upsertItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      originalOffer,
+    );
+    const created = await this.cosmosService.createItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      counterOffer,
+    );
 
     // TODO: Send notification to buyer
 
@@ -453,34 +557,49 @@ export class ListingOffersService {
   /**
    * Withdraw offer
    */
-  async withdraw(id: string, dto: WithdrawOfferDto, userId: string): Promise<PublicOffer> {
-    const offer = await this.cosmosService.getItem<ListingOfferDocument>(OFFERS_CONTAINER, id, id);
+  async withdraw(
+    id: string,
+    dto: WithdrawOfferDto,
+    userId: string,
+  ): Promise<PublicOffer> {
+    const offer = await this.cosmosService.getItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      id,
+      id,
+    );
 
     if (!offer) {
-      throw new NotFoundException({ message: 'Offer not found' });
+      throw new NotFoundException({ message: "Offer not found" });
     }
 
     // Only buyer can withdraw
     if (offer.buyerId !== userId) {
-      throw new ForbiddenException({ message: 'Only the buyer can withdraw this offer' });
+      throw new ForbiddenException({
+        message: "Only the buyer can withdraw this offer",
+      });
     }
 
     // Validate offer is pending or countered
-    if (offer.status.state !== 'pending' && offer.status.state !== 'countered') {
-      throw new BadRequestException({ message: 'Only pending or countered offers can be withdrawn' });
+    if (
+      offer.status.state !== "pending" &&
+      offer.status.state !== "countered"
+    ) {
+      throw new BadRequestException({
+        message: "Only pending or countered offers can be withdrawn",
+      });
     }
 
     const now = new Date().toISOString();
 
-    offer.status.state = 'withdrawn';
+    offer.status.state = "withdrawn";
     offer.status.withdrawnAt = now;
     offer.status.withdrawalReason = dto.reason;
 
     offer.history.push({
       id: this.cosmosService.generateId(),
-      action: 'withdrawn',
+      action: "withdrawn",
       performedBy: userId,
-      performedByRole: 'buyer',
+      performedByRole: "buyer",
       amount: null,
       message: dto.reason,
       timestamp: now,
@@ -489,7 +608,10 @@ export class ListingOffersService {
     offer.audit.updatedAt = now;
     offer.audit.updatedBy = userId;
 
-    const updated = await this.cosmosService.upsertItem<ListingOfferDocument>(OFFERS_CONTAINER, offer);
+    const updated = await this.cosmosService.upsertItem<ListingOfferDocument>(
+      OFFERS_CONTAINER,
+      offer,
+    );
 
     // TODO: Send notification to seller
 
@@ -499,11 +621,21 @@ export class ListingOffersService {
   /**
    * Get offer statistics for a listing
    */
-  async getStatistics(listingId: string, sellerId: string): Promise<OfferStatistics> {
+  async getStatistics(
+    listingId: string,
+    sellerId: string,
+  ): Promise<OfferStatistics> {
     // Verify seller owns the listing
-    const listing = await this.cosmosService.getItem<ListingDocument>(LISTINGS_CONTAINER, listingId, listingId);
+    const listing = await this.cosmosService.getItem<ListingDocument>(
+      LISTINGS_CONTAINER,
+      listingId,
+      listingId,
+    );
     if (!listing || listing.seller.id !== sellerId) {
-      throw new ForbiddenException({ message: 'You do not have permission to view statistics for this listing' });
+      throw new ForbiddenException({
+        message:
+          "You do not have permission to view statistics for this listing",
+      });
     }
 
     const querySpec = `
@@ -512,12 +644,13 @@ export class ListingOffersService {
         AND c.listingId = @listingId
         AND NOT c.offer.isCounterOffer
     `;
-    const { items: offers } = await this.cosmosService.queryItems<ListingOfferDocument>(
-      OFFERS_CONTAINER,
-      querySpec,
-      [{ name: '@listingId', value: listingId }],
-      100,
-    );
+    const { items: offers } =
+      await this.cosmosService.queryItems<ListingOfferDocument>(
+        OFFERS_CONTAINER,
+        querySpec,
+        [{ name: "@listingId", value: listingId }],
+        100,
+      );
 
     if (offers.length === 0) {
       return {
@@ -535,10 +668,13 @@ export class ListingOffersService {
 
     return {
       totalOffers: offers.length,
-      pendingOffers: offers.filter((o) => o.status.state === 'pending').length,
-      acceptedOffers: offers.filter((o) => o.status.state === 'accepted').length,
-      rejectedOffers: offers.filter((o) => o.status.state === 'rejected').length,
-      averageOfferAmount: amounts.reduce((sum, amt) => sum + amt, 0) / amounts.length,
+      pendingOffers: offers.filter((o) => o.status.state === "pending").length,
+      acceptedOffers: offers.filter((o) => o.status.state === "accepted")
+        .length,
+      rejectedOffers: offers.filter((o) => o.status.state === "rejected")
+        .length,
+      averageOfferAmount:
+        amounts.reduce((sum, amt) => sum + amt, 0) / amounts.length,
       highestOfferAmount: Math.max(...amounts),
       lowestOfferAmount: Math.min(...amounts),
     };
