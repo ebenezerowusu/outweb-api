@@ -166,17 +166,43 @@ export class CosmosService implements OnModuleInit {
       parameters: parameters || [],
     };
 
-    const queryIterator = container.items.query<T>(querySpec, {
-      maxItemCount: maxItemCount || 20,
-      continuationToken: continuationToken,
+    // Log query for debugging
+    this.logger.debug(`Executing query on ${containerName}:`, {
+      query,
+      parameters,
+      maxItemCount,
     });
 
-    const response: FeedResponse<T> = await queryIterator.fetchNext();
+    try {
+      const queryIterator = container.items.query<T>(querySpec, {
+        maxItemCount: maxItemCount || 20,
+        continuationToken: continuationToken,
+      });
 
-    return {
-      items: response.resources,
-      continuationToken: response.continuationToken,
-    };
+      const response: FeedResponse<T> = await queryIterator.fetchNext();
+
+      // Log response details
+      this.logger.debug(`Query response from ${containerName}:`, {
+        itemCount: response.resources?.length,
+        hasResources: !!response.resources,
+        hasContinuation: !!response.continuationToken,
+        requestCharge: response.requestCharge,
+      });
+
+      return {
+        items: response.resources,
+        continuationToken: response.continuationToken,
+      };
+    } catch (error) {
+      this.logger.error(`Query failed on ${containerName}:`, {
+        query,
+        parameters,
+        error: error.message,
+        code: error.code,
+        body: error.body,
+      });
+      throw error;
+    }
   }
 
   /**

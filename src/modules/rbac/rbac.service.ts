@@ -69,9 +69,12 @@ export class RbacService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const roleItems = items || [];
+
     return {
-      items: items.map((role) => this.toPublicRole(role)),
-      count: items.length,
+      items: roleItems.map((role) => this.toPublicRole(role)),
+      count: roleItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -264,9 +267,12 @@ export class RbacService {
       parameters,
     );
 
+    // Handle case where items might be undefined
+    const permissionItems = items || [];
+
     return {
       role: { id: role.id, name: role.name },
-      permissions: items.map((p) => this.toPublicPermission(p)),
+      permissions: permissionItems.map((p) => this.toPublicPermission(p)),
     };
   }
 
@@ -389,9 +395,12 @@ export class RbacService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const permissionItems = items || [];
+
     return {
-      items: items.map((permission) => this.toPublicPermission(permission)),
-      count: items.length,
+      items: permissionItems.map((permission) => this.toPublicPermission(permission)),
+      count: permissionItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -555,8 +564,11 @@ export class RbacService {
       sqlQuery,
     );
 
+    // Handle case where items might be undefined
+    const categoryItems = items || [];
+
     return {
-      data: items.map((item) => item.category).sort(),
+      data: categoryItems.map((item) => item.category).sort(),
     };
   }
 
@@ -580,7 +592,10 @@ export class RbacService {
       parameters,
     );
 
-    const foundIds = new Set(items.map((item) => item.id));
+    // Handle case where items might be undefined
+    const permissionItems = items || [];
+
+    const foundIds = new Set(permissionItems.map((item) => item.id));
     const missingIds = permissionIds.filter((id) => !foundIds.has(id));
 
     if (missingIds.length > 0) {

@@ -264,10 +264,13 @@ export class NotificationsService {
       100,
     );
 
+    // Handle case where items might be undefined
+    const notificationItems = items || [];
+
     const now = new Date().toISOString();
 
     // Update all to read
-    const updatePromises = items.map((notification) => {
+    const updatePromises = notificationItems.map((notification) => {
       notification.status.read = true;
       notification.status.readAt = now;
       notification.audit.updatedAt = now;
@@ -279,7 +282,7 @@ export class NotificationsService {
 
     await Promise.all(updatePromises);
 
-    return { updated: items.length };
+    return { updated: notificationItems.length };
   }
 
   /**

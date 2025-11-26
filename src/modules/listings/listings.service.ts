@@ -197,9 +197,12 @@ export class ListingsService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const listingItems = items || [];
+
     return {
-      items: items.map((listing) => this.toPublicListing(listing)),
-      count: items.length,
+      items: listingItems.map((listing) => this.toPublicListing(listing)),
+      count: listingItems.length,
       nextCursor: continuationToken || null,
     };
   }

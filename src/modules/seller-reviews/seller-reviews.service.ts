@@ -96,9 +96,12 @@ export class SellerReviewsService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const reviewItems = items || [];
+
     return {
-      items: items.map((review) => this.toPublicSellerReview(review)),
-      count: items.length,
+      items: reviewItems.map((review) => this.toPublicSellerReview(review)),
+      count: reviewItems.length,
       nextCursor: continuationToken || null,
     };
   }
