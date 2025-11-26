@@ -18,11 +18,11 @@ export class UserRoleItem {
  */
 export class UpdateUserRolesDto {
   @ApiProperty({
-    description: "Array of roles to assign to user",
-    example: [{ roleId: "role_buyer" }, { roleId: "role_seller" }],
+    description: "Array of roles to assign to user (at least one required)",
+    example: [{ roleId: "role_private" }, { roleId: "role_dealer" }],
     type: [UserRoleItem],
   })
   @IsArray()
-  @ArrayMinSize(0)
+  @ArrayMinSize(1)
   roles: UserRoleItem[];
 }
