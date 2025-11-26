@@ -117,7 +117,7 @@ async function bootstrap() {
         .topbar { background-color: #1a1a2e; }
       `,
       swaggerOptions: {
-        persistAuthorization: true, // Persist auth tokens across browser sessions
+        persistAuthorization: true,
       },
     });
 
@@ -129,9 +129,8 @@ async function bootstrap() {
   // Start server
   await app.listen(port, "0.0.0.0");
 
-  logger.log(
-    `🚀 Application running on: http://localhost:${port}/api/${apiVersion}`,
-  );
+  logger.log(`Application running on: http://localhost:${port}/api/${apiVersion}`);
+
   logger.log(`Environment: ${nodeEnv}`);
 }
 
