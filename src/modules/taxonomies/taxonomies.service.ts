@@ -43,8 +43,9 @@ export class TaxonomiesService {
     query: QueryTaxonomiesDto,
   ): Promise<{ data: TaxonomySummary[] }> {
     // Query all taxonomies
+    // Note: "order" is a reserved keyword, so we use bracket notation c["order"]
     const sqlQuery =
-      "SELECT c.id, c.category, c.order, ARRAY_LENGTH(c.options) as optionCount FROM c";
+      'SELECT c.id, c.category, c["order"] as order, ARRAY_LENGTH(c.options) as optionCount FROM c';
 
     const { items } = await this.cosmosService.queryItems<{
       id: string;
