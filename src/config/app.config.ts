@@ -9,6 +9,7 @@ export const AppConfigSchema = z.object({
   nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
   port: z.coerce.number().min(1).max(65535).default(3000),
   appName: z.string().default('OnlyUsedTesla-API'),
+  apiVersion: z.string().default('v2'),
 
   // Azure Cosmos DB
   cosmosEndpoint: z.string().url(),
@@ -19,14 +20,48 @@ export const AppConfigSchema = z.object({
   azureStorageConnectionString: z.string().min(1),
   azureStorageContainer: z.string().default('uploads'),
 
-  // Stripe
+  // Stripe - Subscriptions
   stripeSecretKey: z.string().startsWith('sk_'),
   stripeWebhookSecret: z.string().startsWith('whsec_'),
+  stripeProductIdBasic: z.string().startsWith('prod_').optional(),
+  stripeProductIdPro: z.string().startsWith('prod_').optional(),
+  stripeProductIdEnterprise: z.string().startsWith('prod_').optional(),
+  stripePriceIdBasicMonthly: z.string().startsWith('price_').optional(),
+  stripePriceIdBasicYearly: z.string().startsWith('price_').optional(),
+  stripePriceIdProMonthly: z.string().startsWith('price_').optional(),
+  stripePriceIdProYearly: z.string().startsWith('price_').optional(),
+  stripePriceIdEnterpriseMonthly: z.string().startsWith('price_').optional(),
+  stripePriceIdEnterpriseYearly: z.string().startsWith('price_').optional(),
+
+  // Stripe - One-time Payments
+  stripeProductIdFeaturedListing: z.string().startsWith('prod_').optional(),
+  stripePriceIdFeaturedListing: z.string().startsWith('price_').optional(),
+  stripeProductIdBumpListing: z.string().startsWith('prod_').optional(),
+  stripePriceIdBumpListing: z.string().startsWith('price_').optional(),
+  stripeProductIdHighlightListing: z.string().startsWith('prod_').optional(),
+  stripePriceIdHighlightListing: z.string().startsWith('price_').optional(),
 
   // SendGrid
   sendgridApiKey: z.string().startsWith('SG.'),
   sendgridFromEmail: z.string().email(),
   sendgridFromName: z.string().default('OnlyUsedTesla'),
+
+  // SendGrid Email Templates
+  sendgridTmplVerifyEmail: z.string().min(1),
+  sendgridTmplWelcomePrivate: z.string().min(1),
+  sendgridTmplWelcomeDealer: z.string().min(1),
+  sendgridTmplResetPassword: z.string().min(1),
+  sendgridTmplMfaCodeEmail: z.string().min(1),
+  sendgridTmplChangeEmailVerify: z.string().min(1),
+  sendgridTmplNewLoginAlert: z.string().min(1),
+  sendgridTmplDealerAppReceived: z.string().min(1),
+  sendgridTmplDealerAppApproved: z.string().min(1),
+  sendgridTmplDealerAppRejected: z.string().min(1),
+  sendgridTmplKycApproved: z.string().min(1),
+  sendgridTmplKycRejected: z.string().min(1),
+  sendgridTmplDealerStaffInvite: z.string().min(1),
+  sendgridTmplRoleChanged: z.string().min(1),
+  sendgridTmplCashOfferAlert: z.string().min(1),
 
   // Twilio
   twilioAccountSid: z.string().startsWith('AC'),
@@ -57,6 +92,7 @@ export function loadConfig(): AppConfig {
     nodeEnv: process.env.NODE_ENV,
     port: process.env.PORT,
     appName: process.env.APP_NAME,
+    apiVersion: process.env.API_VERSION,
 
     cosmosEndpoint: process.env.COSMOS_ENDPOINT,
     cosmosKey: process.env.COSMOS_KEY,
@@ -67,10 +103,42 @@ export function loadConfig(): AppConfig {
 
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    stripeProductIdBasic: process.env.STRIPE_PRODUCT_ID_BASIC,
+    stripeProductIdPro: process.env.STRIPE_PRODUCT_ID_PRO,
+    stripeProductIdEnterprise: process.env.STRIPE_PRODUCT_ID_ENTERPRISE,
+    stripePriceIdBasicMonthly: process.env.STRIPE_PRICE_ID_BASIC_MONTHLY,
+    stripePriceIdBasicYearly: process.env.STRIPE_PRICE_ID_BASIC_YEARLY,
+    stripePriceIdProMonthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
+    stripePriceIdProYearly: process.env.STRIPE_PRICE_ID_PRO_YEARLY,
+    stripePriceIdEnterpriseMonthly: process.env.STRIPE_PRICE_ID_ENTERPRISE_MONTHLY,
+    stripePriceIdEnterpriseYearly: process.env.STRIPE_PRICE_ID_ENTERPRISE_YEARLY,
+
+    stripeProductIdFeaturedListing: process.env.STRIPE_PRODUCT_ID_FEATURED_LISTING,
+    stripePriceIdFeaturedListing: process.env.STRIPE_PRICE_ID_FEATURED_LISTING,
+    stripeProductIdBumpListing: process.env.STRIPE_PRODUCT_ID_BUMP_LISTING,
+    stripePriceIdBumpListing: process.env.STRIPE_PRICE_ID_BUMP_LISTING,
+    stripeProductIdHighlightListing: process.env.STRIPE_PRODUCT_ID_HIGHLIGHT_LISTING,
+    stripePriceIdHighlightListing: process.env.STRIPE_PRICE_ID_HIGHLIGHT_LISTING,
 
     sendgridApiKey: process.env.SENDGRID_API_KEY,
     sendgridFromEmail: process.env.SENDGRID_FROM_EMAIL,
     sendgridFromName: process.env.SENDGRID_FROM_NAME,
+
+    sendgridTmplVerifyEmail: process.env.SENDGRID_TMPL_VERIFY_EMAIL,
+    sendgridTmplWelcomePrivate: process.env.SENDGRID_TMPL_WELCOME_PRIVATE,
+    sendgridTmplWelcomeDealer: process.env.SENDGRID_TMPL_WELCOME_DEALER,
+    sendgridTmplResetPassword: process.env.SENDGRID_TMPL_RESET_PASSWORD,
+    sendgridTmplMfaCodeEmail: process.env.SENDGRID_TMPL_MFA_CODE_EMAIL,
+    sendgridTmplChangeEmailVerify: process.env.SENDGRID_TMPL_CHANGE_EMAIL_VERIFY,
+    sendgridTmplNewLoginAlert: process.env.SENDGRID_TMPL_NEW_LOGIN_ALERT,
+    sendgridTmplDealerAppReceived: process.env.SENDGRID_TMPL_DEALER_APP_RECEIVED,
+    sendgridTmplDealerAppApproved: process.env.SENDGRID_TMPL_DEALER_APP_APPROVED,
+    sendgridTmplDealerAppRejected: process.env.SENDGRID_TMPL_DEALER_APP_REJECTED,
+    sendgridTmplKycApproved: process.env.SENDGRID_TMPL_KYC_APPROVED,
+    sendgridTmplKycRejected: process.env.SENDGRID_TMPL_KYC_REJECTED,
+    sendgridTmplDealerStaffInvite: process.env.SENDGRID_TMPL_DEALER_STAFF_INVITE,
+    sendgridTmplRoleChanged: process.env.SENDGRID_TMPL_ROLE_CHANGED,
+    sendgridTmplCashOfferAlert: process.env.SENDGRID_TMPL_CASHOFFER_ALERT,
 
     twilioAccountSid: process.env.TWILIO_ACCOUNT_SID,
     twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,

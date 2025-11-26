@@ -19,9 +19,10 @@ async function bootstrap() {
   );
 
   const configService = app.get(ConfigService<AppConfig>);
-  const port = configService.get('port', { infer: true });
-  const nodeEnv = configService.get('nodeEnv', { infer: true });
-  const corsOrigins = configService.get('corsOrigin', { infer: true });
+  const port = configService.get('port', { infer: true }) || 3000;
+  const nodeEnv = configService.get('nodeEnv', { infer: true }) || 'development';
+  const corsOrigins = configService.get('corsOrigin', { infer: true }) || '*';
+  const apiVersion = configService.get('apiVersion', { infer: true }) || 'v2';
 
   // Enable CORS
   app.enableCors({
@@ -43,17 +44,17 @@ async function bootstrap() {
     }),
   );
 
-  // Global prefix
-  app.setGlobalPrefix('api');
+  // Global prefix with versioning
+  app.setGlobalPrefix(`api/${apiVersion}`);
 
   // Swagger/OpenAPI documentation
   if (nodeEnv !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('OnlyUsedTesla API')
       .setDescription(
-        'NestJS + Fastify backend service for OnlyUsedTesla platform - A high-performance marketplace for used Tesla vehicles',
+        'API backend service for OnlyUsedTesla platform - A high-performance marketplace for used Tesla vehicles',
       )
-      .setVersion('1.0.0')
+      .setVersion(apiVersion)
       .addBearerAuth(
         {
           type: 'http',
@@ -89,7 +90,37 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('docs', app, document);
+
+    // Apply security globally to all endpoints except health endpoints
+    for (const path in document.paths) {
+      // Skip security for health endpoints (they use @SkipAuth and @SkipCountryGuard)
+      if (path.startsWith(`/api/${apiVersion}/health`)) {
+        continue;
+      }
+
+      for (const method in document.paths[path]) {
+        const operation = document.paths[path][method];
+        if (operation && typeof operation === 'object') {
+          // Apply both security schemes to all endpoints
+          operation.security = [
+            { Authorization: [] },
+            { 'X-Country': [] },
+          ];
+        }
+      }
+    }
+
+    SwaggerModule.setup('docs', app, document, {
+      customSiteTitle: 'OnlyUsedTesla API Documentation',
+      customfavIcon: 'https://onlyusedtesla.com/assets/icon_64x64.24a82d.png',
+      customCss: `
+        .topbar-wrapper img { content: url('https://onlyusedtesla.com/assets/icon_512x512.24a82d.png'); width: 40px; height: auto; }
+        .topbar { background-color: #1a1a2e; }
+      `,
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    });
 
     logger.log(`Swagger documentation available at http://localhost:${port}/docs`);
   }
@@ -97,7 +128,7 @@ async function bootstrap() {
   // Start server
   await app.listen(port, '0.0.0.0');
 
-  logger.log(`🚀 Application running on: http://localhost:${port}/api`);
+  logger.log(`Application running on: http://localhost:${port}/api/${apiVersion}`);
   logger.log(`Environment: ${nodeEnv}`);
 }
 

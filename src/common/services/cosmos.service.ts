@@ -53,9 +53,9 @@ export class CosmosService implements OnModuleInit {
    */
   private async connect(): Promise<void> {
     try {
-      const endpoint = this.configService.get('cosmosEndpoint', { infer: true });
-      const key = this.configService.get('cosmosKey', { infer: true });
-      const databaseId = this.configService.get('cosmosDatabase', { infer: true });
+      const endpoint = this.configService.get('cosmosEndpoint', { infer: true })!;
+      const key = this.configService.get('cosmosKey', { infer: true })!;
+      const databaseId = this.configService.get('cosmosDatabase', { infer: true })!;
 
       this.client = new CosmosClient({ endpoint, key });
       this.database = this.client.database(databaseId);
@@ -91,9 +91,9 @@ export class CosmosService implements OnModuleInit {
   /**
    * Create an item in a container
    */
-  async createItem<T extends Resource>(
+  async createItem<T>(
     containerName: string,
-    item: T,
+    item: T & { id: string },
   ): Promise<T> {
     const container = this.getContainer(containerName);
     const { resource } = await container.items.create(item);
@@ -103,15 +103,15 @@ export class CosmosService implements OnModuleInit {
   /**
    * Read an item by ID and partition key
    */
-  async readItem<T extends Resource>(
+  async readItem<T>(
     containerName: string,
     id: string,
     partitionKeyValue: string,
   ): Promise<T | null> {
     try {
       const container = this.getContainer(containerName);
-      const { resource } = await container.item(id, partitionKeyValue).read<T>();
-      return resource || null;
+      const { resource } = await container.item(id, partitionKeyValue).read();
+      return (resource as T) || null;
     } catch (error: any) {
       if (error.code === 404) {
         return null;
@@ -123,14 +123,14 @@ export class CosmosService implements OnModuleInit {
   /**
    * Update (replace) an item
    */
-  async updateItem<T extends Resource>(
+  async updateItem<T>(
     containerName: string,
-    item: T,
+    item: T & { id: string },
     partitionKeyValue: string,
   ): Promise<T> {
     const container = this.getContainer(containerName);
     const { resource } = await container
-      .item(item.id, partitionKeyValue)
+      .item((item as any).id, partitionKeyValue)
       .replace(item);
     return resource as T;
   }
@@ -150,7 +150,7 @@ export class CosmosService implements OnModuleInit {
   /**
    * Query items with pagination
    */
-  async queryItems<T extends Resource>(
+  async queryItems<T>(
     containerName: string,
     query: string,
     parameters?: any[],
@@ -189,5 +189,35 @@ export class CosmosService implements OnModuleInit {
    */
   getDatabase(): Database {
     return this.database;
+  }
+
+  /**
+   * Generate a unique ID
+   */
+  generateId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Upsert (create or update) an item
+   */
+  async upsertItem<T>(
+    containerName: string,
+    item: T & { id: string },
+  ): Promise<T> {
+    const container = this.getContainer(containerName);
+    const { resource } = await container.items.upsert(item);
+    return resource as T;
+  }
+
+  /**
+   * Get an item by ID (alias for readItem for consistency)
+   */
+  async getItem<T>(
+    containerName: string,
+    id: string,
+    partitionKeyValue: string,
+  ): Promise<T | null> {
+    return this.readItem<T>(containerName, id, partitionKeyValue);
   }
 }

@@ -7,7 +7,7 @@ import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 export class SignInDto {
   @ApiProperty({
     description: 'User email address',
-    example: 'jane.doe@example.com',
+    example: 'akua.mensah@gmail.com',
   })
   @IsEmail({}, { message: 'Invalid email format' })
   @IsNotEmpty()

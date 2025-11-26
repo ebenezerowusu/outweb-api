@@ -40,7 +40,8 @@ export const RequireRoles = (...roles: string[]) =>
 export const CurrentUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
-    return request.user;
+    // In NestJS with Fastify, the user is set on the raw request
+    return request.user || request.raw?.user;
   },
 );
 

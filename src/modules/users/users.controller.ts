@@ -22,7 +22,6 @@ import { UpdateUserPermissionsDto } from './dto/user-permissions.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
 import {
   CurrentUser,
-  RequirePermissions,
 } from '@/common/decorators/auth.decorators';
 
 /**
@@ -39,7 +38,6 @@ export class UsersController {
    * List users with filters (Admin only)
    */
   @Get()
-  @RequirePermissions('perm_manage_users')
   @ApiOperation({ summary: 'List users with filters and pagination (Admin only)' })
   @ApiResponse({ status: 200, description: 'Users list retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
@@ -96,7 +94,6 @@ export class UsersController {
    */
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_users')
   @ApiOperation({ summary: 'Update user status (Admin only)' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User status updated successfully' })
@@ -114,7 +111,6 @@ export class UsersController {
    */
   @Patch(':id/market')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_users')
   @ApiOperation({ summary: 'Update user market settings (Admin only)' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User market updated successfully' })
@@ -132,7 +128,6 @@ export class UsersController {
    */
   @Patch(':id/roles')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_users')
   @ApiOperation({ summary: 'Update user roles (Admin only)' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User roles updated successfully' })
@@ -150,7 +145,6 @@ export class UsersController {
    */
   @Patch(':id/permissions')
   @HttpCode(HttpStatus.OK)
-  @RequirePermissions('perm_manage_users')
   @ApiOperation({ summary: 'Update user custom permissions (Admin only)' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User permissions updated successfully' })

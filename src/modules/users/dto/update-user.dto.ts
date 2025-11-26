@@ -16,7 +16,7 @@ import {
 export class UpdateUserDto {
   @ApiProperty({
     description: 'Display name',
-    example: 'Jane D.',
+    example: 'Akua M.',
     required: false,
   })
   @IsString()
@@ -27,7 +27,7 @@ export class UpdateUserDto {
 
   @ApiProperty({
     description: 'First name',
-    example: 'Jane',
+    example: 'Akua',
     required: false,
   })
   @IsString()
@@ -38,7 +38,7 @@ export class UpdateUserDto {
 
   @ApiProperty({
     description: 'Last name',
-    example: 'Doe',
+    example: 'Mensah',
     required: false,
   })
   @IsString()
@@ -49,7 +49,7 @@ export class UpdateUserDto {
 
   @ApiProperty({
     description: 'Phone number',
-    example: '+15550000000',
+    example: '+233244123456',
     required: false,
   })
   @IsString()
@@ -88,7 +88,7 @@ export class UpdateUserDto {
 
   @ApiProperty({
     description: 'Timezone',
-    example: 'America/Los_Angeles',
+    example: 'Africa/Accra',
     required: false,
   })
   @IsString()
@@ -159,7 +159,7 @@ export class UpdateUserStatusDto {
 export class UpdateUserMarketDto {
   @ApiProperty({
     description: 'Primary country code',
-    example: 'US',
+    example: 'GH',
     required: false,
   })
   @IsString()
@@ -170,7 +170,7 @@ export class UpdateUserMarketDto {
 
   @ApiProperty({
     description: 'Allowed countries',
-    example: ['US', 'CA'],
+    example: ['GH', 'NG'],
     type: [String],
     required: false,
   })

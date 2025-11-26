@@ -9,7 +9,7 @@ import { Type } from 'class-transformer';
 export class QueryUsersDto {
   @ApiProperty({
     description: 'Filter by email (supports wildcards with ilike)',
-    example: 'jane.doe@example.com',
+    example: 'akua.mensah@gmail.com',
     required: false,
   })
   @IsString()
@@ -18,7 +18,7 @@ export class QueryUsersDto {
 
   @ApiProperty({
     description: 'Filter by username',
-    example: 'janedoe',
+    example: 'akuamensah',
     required: false,
   })
   @IsString()

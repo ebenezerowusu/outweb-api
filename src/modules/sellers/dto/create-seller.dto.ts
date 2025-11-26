@@ -84,6 +84,57 @@ class DealerDetailsDto {
   @ApiProperty({ example: { site1: 'Lousina', site2: 'California' }, required: false })
   @IsOptional()
   businessSite?: Record<string, string>;
+
+  @ApiProperty({ required: false })
+  @IsUrl()
+  @IsOptional()
+  logoUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsUrl()
+  @IsOptional()
+  bannerUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsUrl()
+  @IsOptional()
+  licensePhotoUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licenseNumber?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licenseExpiration?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insuranceProvider?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insurancePolicyNumber?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insuranceExpiration?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  syndicationApiKey?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  businessSiteLocations?: string[];
 }
 
 class PrivateDetailsDto {
@@ -92,6 +143,11 @@ class PrivateDetailsDto {
   @MinLength(1)
   @MaxLength(150)
   fullName: string;
+
+  @ApiProperty({ required: false })
+  @IsUrl()
+  @IsOptional()
+  idVerificationPhotoUrl?: string;
 }
 
 class SellerUserDto {

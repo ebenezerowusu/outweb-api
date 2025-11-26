@@ -114,30 +114,89 @@
 - Reviewer information with avatar and review count
 - Audit trail tracking
 
+### 7. RBAC Helper APIs Module
+**Permission Checking & Role Management**
+- `POST /rbac/check` - Check single permission (Admin only)
+- `POST /rbac/check/batch` - Check multiple permissions (Admin only)
+- `GET /rbac/me` - Get current user's effective permissions
+- `GET /rbac/permissions/suggest` - Permission suggestions (Admin only)
+- `GET /rbac/roles/suggest` - Role suggestions (Admin only)
+
+**Features**:
+- Single and batch permission checking
+- Effective permissions calculation (roles + custom permissions)
+- Permission source tracking (direct, role-based, or none)
+- Comprehensive permissions catalog (21 predefined permissions)
+- Role catalog with 7 predefined roles (Super Admin, Admin, Dealer, etc.)
+- Search-based suggestions for permissions and roles
+- Category-based permission organization
+- Role permission inheritance
+- Permission descriptions and metadata
+
+### 8. Taxonomies Module
+**Vehicle Classifications & Attributes Management**
+- `GET /taxonomies` - List taxonomies with filters + pagination (Public)
+- `GET /taxonomies/suggest` - Autocomplete suggestions (Public)
+- `GET /taxonomies/:id` - Get taxonomy by ID (Public)
+- `GET /taxonomies/:category/:slug` - Get by category and slug (Public)
+- `POST /taxonomies` - Create new taxonomy (Admin only)
+- `PATCH /taxonomies/:id` - Update taxonomy (Admin only)
+- `PATCH /taxonomies/:id/status` - Update status (Admin only)
+- `PATCH /taxonomies/bulk` - Bulk update taxonomies (Admin only)
+- `DELETE /taxonomies/:id` - Delete taxonomy (Admin only)
+
+**Features**:
+- 11 taxonomy categories (make, model, trim, year, color, interior_color, body_type, drivetrain, battery_size, feature, condition)
+- SEO-friendly slug generation and management
+- Hierarchical taxonomy support (parent-child relationships)
+- Duplicate slug prevention within categories
+- Autocomplete/suggestions with search
+- Bulk operations for status updates
+- Display order management
+- Popular taxonomy marking
+- Usage count tracking
+- SEO metadata (meta title, description, keywords)
+- Custom metadata storage
+- Active/visible status management
+- Child count tracking and validation
+- Cursor-based pagination
+- Public access for read operations
+- Admin-only write operations
+
+### 9. Listings & Vehicles Module
+**Vehicle Listing Management & Marketplace**
+- `GET /listings` - List listings with advanced filtering (Public)
+- `GET /listings/:id` - Get listing by ID (Public)
+- `POST /listings` - Create new listing (Seller or Admin)
+- `PATCH /listings/:id` - Update listing (Seller or Admin)
+- `PATCH /listings/:id/status` - Update listing status (Seller or Admin)
+- `PATCH /listings/:id/visibility` - Update visibility settings (Seller or Admin)
+- `POST /listings/:id/feature` - Feature a listing (Admin only)
+- `DELETE /listings/:id` - Delete/archive listing (Seller or Admin)
+
+**Features**:
+- Complete vehicle data (VIN, make, model, trim, year, mileage, colors, battery, FSD)
+- Pricing with history tracking and negotiation flags
+- Rich media support structure (photos, videos, documents)
+- Location-based filtering (country, state, city, ZIP, coordinates)
+- Condition tracking (ratings, descriptions, known issues, modifications)
+- Service and accident history
+- Advanced search (20+ filters: price, mileage, year, colors, features)
+- Multiple sort options
+- State machine (draft → published → sold/expired/archived)
+- Visibility controls (public, seller info, pricing, offers)
+- Performance metrics (views, favorites, inquiries)
+- Featured listings with expiration
+- VIN privacy (last 4 digits only in public)
+- Taxonomy integration
+- Soft delete functionality
+- Auto view counting
+
 ## 🚧 In Progress
 
 None
 
 ## 📋 Pending Modules
-
-### 7. RBAC Helper APIs
-- Permission checking (`/rbac/check`, `/rbac/check/batch`)
-- Current user's effective permissions (`/rbac/me`)
-- Permission suggestions (`/rbac/permissions/suggest`)
-- Role suggestions (`/rbac/roles/suggest`)
-
-### 8. Taxonomies Module
-- CRUD for taxonomies (make, model, color, etc.)
-- SEO-friendly slug management
-- Autocomplete/suggestions
-- Bulk operations
-
-### 9. Listings & Vehicles Module
-- Vehicle listing creation (Sell Your Tesla flow)
-- Listing search & filtering with facets
-- Vehicle data management
-- Media uploads (images/videos)
-- Status transitions (Published, Sold, Expired, etc.)
 
 ### 10. Payments & Subscriptions Module
 - Subscription plan management
@@ -211,9 +270,9 @@ None
 | Sellers | 7 | ✅ Complete |
 | Seller Groups | 7 | ✅ Complete |
 | Seller Reviews | 7 | ✅ Complete |
-| RBAC | 5 | ⏳ Pending |
-| Taxonomies | 16 | ⏳ Pending |
-| Listings/Vehicles | 15+ | ⏳ Pending |
+| RBAC | 5 | ✅ Complete |
+| Taxonomies | 9 | ✅ Complete |
+| Listings/Vehicles | 8 | ✅ Complete |
 | Payments | 16 | ⏳ Pending |
 | Orders | 10 | ⏳ Pending |
 | Notifications | 9 | ⏳ Pending |
@@ -221,20 +280,20 @@ None
 | Offer Chats | 5 | ⏳ Pending |
 | Chat Messages | 7 | ⏳ Pending |
 
-**Total Progress**: ~40% complete (6/15 modules)
+**Total Progress**: ~60% complete (9/15 modules)
 
 ## 🎯 Next Steps
 
-1. Implement RBAC Helper APIs (permission checking and suggestions)
-2. Implement Taxonomies (required for listings - make, model, color, etc.)
-3. Implement Listings & Vehicles (core marketplace feature)
-4. Implement Payments & Subscriptions (Stripe integration)
-5. Implement Orders & Transactions
-6. Implement Notifications (multi-channel: email, SMS, push)
-7. Implement Listing Offers (offer negotiation)
-8. Implement Chat system (Offer Chats & Messages)
-9. Integrate Stripe, SendGrid, and Twilio services
-10. Complete email verification and password reset flows
+1. Implement Payments & Subscriptions (Stripe integration for dealer subscriptions)
+2. Implement Orders & Transactions (vehicle purchase workflow)
+3. Implement Notifications (multi-channel: email, SMS, push)
+4. Implement Listing Offers (offer negotiation system)
+5. Implement Chat system (Offer Chats & Messages)
+6. Integrate external services (Stripe, SendGrid, Twilio)
+7. Complete auth flows (email verification, password reset, 2FA)
+8. Add media upload functionality (Azure Storage integration)
+9. Production readiness (testing, monitoring, documentation)
+10. Deployment and scaling configuration
 
 ## 📝 Notes
 

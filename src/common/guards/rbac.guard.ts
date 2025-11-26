@@ -47,7 +47,8 @@ export class RbacGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
 
     // Get user from request (set by JWT auth middleware)
-    const user = (request as any).user;
+    // In NestJS with Fastify, the user is set on the raw request
+    const user = (request as any).user || ((request as any).raw?.user);
 
     if (!user) {
       throw new UnauthorizedException({
