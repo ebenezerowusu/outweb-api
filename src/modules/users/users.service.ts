@@ -77,9 +77,12 @@ export class UsersService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const userItems = items || [];
+
     return {
-      items: items.map((user) => this.toPublicUser(user)),
-      count: items.length,
+      items: userItems.map((user) => this.toPublicUser(user)),
+      count: userItems.length,
       nextCursor: continuationToken || null,
     };
   }
