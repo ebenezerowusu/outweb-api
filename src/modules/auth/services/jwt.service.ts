@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { SignJWT, jwtVerify } from 'jose';
-import { AppConfig } from '@/config/app.config';
-import { JwtPayload, TokenResponse } from '@/common/types/token.type';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { SignJWT, jwtVerify } from "jose";
+import { AppConfig } from "@/config/app.config";
+import { JwtPayload, TokenResponse } from "@/common/types/token.type";
 
 /**
  * JWT Service
@@ -18,42 +18,46 @@ export class JwtService {
 
   constructor(private configService: ConfigService<AppConfig>) {
     // Convert secrets to Uint8Array for JOSE
-    const accessSecretString = this.configService.get('jwtAccessSecret', {
+    const accessSecretString = this.configService.get("jwtAccessSecret", {
       infer: true,
     })!;
-    const refreshSecretString = this.configService.get('jwtRefreshSecret', {
+    const refreshSecretString = this.configService.get("jwtRefreshSecret", {
       infer: true,
     })!;
 
     this.accessSecret = new TextEncoder().encode(accessSecretString);
     this.refreshSecret = new TextEncoder().encode(refreshSecretString);
 
-    this.accessExpiresIn = this.configService.get('jwtAccessExpiresIn', {
-      infer: true,
-    }) || 3600;
-    this.refreshExpiresIn = this.configService.get('jwtRefreshExpiresIn', {
-      infer: true,
-    }) || 604800;
+    this.accessExpiresIn =
+      this.configService.get("jwtAccessExpiresIn", {
+        infer: true,
+      }) || 3600;
+    this.refreshExpiresIn =
+      this.configService.get("jwtRefreshExpiresIn", {
+        infer: true,
+      }) || 604800;
 
-    this.logger.log('JWT Service initialized');
+    this.logger.log("JWT Service initialized");
   }
 
   /**
    * Generate access and refresh tokens
    */
-  async generateTokens(payload: Omit<JwtPayload, 'iat' | 'exp'>): Promise<TokenResponse> {
+  async generateTokens(
+    payload: Omit<JwtPayload, "iat" | "exp">,
+  ): Promise<TokenResponse> {
     const now = Math.floor(Date.now() / 1000);
 
     // Generate access token
     const accessToken = await new SignJWT(payload as any)
-      .setProtectedHeader({ alg: 'HS256' })
+      .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt(now)
       .setExpirationTime(now + this.accessExpiresIn)
       .sign(this.accessSecret);
 
     // Generate refresh token
     const refreshToken = await new SignJWT({ sub: payload.sub })
-      .setProtectedHeader({ alg: 'HS256' })
+      .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt(now)
       .setExpirationTime(now + this.refreshExpiresIn)
       .sign(this.refreshSecret);
@@ -61,7 +65,7 @@ export class JwtService {
     return {
       accessToken,
       refreshToken,
-      tokenType: 'Bearer',
+      tokenType: "Bearer",
       expiresIn: this.accessExpiresIn,
     };
   }
@@ -87,7 +91,7 @@ export class JwtService {
       const { payload } = await jwtVerify(token, this.refreshSecret);
       return payload as unknown as JwtPayload;
     } catch (error) {
-      throw new Error('Invalid or expired refresh token');
+      throw new Error("Invalid or expired refresh token");
     }
   }
 }

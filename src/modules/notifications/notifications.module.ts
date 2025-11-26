@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { NotificationsController } from './notifications.controller';
-import { NotificationsService } from './notifications.service';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { EmailService } from '@/common/services/email.service';
+import { Module } from "@nestjs/common";
+import { NotificationsController } from "./notifications.controller";
+import { NotificationsService } from "./notifications.service";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { EmailService } from "@/common/services/email.service";
 
 /**
  * Notifications Module

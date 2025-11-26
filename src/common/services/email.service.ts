@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as sgMail from '@sendgrid/mail';
-import { AppConfig } from '@/config/app.config';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as sgMail from "@sendgrid/mail";
+import { AppConfig } from "@/config/app.config";
 
 /**
  * Email Service
@@ -12,7 +12,7 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
   constructor(private readonly configService: ConfigService<AppConfig>) {
-    const apiKey = this.configService.get('sendgridApiKey', { infer: true });
+    const apiKey = this.configService.get("sendgridApiKey", { infer: true });
     if (apiKey) {
       sgMail.setApiKey(apiKey);
     }
@@ -25,7 +25,9 @@ export class EmailService {
     to: string,
     data: { firstName: string; verifyUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplVerifyEmail', { infer: true });
+    const templateId = this.configService.get("sendgridTmplVerifyEmail", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -36,7 +38,9 @@ export class EmailService {
     to: string,
     data: { firstName: string; dashboardUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplWelcomePrivate', { infer: true });
+    const templateId = this.configService.get("sendgridTmplWelcomePrivate", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -47,7 +51,9 @@ export class EmailService {
     to: string,
     data: { firstName: string; dealerName: string; dealerDashboardUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplWelcomeDealer', { infer: true });
+    const templateId = this.configService.get("sendgridTmplWelcomeDealer", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -58,7 +64,9 @@ export class EmailService {
     to: string,
     data: { firstName: string; resetUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplResetPassword', { infer: true });
+    const templateId = this.configService.get("sendgridTmplResetPassword", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -69,7 +77,9 @@ export class EmailService {
     to: string,
     data: { firstName: string; code: string; expiresMinutes: number },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplMfaCodeEmail', { infer: true });
+    const templateId = this.configService.get("sendgridTmplMfaCodeEmail", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -80,7 +90,9 @@ export class EmailService {
     to: string,
     data: { firstName: string; verifyUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplChangeEmailVerify', { infer: true });
+    const templateId = this.configService.get("sendgridTmplChangeEmailVerify", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -97,7 +109,9 @@ export class EmailService {
       userAgent: string;
     },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplNewLoginAlert', { infer: true });
+    const templateId = this.configService.get("sendgridTmplNewLoginAlert", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -108,7 +122,9 @@ export class EmailService {
     to: string,
     data: { dealerName: string; submittedAt: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplDealerAppReceived', { infer: true });
+    const templateId = this.configService.get("sendgridTmplDealerAppReceived", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -119,7 +135,9 @@ export class EmailService {
     to: string,
     data: { dealerName: string; dealerDashboardUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplDealerAppApproved', { infer: true });
+    const templateId = this.configService.get("sendgridTmplDealerAppApproved", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -130,7 +148,9 @@ export class EmailService {
     to: string,
     data: { dealerName: string; reason: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplDealerAppRejected', { infer: true });
+    const templateId = this.configService.get("sendgridTmplDealerAppRejected", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -141,7 +161,9 @@ export class EmailService {
     to: string,
     data: { sellerName: string; dashboardUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplKycApproved', { infer: true });
+    const templateId = this.configService.get("sendgridTmplKycApproved", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -152,7 +174,9 @@ export class EmailService {
     to: string,
     data: { sellerName: string; reason: string; resubmitUrl: string },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplKycRejected', { infer: true });
+    const templateId = this.configService.get("sendgridTmplKycRejected", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -168,7 +192,9 @@ export class EmailService {
       setPasswordUrl: string;
     },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplDealerStaffInvite', { infer: true });
+    const templateId = this.configService.get("sendgridTmplDealerStaffInvite", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -184,7 +210,9 @@ export class EmailService {
       dashboardUrl: string;
     },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplRoleChanged', { infer: true });
+    const templateId = this.configService.get("sendgridTmplRoleChanged", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -211,7 +239,9 @@ export class EmailService {
       listingImage: string;
     },
   ): Promise<void> {
-    const templateId = this.configService.get('sendgridTmplCashOfferAlert', { infer: true });
+    const templateId = this.configService.get("sendgridTmplCashOfferAlert", {
+      infer: true,
+    });
     await this.sendTemplateEmail(to, templateId!, data);
   }
 
@@ -224,8 +254,12 @@ export class EmailService {
     dynamicTemplateData: Record<string, any>,
   ): Promise<void> {
     try {
-      const fromEmail = this.configService.get('sendgridFromEmail', { infer: true });
-      const fromName = this.configService.get('sendgridFromName', { infer: true });
+      const fromEmail = this.configService.get("sendgridFromEmail", {
+        infer: true,
+      });
+      const fromName = this.configService.get("sendgridFromName", {
+        infer: true,
+      });
 
       const msg = {
         to,
@@ -238,7 +272,9 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      this.logger.log(`Email sent successfully to ${to} using template ${templateId}`);
+      this.logger.log(
+        `Email sent successfully to ${to} using template ${templateId}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to send email to ${to}:`, error);
       throw error;

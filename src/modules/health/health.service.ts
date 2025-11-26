@@ -1,8 +1,8 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { BlobServiceClient } from '@azure/storage-blob';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { AppConfig } from '@/config/app.config';
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { BlobServiceClient } from "@azure/storage-blob";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { AppConfig } from "@/config/app.config";
 
 @Injectable()
 export class HealthService {
@@ -14,7 +14,7 @@ export class HealthService {
   ) {
     // Initialize Azure Storage client
     const connectionString = this.configService.get(
-      'azureStorageConnectionString',
+      "azureStorageConnectionString",
       { infer: true },
     )!;
     this.blobServiceClient =
@@ -26,10 +26,10 @@ export class HealthService {
    */
   async checkHealth() {
     return {
-      status: 'ok',
+      status: "ok",
       timestamp: new Date().toISOString(),
-      service: 'OnlyUsedTesla-API',
-      version: '1.0.0',
+      service: "OnlyUsedTesla-API",
+      version: "1.0.0",
     };
   }
 
@@ -44,8 +44,8 @@ export class HealthService {
       if (!isHealthy) {
         throw new ServiceUnavailableException({
           statusCode: 503,
-          error: 'Service Unavailable',
-          message: 'Cosmos DB connection failed',
+          error: "Service Unavailable",
+          message: "Cosmos DB connection failed",
         });
       }
 
@@ -66,7 +66,7 @@ export class HealthService {
           _rid: db._rid,
           _self: db._self,
           _ts: db._ts,
-          containers: containerList.map(c => ({
+          containers: containerList.map((c) => ({
             id: c.id,
             _rid: c._rid,
             partitionKey: c.partitionKey,
@@ -76,11 +76,11 @@ export class HealthService {
       }
 
       return {
-        status: 'ok',
-        service: 'cosmos-db',
+        status: "ok",
+        service: "cosmos-db",
         timestamp: new Date().toISOString(),
         account: {
-          endpoint: this.configService.get('cosmosEndpoint', { infer: true }),
+          endpoint: this.configService.get("cosmosEndpoint", { infer: true }),
           databaseCount: databases.length,
           databases,
         },
@@ -88,9 +88,9 @@ export class HealthService {
     } catch (error) {
       throw new ServiceUnavailableException({
         statusCode: 503,
-        error: 'Service Unavailable',
-        message: 'Cosmos DB connection failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Service Unavailable",
+        message: "Cosmos DB connection failed",
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -106,7 +106,9 @@ export class HealthService {
 
       const containers: any[] = [];
       for await (const container of this.blobServiceClient.listContainers()) {
-        const containerClient = this.blobServiceClient.getContainerClient(container.name);
+        const containerClient = this.blobServiceClient.getContainerClient(
+          container.name,
+        );
 
         // Get container properties
         const containerProperties = await containerClient.getProperties();
@@ -114,7 +116,9 @@ export class HealthService {
         // Count blobs in container (optional - can be slow for large containers)
         let blobCount = 0;
         try {
-          for await (const _ of containerClient.listBlobsFlat({ includeMetadata: false })) {
+          for await (const _ of containerClient.listBlobsFlat({
+            includeMetadata: false,
+          })) {
             blobCount++;
             // Limit counting to avoid performance issues
             if (blobCount >= 1000) {
@@ -129,19 +133,19 @@ export class HealthService {
         containers.push({
           name: container.name,
           lastModified: container.properties.lastModified,
-          publicAccess: container.properties.publicAccess || 'none',
+          publicAccess: container.properties.publicAccess || "none",
           leaseStatus: container.properties.leaseStatus,
           leaseState: container.properties.leaseState,
           hasImmutabilityPolicy: container.properties.hasImmutabilityPolicy,
           hasLegalHold: container.properties.hasLegalHold,
-          blobCount: blobCount === -1 ? '1000+' : blobCount,
+          blobCount: blobCount === -1 ? "1000+" : blobCount,
           metadata: containerProperties.metadata || {},
         });
       }
 
       return {
-        status: 'ok',
-        service: 'azure-storage',
+        status: "ok",
+        service: "azure-storage",
         timestamp: new Date().toISOString(),
         account: {
           accountName: this.blobServiceClient.accountName,
@@ -153,9 +157,9 @@ export class HealthService {
     } catch (error) {
       throw new ServiceUnavailableException({
         statusCode: 503,
-        error: 'Service Unavailable',
-        message: 'Azure Storage connection failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Service Unavailable",
+        message: "Azure Storage connection failed",
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }

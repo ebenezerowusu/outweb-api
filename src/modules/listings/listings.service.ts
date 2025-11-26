@@ -3,20 +3,24 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { PaginatedResponse } from '@/common/types/pagination.type';
-import { ListingDocument, PublicListing, ListingState } from './interfaces/listing.interface';
-import { CreateListingDto } from './dto/create-listing.dto';
+} from "@nestjs/common";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { PaginatedResponse } from "@/common/types/pagination.type";
+import {
+  ListingDocument,
+  PublicListing,
+  ListingState,
+} from "./interfaces/listing.interface";
+import { CreateListingDto } from "./dto/create-listing.dto";
 import {
   UpdateListingDto,
   UpdateListingStatusDto,
   UpdateListingVisibilityDto,
   FeatureListingDto,
-} from './dto/update-listing.dto';
-import { QueryListingsDto } from './dto/query-listing.dto';
-import { SellerDocument } from '@/modules/sellers/interfaces/seller.interface';
-import { TaxonomyDocument } from '@/modules/taxonomies/interfaces/taxonomy.interface';
+} from "./dto/update-listing.dto";
+import { QueryListingsDto } from "./dto/query-listing.dto";
+import { SellerDocument } from "@/modules/sellers/interfaces/seller.interface";
+import { TaxonomyDocument } from "@/modules/taxonomies/interfaces/taxonomy.interface";
 
 /**
  * Listings Service
@@ -24,164 +28,174 @@ import { TaxonomyDocument } from '@/modules/taxonomies/interfaces/taxonomy.inter
  */
 @Injectable()
 export class ListingsService {
-  private readonly LISTINGS_CONTAINER = 'listings';
-  private readonly SELLERS_CONTAINER = 'sellers';
-  private readonly TAXONOMIES_CONTAINER = 'taxonomies';
+  private readonly LISTINGS_CONTAINER = "listings";
+  private readonly SELLERS_CONTAINER = "sellers";
+  private readonly TAXONOMIES_CONTAINER = "taxonomies";
 
   constructor(private readonly cosmosService: CosmosService) {}
 
   /**
    * List listings with filters and pagination
    */
-  async findAll(query: QueryListingsDto): Promise<PaginatedResponse<PublicListing>> {
-    let sqlQuery = 'SELECT * FROM c WHERE 1=1';
+  async findAll(
+    query: QueryListingsDto,
+  ): Promise<PaginatedResponse<PublicListing>> {
+    let sqlQuery = "SELECT * FROM c WHERE 1=1";
     const parameters: any[] = [];
 
     // Search by make, model, or VIN
     if (query.search) {
-      sqlQuery += ' AND (CONTAINS(LOWER(c.vehicle.make), @search) OR CONTAINS(LOWER(c.vehicle.model), @search) OR CONTAINS(c.vehicle.vin, @search))';
-      parameters.push({ name: '@search', value: query.search.toLowerCase() });
+      sqlQuery +=
+        " AND (CONTAINS(LOWER(c.vehicle.make), @search) OR CONTAINS(LOWER(c.vehicle.model), @search) OR CONTAINS(c.vehicle.vin, @search))";
+      parameters.push({ name: "@search", value: query.search.toLowerCase() });
     }
 
     // Filter by seller
     if (query.sellerId) {
-      sqlQuery += ' AND c.sellerId = @sellerId';
-      parameters.push({ name: '@sellerId', value: query.sellerId });
+      sqlQuery += " AND c.sellerId = @sellerId";
+      parameters.push({ name: "@sellerId", value: query.sellerId });
     }
 
     // Filter by make
     if (query.makeId) {
-      sqlQuery += ' AND c.vehicle.makeId = @makeId';
-      parameters.push({ name: '@makeId', value: query.makeId });
+      sqlQuery += " AND c.vehicle.makeId = @makeId";
+      parameters.push({ name: "@makeId", value: query.makeId });
     }
 
     // Filter by model
     if (query.modelId) {
-      sqlQuery += ' AND c.vehicle.modelId = @modelId';
-      parameters.push({ name: '@modelId', value: query.modelId });
+      sqlQuery += " AND c.vehicle.modelId = @modelId";
+      parameters.push({ name: "@modelId", value: query.modelId });
     }
 
     // Filter by year range
     if (query.minYear) {
-      sqlQuery += ' AND c.vehicle.year >= @minYear';
-      parameters.push({ name: '@minYear', value: query.minYear });
+      sqlQuery += " AND c.vehicle.year >= @minYear";
+      parameters.push({ name: "@minYear", value: query.minYear });
     }
     if (query.maxYear) {
-      sqlQuery += ' AND c.vehicle.year <= @maxYear';
-      parameters.push({ name: '@maxYear', value: query.maxYear });
+      sqlQuery += " AND c.vehicle.year <= @maxYear";
+      parameters.push({ name: "@maxYear", value: query.maxYear });
     }
 
     // Filter by price range
     if (query.minPrice) {
-      sqlQuery += ' AND c.pricing.listPrice >= @minPrice';
-      parameters.push({ name: '@minPrice', value: query.minPrice });
+      sqlQuery += " AND c.pricing.listPrice >= @minPrice";
+      parameters.push({ name: "@minPrice", value: query.minPrice });
     }
     if (query.maxPrice) {
-      sqlQuery += ' AND c.pricing.listPrice <= @maxPrice';
-      parameters.push({ name: '@maxPrice', value: query.maxPrice });
+      sqlQuery += " AND c.pricing.listPrice <= @maxPrice";
+      parameters.push({ name: "@maxPrice", value: query.maxPrice });
     }
 
     // Filter by mileage range
     if (query.minMileage) {
-      sqlQuery += ' AND c.vehicle.mileage >= @minMileage';
-      parameters.push({ name: '@minMileage', value: query.minMileage });
+      sqlQuery += " AND c.vehicle.mileage >= @minMileage";
+      parameters.push({ name: "@minMileage", value: query.minMileage });
     }
     if (query.maxMileage) {
-      sqlQuery += ' AND c.vehicle.mileage <= @maxMileage';
-      parameters.push({ name: '@maxMileage', value: query.maxMileage });
+      sqlQuery += " AND c.vehicle.mileage <= @maxMileage";
+      parameters.push({ name: "@maxMileage", value: query.maxMileage });
     }
 
     // Filter by colors
     if (query.exteriorColorId) {
-      sqlQuery += ' AND c.vehicle.exteriorColorId = @exteriorColorId';
-      parameters.push({ name: '@exteriorColorId', value: query.exteriorColorId });
+      sqlQuery += " AND c.vehicle.exteriorColorId = @exteriorColorId";
+      parameters.push({
+        name: "@exteriorColorId",
+        value: query.exteriorColorId,
+      });
     }
     if (query.interiorColorId) {
-      sqlQuery += ' AND c.vehicle.interiorColorId = @interiorColorId';
-      parameters.push({ name: '@interiorColorId', value: query.interiorColorId });
+      sqlQuery += " AND c.vehicle.interiorColorId = @interiorColorId";
+      parameters.push({
+        name: "@interiorColorId",
+        value: query.interiorColorId,
+      });
     }
 
     // Filter by body type
     if (query.bodyTypeId) {
-      sqlQuery += ' AND c.vehicle.bodyTypeId = @bodyTypeId';
-      parameters.push({ name: '@bodyTypeId', value: query.bodyTypeId });
+      sqlQuery += " AND c.vehicle.bodyTypeId = @bodyTypeId";
+      parameters.push({ name: "@bodyTypeId", value: query.bodyTypeId });
     }
 
     // Filter by drivetrain
     if (query.drivetrainId) {
-      sqlQuery += ' AND c.vehicle.drivetrainId = @drivetrainId';
-      parameters.push({ name: '@drivetrainId', value: query.drivetrainId });
+      sqlQuery += " AND c.vehicle.drivetrainId = @drivetrainId";
+      parameters.push({ name: "@drivetrainId", value: query.drivetrainId });
     }
 
     // Filter by condition
     if (query.condition) {
-      sqlQuery += ' AND c.condition.overall = @condition';
-      parameters.push({ name: '@condition', value: query.condition });
+      sqlQuery += " AND c.condition.overall = @condition";
+      parameters.push({ name: "@condition", value: query.condition });
     }
 
     // Filter by state
     if (query.state) {
-      sqlQuery += ' AND c.status.state = @state';
-      parameters.push({ name: '@state', value: query.state });
+      sqlQuery += " AND c.status.state = @state";
+      parameters.push({ name: "@state", value: query.state });
     }
 
     // Filter by featured
     if (query.featured !== undefined) {
-      sqlQuery += ' AND c.status.featured = @featured';
-      parameters.push({ name: '@featured', value: query.featured });
+      sqlQuery += " AND c.status.featured = @featured";
+      parameters.push({ name: "@featured", value: query.featured });
     }
 
     // Filter by verified
     if (query.verified !== undefined) {
-      sqlQuery += ' AND c.status.verified = @verified';
-      parameters.push({ name: '@verified', value: query.verified });
+      sqlQuery += " AND c.status.verified = @verified";
+      parameters.push({ name: "@verified", value: query.verified });
     }
 
     // Filter by FSD capable
     if (query.fsdCapable !== undefined) {
-      sqlQuery += ' AND c.vehicle.fsdCapable = @fsdCapable';
-      parameters.push({ name: '@fsdCapable', value: query.fsdCapable });
+      sqlQuery += " AND c.vehicle.fsdCapable = @fsdCapable";
+      parameters.push({ name: "@fsdCapable", value: query.fsdCapable });
     }
 
     // Filter by location
     if (query.country) {
-      sqlQuery += ' AND c.location.country = @country';
-      parameters.push({ name: '@country', value: query.country.toUpperCase() });
+      sqlQuery += " AND c.location.country = @country";
+      parameters.push({ name: "@country", value: query.country.toUpperCase() });
     }
     if (query.state_location) {
-      sqlQuery += ' AND c.location.state = @state_location';
-      parameters.push({ name: '@state_location', value: query.state_location });
+      sqlQuery += " AND c.location.state = @state_location";
+      parameters.push({ name: "@state_location", value: query.state_location });
     }
     if (query.city) {
-      sqlQuery += ' AND LOWER(c.location.city) = @city';
-      parameters.push({ name: '@city', value: query.city.toLowerCase() });
+      sqlQuery += " AND LOWER(c.location.city) = @city";
+      parameters.push({ name: "@city", value: query.city.toLowerCase() });
     }
     if (query.zipCode) {
-      sqlQuery += ' AND c.location.zipCode = @zipCode';
-      parameters.push({ name: '@zipCode', value: query.zipCode });
+      sqlQuery += " AND c.location.zipCode = @zipCode";
+      parameters.push({ name: "@zipCode", value: query.zipCode });
     }
 
     // Apply sorting
     const sortMap: Record<string, string> = {
-      price_asc: 'c.pricing.listPrice ASC',
-      price_desc: 'c.pricing.listPrice DESC',
-      mileage_asc: 'c.vehicle.mileage ASC',
-      mileage_desc: 'c.vehicle.mileage DESC',
-      year_asc: 'c.vehicle.year ASC',
-      year_desc: 'c.vehicle.year DESC',
-      created_asc: 'c.audit.createdAt ASC',
-      created_desc: 'c.audit.createdAt DESC',
+      price_asc: "c.pricing.listPrice ASC",
+      price_desc: "c.pricing.listPrice DESC",
+      mileage_asc: "c.vehicle.mileage ASC",
+      mileage_desc: "c.vehicle.mileage DESC",
+      year_asc: "c.vehicle.year ASC",
+      year_desc: "c.vehicle.year DESC",
+      created_asc: "c.audit.createdAt ASC",
+      created_desc: "c.audit.createdAt DESC",
     };
-    const sortBy = query.sortBy || 'created_desc';
-    sqlQuery += ` ORDER BY ${sortMap[sortBy] || 'c.audit.createdAt DESC'}`;
+    const sortBy = query.sortBy || "created_desc";
+    sqlQuery += ` ORDER BY ${sortMap[sortBy] || "c.audit.createdAt DESC"}`;
 
-    const { items, continuationToken } = await this.cosmosService.queryItems<ListingDocument>(
-      this.LISTINGS_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
+    const { items, continuationToken } =
+      await this.cosmosService.queryItems<ListingDocument>(
+        this.LISTINGS_CONTAINER,
+        sqlQuery,
+        parameters,
+        query.limit,
+        query.cursor,
+      );
 
     return {
       items: items.map((listing) => this.toPublicListing(listing)),
@@ -203,15 +217,19 @@ export class ListingsService {
     if (!listing) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Listing not found',
+        error: "Not Found",
+        message: "Listing not found",
       });
     }
 
     // Increment view count
     listing.performance.views += 1;
     listing.performance.lastViewedAt = new Date().toISOString();
-    await this.cosmosService.updateItem(this.LISTINGS_CONTAINER, listing, listing.id);
+    await this.cosmosService.updateItem(
+      this.LISTINGS_CONTAINER,
+      listing,
+      listing.id,
+    );
 
     return this.toPublicListing(listing);
   }
@@ -219,7 +237,11 @@ export class ListingsService {
   /**
    * Create new listing
    */
-  async create(dto: CreateListingDto, userId: string, country: string): Promise<PublicListing> {
+  async create(
+    dto: CreateListingDto,
+    userId: string,
+    country: string,
+  ): Promise<PublicListing> {
     // Determine seller
     const sellerId = dto.sellerId || userId;
 
@@ -233,33 +255,38 @@ export class ListingsService {
     if (!seller) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'Seller not found',
+        error: "Bad Request",
+        message: "Seller not found",
       });
     }
 
     // Resolve taxonomy names from IDs
-    const taxonomies = await this.resolveTaxonomies([
-      dto.vehicle.makeId,
-      dto.vehicle.modelId,
-      dto.vehicle.trimId,
-      dto.vehicle.exteriorColorId,
-      dto.vehicle.interiorColorId,
-      dto.vehicle.bodyTypeId,
-      dto.vehicle.drivetrainId,
-      dto.vehicle.batterySizeId,
-    ].filter(Boolean) as string[]);
+    const taxonomies = await this.resolveTaxonomies(
+      [
+        dto.vehicle.makeId,
+        dto.vehicle.modelId,
+        dto.vehicle.trimId,
+        dto.vehicle.exteriorColorId,
+        dto.vehicle.interiorColorId,
+        dto.vehicle.bodyTypeId,
+        dto.vehicle.drivetrainId,
+        dto.vehicle.batterySizeId,
+      ].filter(Boolean) as string[],
+    );
 
     const now = new Date().toISOString();
     const listingId = this.cosmosService.generateId();
 
     const listing: ListingDocument = {
       id: listingId,
-      type: 'listing',
+      type: "listing",
       sellerId: seller.id,
       seller: {
         id: seller.id,
-        name: seller.sellerType === 'dealer' ? seller.dealerDetails!.companyName : seller.privateDetails!.fullName,
+        name:
+          seller.sellerType === "dealer"
+            ? seller.dealerDetails!.companyName
+            : seller.privateDetails!.fullName,
         type: seller.sellerType,
         rating: seller.meta.averageRating,
         reviewCount: seller.meta.totalReviews,
@@ -267,21 +294,21 @@ export class ListingsService {
       vehicle: {
         vin: dto.vehicle.vin,
         // TODO: Update to use new taxonomy structure - these will show as 'Unknown' until resolved
-        make: 'Unknown', // taxonomies[dto.vehicle.makeId]?.name || 'Unknown',
+        make: "Unknown", // taxonomies[dto.vehicle.makeId]?.name || 'Unknown',
         makeId: dto.vehicle.makeId,
-        model: 'Unknown', // taxonomies[dto.vehicle.modelId]?.name || 'Unknown',
+        model: "Unknown", // taxonomies[dto.vehicle.modelId]?.name || 'Unknown',
         modelId: dto.vehicle.modelId,
         trim: null, // dto.vehicle.trimId ? taxonomies[dto.vehicle.trimId]?.name || null : null,
         trimId: dto.vehicle.trimId || null,
         year: dto.vehicle.year,
         mileage: dto.vehicle.mileage,
-        exteriorColor: 'Unknown', // taxonomies[dto.vehicle.exteriorColorId]?.name || 'Unknown',
+        exteriorColor: "Unknown", // taxonomies[dto.vehicle.exteriorColorId]?.name || 'Unknown',
         exteriorColorId: dto.vehicle.exteriorColorId,
-        interiorColor: 'Unknown', // taxonomies[dto.vehicle.interiorColorId]?.name || 'Unknown',
+        interiorColor: "Unknown", // taxonomies[dto.vehicle.interiorColorId]?.name || 'Unknown',
         interiorColorId: dto.vehicle.interiorColorId,
-        bodyType: 'Unknown', // taxonomies[dto.vehicle.bodyTypeId]?.name || 'Unknown',
+        bodyType: "Unknown", // taxonomies[dto.vehicle.bodyTypeId]?.name || 'Unknown',
         bodyTypeId: dto.vehicle.bodyTypeId,
-        drivetrain: 'Unknown', // taxonomies[dto.vehicle.drivetrainId]?.name || 'Unknown',
+        drivetrain: "Unknown", // taxonomies[dto.vehicle.drivetrainId]?.name || 'Unknown',
         drivetrainId: dto.vehicle.drivetrainId,
         batterySize: null, // dto.vehicle.batterySizeId ? taxonomies[dto.vehicle.batterySizeId]?.name || null : null,
         batterySizeId: dto.vehicle.batterySizeId || null,
@@ -294,13 +321,15 @@ export class ListingsService {
       pricing: {
         listPrice: dto.pricing.listPrice,
         originalPrice: dto.pricing.originalPrice ?? null,
-        currency: dto.pricing.currency || 'USD',
-        priceHistory: [{
-          price: dto.pricing.listPrice,
-          changedAt: now,
-          changedBy: userId,
-          reason: 'Initial listing',
-        }],
+        currency: dto.pricing.currency || "USD",
+        priceHistory: [
+          {
+            price: dto.pricing.listPrice,
+            changedAt: now,
+            changedBy: userId,
+            reason: "Initial listing",
+          },
+        ],
         negotiable: dto.pricing.negotiable ?? true,
         acceptsOffers: dto.pricing.acceptsOffers ?? true,
         tradeinAccepted: dto.pricing.tradeinAccepted ?? false,
@@ -336,7 +365,7 @@ export class ListingsService {
         accidentHistory: [],
       },
       status: {
-        state: 'draft',
+        state: "draft",
         substatus: null,
         publishedAt: null,
         soldAt: null,
@@ -396,8 +425,8 @@ export class ListingsService {
     if (!listing) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Listing not found',
+        error: "Not Found",
+        message: "Listing not found",
       });
     }
 
@@ -405,8 +434,8 @@ export class ListingsService {
     if (!isAdmin && listing.sellerId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have permission to update this listing',
+        error: "Forbidden",
+        message: "You do not have permission to update this listing",
       });
     }
 
@@ -420,7 +449,7 @@ export class ListingsService {
         price: dto.listPrice,
         changedAt: new Date().toISOString(),
         changedBy: userId,
-        reason: dto.priceChangeReason || 'Price update',
+        reason: dto.priceChangeReason || "Price update",
       });
       listing.pricing.listPrice = dto.listPrice;
     }
@@ -480,8 +509,8 @@ export class ListingsService {
     if (!listing) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Listing not found',
+        error: "Not Found",
+        message: "Listing not found",
       });
     }
 
@@ -492,12 +521,12 @@ export class ListingsService {
     listing.status.substatus = dto.substatus || null;
 
     // Handle state transitions
-    if (dto.state === 'published' && !listing.status.publishedAt) {
+    if (dto.state === "published" && !listing.status.publishedAt) {
       listing.status.publishedAt = now;
       listing.visibility.isPublic = true;
     }
 
-    if (dto.state === 'sold') {
+    if (dto.state === "sold") {
       listing.status.soldAt = now;
       listing.visibility.isPublic = false;
     }
@@ -531,8 +560,8 @@ export class ListingsService {
     if (!listing) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Listing not found',
+        error: "Not Found",
+        message: "Listing not found",
       });
     }
 
@@ -568,7 +597,10 @@ export class ListingsService {
   /**
    * Feature a listing
    */
-  async featureListing(id: string, dto: FeatureListingDto): Promise<PublicListing> {
+  async featureListing(
+    id: string,
+    dto: FeatureListingDto,
+  ): Promise<PublicListing> {
     const listing = await this.cosmosService.readItem<ListingDocument>(
       this.LISTINGS_CONTAINER,
       id,
@@ -578,13 +610,15 @@ export class ListingsService {
     if (!listing) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Listing not found',
+        error: "Not Found",
+        message: "Listing not found",
       });
     }
 
     const now = new Date();
-    const featuredUntil = new Date(now.getTime() + dto.durationDays * 24 * 60 * 60 * 1000);
+    const featuredUntil = new Date(
+      now.getTime() + dto.durationDays * 24 * 60 * 60 * 1000,
+    );
 
     listing.status.featured = true;
     listing.status.featuredUntil = featuredUntil.toISOString();
@@ -612,8 +646,8 @@ export class ListingsService {
     if (!listing) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Listing not found',
+        error: "Not Found",
+        message: "Listing not found",
       });
     }
 
@@ -621,13 +655,13 @@ export class ListingsService {
     if (!isAdmin && listing.sellerId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have permission to delete this listing',
+        error: "Forbidden",
+        message: "You do not have permission to delete this listing",
       });
     }
 
     // Soft delete by archiving
-    listing.status.state = 'archived';
+    listing.status.state = "archived";
     listing.visibility.isPublic = false;
     listing.audit.updatedAt = new Date().toISOString();
     listing.audit.updatedBy = userId;

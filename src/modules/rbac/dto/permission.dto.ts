@@ -1,43 +1,43 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsString,
   IsOptional,
   Length,
   MaxLength,
   Matches,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Create Permission DTO
  */
 export class CreatePermissionDto {
   @ApiProperty({
-    description: 'Permission ID (optional, will be generated if not provided)',
-    example: 'perm_export_inventory',
+    description: "Permission ID (optional, will be generated if not provided)",
+    example: "perm_export_inventory",
     required: false,
-    pattern: '^perm_[a-z0-9_]+$',
+    pattern: "^perm_[a-z0-9_]+$",
   })
   @IsString()
   @MaxLength(64)
   @Matches(/^perm_[a-z0-9_]+$/, {
-    message: 'Permission ID must match pattern: perm_[a-z0-9_]+',
+    message: "Permission ID must match pattern: perm_[a-z0-9_]+",
   })
   @IsOptional()
   id?: string;
 
   @ApiProperty({
-    description: 'Permission category',
-    example: 'listings',
-    examples: ['listings', 'dealer', 'admin'],
+    description: "Permission category",
+    example: "listings",
+    examples: ["listings", "dealer", "admin"],
   })
   @IsString()
   @Length(3, 50)
   category: string;
 
   @ApiProperty({
-    description: 'Permission name (must be unique)',
-    example: 'listings.inventory.export',
+    description: "Permission name (must be unique)",
+    example: "listings.inventory.export",
     minLength: 3,
     maxLength: 100,
   })
@@ -46,8 +46,8 @@ export class CreatePermissionDto {
   name: string;
 
   @ApiProperty({
-    description: 'Permission description',
-    example: 'Export vehicle inventory to CSV',
+    description: "Permission description",
+    example: "Export vehicle inventory to CSV",
     minLength: 3,
     maxLength: 255,
   })
@@ -61,9 +61,9 @@ export class CreatePermissionDto {
  */
 export class UpdatePermissionDto {
   @ApiProperty({
-    description: 'Updated permission category',
+    description: "Updated permission category",
     required: false,
-    example: 'admin',
+    example: "admin",
   })
   @IsString()
   @Length(3, 50)
@@ -71,9 +71,9 @@ export class UpdatePermissionDto {
   category?: string;
 
   @ApiProperty({
-    description: 'Updated permission name',
+    description: "Updated permission name",
     required: false,
-    example: 'listings.inventory.export.advanced',
+    example: "listings.inventory.export.advanced",
   })
   @IsString()
   @Length(3, 100)
@@ -81,9 +81,9 @@ export class UpdatePermissionDto {
   name?: string;
 
   @ApiProperty({
-    description: 'Updated permission description',
+    description: "Updated permission description",
     required: false,
-    example: 'Export vehicle inventory to CSV with advanced filters',
+    example: "Export vehicle inventory to CSV with advanced filters",
   })
   @IsString()
   @Length(3, 255)
@@ -96,25 +96,25 @@ export class UpdatePermissionDto {
  */
 export class QueryPermissionsDto {
   @ApiProperty({
-    description: 'Filter by permission category',
+    description: "Filter by permission category",
     required: false,
-    example: 'listings',
+    example: "listings",
   })
   @IsString()
   @IsOptional()
   category?: string;
 
   @ApiProperty({
-    description: 'Filter by permission name (prefix or exact match)',
+    description: "Filter by permission name (prefix or exact match)",
     required: false,
-    example: 'listings.',
+    example: "listings.",
   })
   @IsString()
   @IsOptional()
   name?: string;
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     required: false,
     minimum: 1,
     maximum: 100,
@@ -125,7 +125,7 @@ export class QueryPermissionsDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token for pagination',
+    description: "Continuation token for pagination",
     required: false,
   })
   @IsString()

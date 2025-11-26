@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsString,
   IsNumber,
@@ -9,9 +9,9 @@ import {
   Length,
   Min,
   ArrayMinSize,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { CreateTaxonomyOptionDto } from './create-taxonomy.dto';
+} from "class-validator";
+import { Type } from "class-transformer";
+import { CreateTaxonomyOptionDto } from "./create-taxonomy.dto";
 
 /**
  * Update Taxonomy DTO (PATCH /taxonomies/:categoryId)
@@ -19,7 +19,7 @@ import { CreateTaxonomyOptionDto } from './create-taxonomy.dto';
  */
 export class UpdateTaxonomyDto {
   @ApiProperty({
-    description: 'Display order',
+    description: "Display order",
     required: false,
     minimum: 1,
   })
@@ -29,7 +29,7 @@ export class UpdateTaxonomyDto {
   order?: number;
 
   @ApiProperty({
-    description: 'Replace entire options array',
+    description: "Replace entire options array",
     type: [CreateTaxonomyOptionDto],
     required: false,
   })
@@ -46,7 +46,7 @@ export class UpdateTaxonomyDto {
  */
 export class UpdateTaxonomyOptionDto {
   @ApiProperty({
-    description: 'Option label',
+    description: "Option label",
     required: false,
   })
   @IsString()
@@ -55,7 +55,7 @@ export class UpdateTaxonomyOptionDto {
   label?: string;
 
   @ApiProperty({
-    description: 'Option value',
+    description: "Option value",
     required: false,
   })
   @IsString()
@@ -64,7 +64,7 @@ export class UpdateTaxonomyOptionDto {
   value?: string;
 
   @ApiProperty({
-    description: 'URL-friendly slug',
+    description: "URL-friendly slug",
     required: false,
   })
   @IsString()
@@ -73,7 +73,7 @@ export class UpdateTaxonomyOptionDto {
   slug?: string;
 
   @ApiProperty({
-    description: 'Display order',
+    description: "Display order",
     required: false,
   })
   @IsNumber()
@@ -82,7 +82,7 @@ export class UpdateTaxonomyOptionDto {
   order?: number;
 
   @ApiProperty({
-    description: 'Is option active',
+    description: "Is option active",
     required: false,
   })
   @IsBoolean()
@@ -90,7 +90,7 @@ export class UpdateTaxonomyOptionDto {
   isActive?: boolean;
 
   @ApiProperty({
-    description: 'Make (for model taxonomy)',
+    description: "Make (for model taxonomy)",
     required: false,
   })
   @IsString()

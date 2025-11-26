@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsEmail,
   IsString,
@@ -11,8 +11,8 @@ import {
   MinLength,
   MaxLength,
   ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from "class-validator";
+import { Type } from "class-transformer";
 
 class UpdateAddressDto {
   @ApiProperty({ required: false })
@@ -243,11 +243,11 @@ export class UpdateSellerMetaDto {
  * Update Seller Users DTO
  */
 class SellerUserItemDto {
-  @ApiProperty({ example: 'usr_123' })
+  @ApiProperty({ example: "usr_123" })
   @IsString()
   userId: string;
 
-  @ApiProperty({ example: 'owner' })
+  @ApiProperty({ example: "owner" })
   @IsString()
   role: string;
 }

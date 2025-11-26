@@ -4,28 +4,32 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { EmailService } from '@/common/services/email.service';
-import { JwtService } from './jwt.service';
-import { TokenResponse } from '@/common/types/token.type';
-import { ValidationException } from '@/common/exceptions/validation.exception';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcryptjs";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { EmailService } from "@/common/services/email.service";
+import { JwtService } from "./jwt.service";
+import { TokenResponse } from "@/common/types/token.type";
+import { ValidationException } from "@/common/exceptions/validation.exception";
+import { UserDocument, PublicUser } from "../interfaces/user.interface";
+import { SellerDocument } from "@/modules/sellers/interfaces/seller.interface";
+import { SellerGroupDocument } from "@/modules/seller-groups/interfaces/seller-group.interface";
+import { SignInDto } from "../dto/signin.dto";
+import { SignUpPrivateDto } from "../dto/signup-private.dto";
+import { SignUpDealerDto } from "../dto/signup-dealer.dto";
+import { RefreshTokenDto } from "../dto/refresh-token.dto";
 import {
-  UserDocument,
-  PublicUser,
-} from '../interfaces/user.interface';
-import { SellerDocument } from '@/modules/sellers/interfaces/seller.interface';
-import { SellerGroupDocument } from '@/modules/seller-groups/interfaces/seller-group.interface';
-import { SignInDto } from '../dto/signin.dto';
-import { SignUpPrivateDto } from '../dto/signup-private.dto';
-import { SignUpDealerDto } from '../dto/signup-dealer.dto';
-import { RefreshTokenDto } from '../dto/refresh-token.dto';
-import { RequestEmailVerificationDto, ConfirmEmailVerificationDto } from '../dto/verify-email.dto';
-import { ForgotPasswordDto, ResetPasswordDto } from '../dto/password-reset.dto';
-import { Setup2FaDto, Disable2FaDto, TwoFactorMethod } from '../dto/two-factor.dto';
-import { AppConfig } from '@/config/app.config';
+  RequestEmailVerificationDto,
+  ConfirmEmailVerificationDto,
+} from "../dto/verify-email.dto";
+import { ForgotPasswordDto, ResetPasswordDto } from "../dto/password-reset.dto";
+import {
+  Setup2FaDto,
+  Disable2FaDto,
+  TwoFactorMethod,
+} from "../dto/two-factor.dto";
+import { AppConfig } from "@/config/app.config";
 
 /**
  * Auth Service
@@ -33,9 +37,9 @@ import { AppConfig } from '@/config/app.config';
  */
 @Injectable()
 export class AuthService {
-  private readonly USERS_CONTAINER = 'users';
-  private readonly SELLERS_CONTAINER = 'sellers';
-  private readonly SELLER_GROUPS_CONTAINER = 'sellerGroups';
+  private readonly USERS_CONTAINER = "users";
+  private readonly SELLERS_CONTAINER = "sellers";
+  private readonly SELLER_GROUPS_CONTAINER = "sellerGroups";
 
   constructor(
     private readonly cosmosService: CosmosService,
@@ -49,11 +53,11 @@ export class AuthService {
    */
   async signIn(dto: SignInDto): Promise<{ user: PublicUser } & TokenResponse> {
     // Find user by email
-    const query = 'SELECT * FROM c WHERE c.profile.email = @email';
+    const query = "SELECT * FROM c WHERE c.profile.email = @email";
     const { items } = await this.cosmosService.queryItems<UserDocument>(
       this.USERS_CONTAINER,
       query,
-      [{ name: '@email', value: dto.email.toLowerCase() }],
+      [{ name: "@email", value: dto.email.toLowerCase() }],
     );
 
     const user = items[0];
@@ -61,8 +65,8 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException({
         statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Invalid email or password',
+        error: "Unauthorized",
+        message: "Invalid email or password",
       });
     }
 
@@ -75,8 +79,8 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException({
         statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Invalid email or password',
+        error: "Unauthorized",
+        message: "Invalid email or password",
       });
     }
 
@@ -84,8 +88,8 @@ export class AuthService {
     if (user.status.blocked) {
       throw new UnauthorizedException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'Account is blocked',
+        error: "Forbidden",
+        message: "Account is blocked",
       });
     }
 
@@ -93,8 +97,8 @@ export class AuthService {
     if (!user.status.isActive) {
       throw new ConflictException({
         statusCode: 409,
-        error: 'Conflict',
-        message: 'Account is inactive',
+        error: "Conflict",
+        message: "Account is inactive",
       });
     }
 
@@ -128,14 +132,14 @@ export class AuthService {
     // Validate passwords match
     if (dto.password !== dto.confirmPassword) {
       throw new ValidationException({
-        confirmPassword: ['Passwords do not match'],
+        confirmPassword: ["Passwords do not match"],
       });
     }
 
     // Validate terms acceptance
     if (!dto.acceptTermsOfService) {
       throw new ValidationException({
-        acceptTermsOfService: ['You must accept the terms of service'],
+        acceptTermsOfService: ["You must accept the terms of service"],
       });
     }
 
@@ -153,7 +157,7 @@ export class AuthService {
 
     const user: UserDocument = {
       id: userId,
-      type: 'user',
+      type: "user",
       profile: {
         displayName: `${dto.firstName} ${dto.lastName}`,
         firstName: dto.firstName.trim(),
@@ -161,19 +165,19 @@ export class AuthService {
         email: dto.email.toLowerCase(),
         phoneNumber: dto.phone,
         phoneE164: null,
-        zipCode: dto.zipCode || '',
+        zipCode: dto.zipCode || "",
         avatarUrl: null,
       },
       market: {
         country: country,
         allowedCountries: [country],
-        source: 'user',
+        source: "user",
       },
       auth: {
         username: dto.email.toLowerCase(),
         passwordHash,
         passwordSalt: salt,
-        authProvider: 'local',
+        authProvider: "local",
         twoFactorEnabled: false,
         twoFactorMethod: null,
       },
@@ -195,15 +199,15 @@ export class AuthService {
       sellerMemberships: [
         {
           sellerId: sellerId,
-          role: 'owner',
+          role: "owner",
           isPrimary: true,
         },
       ],
-      roles: [{ roleId: 'role_private' }],
+      roles: [{ roleId: "role_private" }],
       customPermissions: [],
       preferences: {
-        language: 'en-US',
-        timezone: 'America/Los_Angeles',
+        language: "en-US",
+        timezone: "America/Los_Angeles",
         notifications: {
           email: true,
           sms: false,
@@ -217,8 +221,8 @@ export class AuthService {
       metadata: {
         createdAt: now,
         updatedAt: now,
-        createdBy: 'system',
-        updatedBy: 'system',
+        createdBy: "system",
+        updatedBy: "system",
       },
     };
 
@@ -228,21 +232,21 @@ export class AuthService {
     // Create seller document for private seller
     const seller: SellerDocument = {
       id: sellerId,
-      sellerType: 'private',
+      sellerType: "private",
       profile: {
         email: dto.email.toLowerCase(),
         phone: dto.phone,
         address: {
-          street: '',
-          city: '',
-          state: '',
+          street: "",
+          city: "",
+          state: "",
           country: country,
         },
       },
       market: {
         country: country,
         allowedCountries: [country],
-        source: 'user',
+        source: "user",
       },
       dealerDetails: null,
       privateDetails: {
@@ -252,9 +256,9 @@ export class AuthService {
       users: [
         {
           userId: userId,
-          role: 'owner',
+          role: "owner",
           joinedAt: now,
-          invitedBy: 'system',
+          invitedBy: "system",
         },
       ],
       listings: [],
@@ -287,14 +291,16 @@ export class AuthService {
     await this.cosmosService.createItem(this.SELLERS_CONTAINER, seller);
 
     // Send welcome email
-    const dashboardUrl = 'https://app.onlyusedtesla.com/dashboard';
-    await this.emailService.sendWelcomePrivateEmail(user.profile.email, {
-      firstName: user.profile.firstName,
-      dashboardUrl,
-    }).catch(error => {
-      console.error('Failed to send welcome email:', error);
-      // Don't block signup if email fails
-    });
+    const dashboardUrl = "https://app.onlyusedtesla.com/dashboard";
+    await this.emailService
+      .sendWelcomePrivateEmail(user.profile.email, {
+        firstName: user.profile.firstName,
+        dashboardUrl,
+      })
+      .catch((error) => {
+        console.error("Failed to send welcome email:", error);
+        // Don't block signup if email fails
+      });
 
     // Generate tokens
     const tokens = await this.jwtService.generateTokens({
@@ -316,43 +322,45 @@ export class AuthService {
   async signUpDealer(
     dto: SignUpDealerDto,
     country: string,
-  ): Promise<{
-    user: PublicUser;
-    stripe: {
-      checkoutSessionId: string;
-      subscriptionIds: string[];
-      checkoutUrl: string;
-    };
-    seller: {
-      sellerId: string;
-      representing: string;
-      groupName?: string;
-    };
-  } & TokenResponse> {
+  ): Promise<
+    {
+      user: PublicUser;
+      stripe: {
+        checkoutSessionId: string;
+        subscriptionIds: string[];
+        checkoutUrl: string;
+      };
+      seller: {
+        sellerId: string;
+        representing: string;
+        groupName?: string;
+      };
+    } & TokenResponse
+  > {
     // Validate passwords match
     if (dto.password !== dto.confirmPassword) {
       throw new ValidationException({
-        confirmPassword: ['Passwords do not match'],
+        confirmPassword: ["Passwords do not match"],
       });
     }
 
     // Validate terms acceptance
     if (!dto.acceptTermsOfService) {
       throw new ValidationException({
-        acceptTermsOfService: ['You must accept the terms of service'],
+        acceptTermsOfService: ["You must accept the terms of service"],
       });
     }
 
     // Validate dealer-specific fields
-    if (dto.whoAreYouRepresenting === 'dealer_group' && !dto.groupName) {
+    if (dto.whoAreYouRepresenting === "dealer_group" && !dto.groupName) {
       throw new ValidationException({
-        groupName: ['Group name is required when representing a dealer group'],
+        groupName: ["Group name is required when representing a dealer group"],
       });
     }
 
     if (!dto.subscriptionIds || dto.subscriptionIds.length === 0) {
       throw new ValidationException({
-        subscriptionIds: ['At least one subscription id is required'],
+        subscriptionIds: ["At least one subscription id is required"],
       });
     }
 
@@ -370,7 +378,7 @@ export class AuthService {
 
     const user: UserDocument = {
       id: userId,
-      type: 'user',
+      type: "user",
       profile: {
         displayName: `${dto.firstName} ${dto.lastName}`,
         firstName: dto.firstName.trim(),
@@ -378,19 +386,19 @@ export class AuthService {
         email: dto.email.toLowerCase(),
         phoneNumber: dto.phone,
         phoneE164: null,
-        zipCode: '00233',
+        zipCode: "00233",
         avatarUrl: null,
       },
       market: {
         country: country,
         allowedCountries: [country],
-        source: 'user|phone|kyc',
+        source: "user|phone|kyc",
       },
       auth: {
         username: dto.email.toLowerCase(),
         passwordHash,
         passwordSalt: salt,
-        authProvider: 'local',
+        authProvider: "local",
         twoFactorEnabled: false,
         twoFactorMethod: null,
       },
@@ -412,15 +420,15 @@ export class AuthService {
       sellerMemberships: [
         {
           sellerId: sellerId,
-          role: 'owner',
+          role: "owner",
           isPrimary: true,
         },
       ],
-      roles: [{ roleId: 'role_dealer' }],
-      customPermissions: ['perm_manage_inventory'],
+      roles: [{ roleId: "role_dealer" }],
+      customPermissions: ["perm_manage_inventory"],
       preferences: {
-        language: 'en-US',
-        timezone: 'America/New_York',
+        language: "en-US",
+        timezone: "America/New_York",
         notifications: {
           email: true,
           sms: true,
@@ -451,21 +459,21 @@ export class AuthService {
 
     const seller: SellerDocument = {
       id: sellerId,
-      sellerType: 'dealer',
+      sellerType: "dealer",
       profile: {
         email: dto.email.toLowerCase(),
         phone: dto.phone,
         address: {
           street: dto.address,
-          city: '',
-          state: '',
+          city: "",
+          state: "",
           country: country,
         },
       },
       market: {
         country: country,
         allowedCountries: [country],
-        source: 'user|phone|kyc',
+        source: "user|phone|kyc",
       },
       dealerDetails: {
         companyName: dto.companyName,
@@ -501,9 +509,9 @@ export class AuthService {
       users: [
         {
           userId: userId,
-          role: 'owner',
+          role: "owner",
           joinedAt: now,
-          invitedBy: 'system',
+          invitedBy: "system",
         },
       ],
       listings: [],
@@ -536,12 +544,12 @@ export class AuthService {
     await this.cosmosService.createItem(this.SELLERS_CONTAINER, seller);
 
     // Create seller group if representing a dealer group
-    if (dto.whoAreYouRepresenting === 'dealer_group' && dto.groupName) {
+    if (dto.whoAreYouRepresenting === "dealer_group" && dto.groupName) {
       const sellerGroupId = this.generateSellerGroupId();
 
       const sellerGroup: SellerGroupDocument = {
         id: sellerGroupId,
-        type: 'seller_group',
+        type: "seller_group",
         profile: {
           name: dto.groupName,
           description: null,
@@ -556,9 +564,9 @@ export class AuthService {
         headquarters: {
           address: {
             street: dto.address,
-            city: '',
-            state: '',
-            zipCode: '',
+            city: "",
+            state: "",
+            zipCode: "",
             country: country,
           },
           contactPerson: `${dto.firstName} ${dto.lastName}`,
@@ -568,7 +576,7 @@ export class AuthService {
         members: [
           {
             sellerId: sellerId,
-            role: 'primary',
+            role: "primary",
             joinedAt: now,
             addedBy: userId,
           },
@@ -596,11 +604,18 @@ export class AuthService {
       };
 
       // Save seller group to Cosmos DB
-      await this.cosmosService.createItem(this.SELLER_GROUPS_CONTAINER, sellerGroup);
+      await this.cosmosService.createItem(
+        this.SELLER_GROUPS_CONTAINER,
+        sellerGroup,
+      );
 
       // Update seller's dealerGroupId to reference the group
       seller.dealerDetails!.dealerGroupId = sellerGroupId;
-      await this.cosmosService.updateItem(this.SELLERS_CONTAINER, seller, sellerId);
+      await this.cosmosService.updateItem(
+        this.SELLERS_CONTAINER,
+        seller,
+        sellerId,
+      );
     }
 
     // TODO: Create Stripe checkout session for subscriptions
@@ -613,15 +628,17 @@ export class AuthService {
     };
 
     // Send welcome dealer email
-    const dealerDashboardUrl = 'https://app.onlyusedtesla.com/dealer';
-    await this.emailService.sendWelcomeDealerEmail(user.profile.email, {
-      firstName: user.profile.firstName,
-      dealerName: dto.companyName,
-      dealerDashboardUrl,
-    }).catch(error => {
-      console.error('Failed to send welcome email:', error);
-      // Don't block signup if email fails
-    });
+    const dealerDashboardUrl = "https://app.onlyusedtesla.com/dealer";
+    await this.emailService
+      .sendWelcomeDealerEmail(user.profile.email, {
+        firstName: user.profile.firstName,
+        dealerName: dto.companyName,
+        dealerDashboardUrl,
+      })
+      .catch((error) => {
+        console.error("Failed to send welcome email:", error);
+        // Don't block signup if email fails
+      });
 
     // Generate tokens
     const tokens = await this.jwtService.generateTokens({
@@ -649,7 +666,9 @@ export class AuthService {
   async refresh(dto: RefreshTokenDto): Promise<TokenResponse> {
     try {
       // Verify refresh token
-      const payload = await this.jwtService.verifyRefreshToken(dto.refreshToken);
+      const payload = await this.jwtService.verifyRefreshToken(
+        dto.refreshToken,
+      );
 
       // Get user from database
       const user = await this.cosmosService.readItem<UserDocument>(
@@ -661,8 +680,8 @@ export class AuthService {
       if (!user) {
         throw new UnauthorizedException({
           statusCode: 401,
-          error: 'Unauthorized',
-          message: 'Invalid or expired refresh token',
+          error: "Unauthorized",
+          message: "Invalid or expired refresh token",
         });
       }
 
@@ -676,8 +695,8 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException({
         statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Invalid or expired refresh token',
+        error: "Unauthorized",
+        message: "Invalid or expired refresh token",
       });
     }
   }
@@ -695,8 +714,8 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -706,20 +725,22 @@ export class AuthService {
   /**
    * Request email verification
    */
-  async requestEmailVerification(dto: RequestEmailVerificationDto): Promise<{ statusCode: number; message: string }> {
+  async requestEmailVerification(
+    dto: RequestEmailVerificationDto,
+  ): Promise<{ statusCode: number; message: string }> {
     // Find user by email
-    const query = 'SELECT * FROM c WHERE c.profile.email = @email';
+    const query = "SELECT * FROM c WHERE c.profile.email = @email";
     const { items } = await this.cosmosService.queryItems<UserDocument>(
       this.USERS_CONTAINER,
       query,
-      [{ name: '@email', value: dto.email.toLowerCase() }],
+      [{ name: "@email", value: dto.email.toLowerCase() }],
     );
 
     // Return same response whether user exists or not (security best practice)
     if (!items[0]) {
       return {
         statusCode: 202,
-        message: 'Verification email sent if the account exists',
+        message: "Verification email sent if the account exists",
       };
     }
 
@@ -735,23 +756,27 @@ export class AuthService {
 
     // Send verification email
     const verifyUrl = `https://app.onlyusedtesla.com/verify-email?token=${token.accessToken}`;
-    await this.emailService.sendVerificationEmail(user.profile.email, {
-      firstName: user.profile.firstName,
-      verifyUrl,
-    }).catch(error => {
-      console.error('Failed to send verification email:', error);
-    });
+    await this.emailService
+      .sendVerificationEmail(user.profile.email, {
+        firstName: user.profile.firstName,
+        verifyUrl,
+      })
+      .catch((error) => {
+        console.error("Failed to send verification email:", error);
+      });
 
     return {
       statusCode: 202,
-      message: 'Verification email sent if the account exists',
+      message: "Verification email sent if the account exists",
     };
   }
 
   /**
    * Confirm email verification
    */
-  async confirmEmailVerification(dto: ConfirmEmailVerificationDto): Promise<{ statusCode: number; message: string }> {
+  async confirmEmailVerification(
+    dto: ConfirmEmailVerificationDto,
+  ): Promise<{ statusCode: number; message: string }> {
     try {
       // Verify token
       const payload = await this.jwtService.verifyAccessToken(dto.token);
@@ -766,8 +791,8 @@ export class AuthService {
       if (!user) {
         throw new UnauthorizedException({
           statusCode: 401,
-          error: 'Unauthorized',
-          message: 'Invalid or expired token',
+          error: "Unauthorized",
+          message: "Invalid or expired token",
         });
       }
 
@@ -780,13 +805,13 @@ export class AuthService {
 
       return {
         statusCode: 200,
-        message: 'Email verified successfully',
+        message: "Email verified successfully",
       };
     } catch (error) {
       throw new UnauthorizedException({
         statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Invalid or expired token',
+        error: "Unauthorized",
+        message: "Invalid or expired token",
       });
     }
   }
@@ -794,20 +819,22 @@ export class AuthService {
   /**
    * Forgot password - send reset email
    */
-  async forgotPassword(dto: ForgotPasswordDto): Promise<{ statusCode: number; message: string }> {
+  async forgotPassword(
+    dto: ForgotPasswordDto,
+  ): Promise<{ statusCode: number; message: string }> {
     // Find user by email
-    const query = 'SELECT * FROM c WHERE c.profile.email = @email';
+    const query = "SELECT * FROM c WHERE c.profile.email = @email";
     const { items } = await this.cosmosService.queryItems<UserDocument>(
       this.USERS_CONTAINER,
       query,
-      [{ name: '@email', value: dto.email.toLowerCase() }],
+      [{ name: "@email", value: dto.email.toLowerCase() }],
     );
 
     // Return same response whether user exists or not (security best practice)
     if (!items[0]) {
       return {
         statusCode: 202,
-        message: 'Password reset link sent if the account exists',
+        message: "Password reset link sent if the account exists",
       };
     }
 
@@ -823,27 +850,31 @@ export class AuthService {
 
     // Send reset email
     const resetUrl = `https://app.onlyusedtesla.com/reset-password?token=${token.accessToken}`;
-    await this.emailService.sendResetPasswordEmail(user.profile.email, {
-      firstName: user.profile.firstName,
-      resetUrl,
-    }).catch(error => {
-      console.error('Failed to send password reset email:', error);
-    });
+    await this.emailService
+      .sendResetPasswordEmail(user.profile.email, {
+        firstName: user.profile.firstName,
+        resetUrl,
+      })
+      .catch((error) => {
+        console.error("Failed to send password reset email:", error);
+      });
 
     return {
       statusCode: 202,
-      message: 'Password reset link sent if the account exists',
+      message: "Password reset link sent if the account exists",
     };
   }
 
   /**
    * Reset password with token
    */
-  async resetPassword(dto: ResetPasswordDto): Promise<{ statusCode: number; message: string }> {
+  async resetPassword(
+    dto: ResetPasswordDto,
+  ): Promise<{ statusCode: number; message: string }> {
     // Validate passwords match
     if (dto.newPassword !== dto.confirmPassword) {
       throw new ValidationException({
-        confirmPassword: ['Passwords do not match'],
+        confirmPassword: ["Passwords do not match"],
       });
     }
 
@@ -861,8 +892,8 @@ export class AuthService {
       if (!user) {
         throw new UnauthorizedException({
           statusCode: 401,
-          error: 'Unauthorized',
-          message: 'Invalid or expired token',
+          error: "Unauthorized",
+          message: "Invalid or expired token",
         });
       }
 
@@ -879,13 +910,13 @@ export class AuthService {
 
       return {
         statusCode: 200,
-        message: 'Password updated successfully',
+        message: "Password updated successfully",
       };
     } catch (error) {
       throw new UnauthorizedException({
         statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Invalid or expired token',
+        error: "Unauthorized",
+        message: "Invalid or expired token",
       });
     }
   }
@@ -893,7 +924,10 @@ export class AuthService {
   /**
    * Setup 2FA
    */
-  async setup2FA(dto: Setup2FaDto, userId: string): Promise<{ statusCode: number; message: string; qrCode?: string }> {
+  async setup2FA(
+    dto: Setup2FaDto,
+    userId: string,
+  ): Promise<{ statusCode: number; message: string; qrCode?: string }> {
     const user = await this.cosmosService.readItem<UserDocument>(
       this.USERS_CONTAINER,
       userId,
@@ -903,8 +937,8 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -918,20 +952,22 @@ export class AuthService {
     // If email method, send test code
     if (dto.method === TwoFactorMethod.SMS) {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      await this.emailService.sendMfaCodeEmail(user.profile.email, {
-        firstName: user.profile.firstName,
-        code,
-        expiresMinutes: 10,
-      }).catch(error => {
-        console.error('Failed to send MFA code email:', error);
-      });
+      await this.emailService
+        .sendMfaCodeEmail(user.profile.email, {
+          firstName: user.profile.firstName,
+          code,
+          expiresMinutes: 10,
+        })
+        .catch((error) => {
+          console.error("Failed to send MFA code email:", error);
+        });
     }
 
     return {
       statusCode: 200,
-      message: 'Two-factor authentication enabled',
+      message: "Two-factor authentication enabled",
       ...(dto.method === TwoFactorMethod.AUTHENTICATOR_APP && {
-        qrCode: 'TODO: Generate QR code for authenticator app',
+        qrCode: "TODO: Generate QR code for authenticator app",
       }),
     };
   }
@@ -939,7 +975,10 @@ export class AuthService {
   /**
    * Disable 2FA
    */
-  async disable2FA(dto: Disable2FaDto, userId: string): Promise<{ statusCode: number; message: string }> {
+  async disable2FA(
+    dto: Disable2FaDto,
+    userId: string,
+  ): Promise<{ statusCode: number; message: string }> {
     const user = await this.cosmosService.readItem<UserDocument>(
       this.USERS_CONTAINER,
       userId,
@@ -949,8 +988,8 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -963,7 +1002,7 @@ export class AuthService {
 
     return {
       statusCode: 200,
-      message: 'Two-factor authentication disabled',
+      message: "Two-factor authentication disabled",
     };
   }
 
@@ -971,19 +1010,19 @@ export class AuthService {
    * Helper: Check if email exists
    */
   private async checkEmailExists(email: string): Promise<void> {
-    const query = 'SELECT c.id FROM c WHERE c.profile.email = @email';
+    const query = "SELECT c.id FROM c WHERE c.profile.email = @email";
     const { items } = await this.cosmosService.queryItems(
       this.USERS_CONTAINER,
       query,
-      [{ name: '@email', value: email.toLowerCase() }],
+      [{ name: "@email", value: email.toLowerCase() }],
       1,
     );
 
     if (items.length > 0) {
       throw new ConflictException({
         statusCode: 409,
-        error: 'Conflict',
-        message: 'Email is already registered',
+        error: "Conflict",
+        message: "Email is already registered",
       });
     }
   }
