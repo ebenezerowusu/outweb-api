@@ -43,14 +43,14 @@ export class TaxonomiesService {
     query: QueryTaxonomiesDto,
   ): Promise<{ data: TaxonomySummary[] }> {
     // Query all taxonomies
-    // Note: "order" is a reserved keyword, so we use bracket notation c["order"]
+    // Note: "order" is a reserved keyword, so we use bracket notation and alias to non-reserved name
     const sqlQuery =
-      'SELECT c.id, c.category, c["order"] as order, ARRAY_LENGTH(c.options) as optionCount FROM c';
+      'SELECT c.id, c.category, c["order"] as displayOrder, ARRAY_LENGTH(c.options) as optionCount FROM c';
 
     const { items } = await this.cosmosService.queryItems<{
       id: string;
       category: string;
-      order: number;
+      displayOrder: number;
       optionCount: number;
     }>(this.TAXONOMIES_CONTAINER, sqlQuery, [], 1000);
 
@@ -62,12 +62,20 @@ export class TaxonomiesService {
 
     // Sort
     if (query.sortBy === "order") {
-      taxonomies.sort((a, b) => a.order - b.order);
+      taxonomies.sort((a, b) => a.displayOrder - b.displayOrder);
     } else {
       taxonomies.sort((a, b) => a.id.localeCompare(b.id));
     }
 
-    return { data: taxonomies };
+    // Map back to expected format
+    const result = taxonomies.map((t) => ({
+      id: t.id,
+      category: t.category,
+      order: t.displayOrder,
+      optionCount: t.optionCount,
+    }));
+
+    return { data: result };
   }
 
   /**
