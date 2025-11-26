@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from "@nestjs/common";
 import { CosmosService } from "@/common/services/cosmos.service";
 import { PaginatedResponse } from "@/common/types/pagination.type";
@@ -308,6 +309,15 @@ export class UsersService {
         statusCode: 404,
         error: "Not Found",
         message: "User not found",
+      });
+    }
+
+    // Validate that roles array is not empty
+    if (!dto.roles || dto.roles.length === 0) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "At least one role is required",
       });
     }
 
