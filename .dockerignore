@@ -1,0 +1,12 @@
+# keep builds fast & clean
+node_modules
+dist
+.git
+.github
+.gitignore
+Dockerfile
+*.log
+npm-debug.log*
+yarn-error.log*
+coverage
+.env
