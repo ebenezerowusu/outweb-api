@@ -39,18 +39,18 @@ export interface PaginationParams {
  * Used in query parameters for filtering
  */
 export type FilterOperator =
-  | 'eq'    // Equals
-  | 'ne'    // Not equals
-  | 'in'    // In set
-  | 'nin'   // Not in set
-  | 'gt'    // Greater than
-  | 'gte'   // Greater than or equal
-  | 'lt'    // Less than
-  | 'lte'   // Less than or equal
-  | 'like'  // Wildcard match (case-sensitive)
-  | 'ilike' // Wildcard match (case-insensitive)
-  | 'startsWith' // Starts with
-  | 'contains'   // Contains
-  | 'between'    // Between two values
-  | 'is'         // Is (for null checks)
-  | 'not';       // Not (for null checks)
+  | "eq" // Equals
+  | "ne" // Not equals
+  | "in" // In set
+  | "nin" // Not in set
+  | "gt" // Greater than
+  | "gte" // Greater than or equal
+  | "lt" // Less than
+  | "lte" // Less than or equal
+  | "like" // Wildcard match (case-sensitive)
+  | "ilike" // Wildcard match (case-insensitive)
+  | "startsWith" // Starts with
+  | "contains" // Contains
+  | "between" // Between two values
+  | "is" // Is (for null checks)
+  | "not"; // Not (for null checks)

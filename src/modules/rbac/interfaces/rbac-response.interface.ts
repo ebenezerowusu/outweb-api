@@ -5,7 +5,7 @@ export interface PermissionCheckResponse {
   userId: string;
   permission: string;
   hasPermission: boolean;
-  source?: 'direct' | 'role' | 'none';
+  source?: "direct" | "role" | "none";
   roleId?: string;
 }
 
@@ -17,7 +17,7 @@ export interface BatchPermissionCheckResponse {
   permissions: {
     [permission: string]: {
       hasPermission: boolean;
-      source?: 'direct' | 'role' | 'none';
+      source?: "direct" | "role" | "none";
       roleId?: string;
     };
   };

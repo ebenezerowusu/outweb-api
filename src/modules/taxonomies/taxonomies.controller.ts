@@ -10,7 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
-} from '@nestjs/common';
+} from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
@@ -18,30 +18,30 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
-} from '@nestjs/swagger';
-import { TaxonomiesService } from './taxonomies.service';
+} from "@nestjs/swagger";
+import { TaxonomiesService } from "./taxonomies.service";
 import {
   QueryTaxonomiesDto,
   GetTaxonomyOptionsDto,
   BulkGetTaxonomiesDto,
-} from './dto/query-taxonomy.dto';
+} from "./dto/query-taxonomy.dto";
 import {
   CreateTaxonomyDto,
   AddTaxonomyOptionsDto,
-} from './dto/create-taxonomy.dto';
+} from "./dto/create-taxonomy.dto";
 import {
   UpdateTaxonomyDto,
   UpdateTaxonomyOptionDto,
-} from './dto/update-taxonomy.dto';
-import { SkipAuth } from '@/common/decorators/auth.decorators';
+} from "./dto/update-taxonomy.dto";
+import { SkipAuth } from "@/common/decorators/auth.decorators";
 
 /**
  * Taxonomies Controller
  * Handles taxonomy categories and options for vehicle classifications
  */
-@ApiTags('Taxonomies')
-@Controller('taxonomies')
-@ApiBearerAuth('Authorization')
+@ApiTags("Taxonomies")
+@Controller("taxonomies")
+@ApiBearerAuth("Authorization")
 export class TaxonomiesController {
   constructor(private readonly taxonomiesService: TaxonomiesService) {}
 
@@ -51,10 +51,10 @@ export class TaxonomiesController {
    */
   @Get()
   @SkipAuth()
-  @ApiOperation({ summary: 'List all taxonomy categories (Public)' })
+  @ApiOperation({ summary: "List all taxonomy categories (Public)" })
   @ApiResponse({
     status: 200,
-    description: 'Taxonomy categories retrieved successfully',
+    description: "Taxonomy categories retrieved successfully",
   })
   async findAll(@Query() query: QueryTaxonomiesDto) {
     return this.taxonomiesService.findAll(query);
@@ -64,17 +64,17 @@ export class TaxonomiesController {
    * GET /taxonomies/bulk
    * Fetch multiple categories in one call
    */
-  @Get('bulk')
+  @Get("bulk")
   @SkipAuth()
-  @ApiOperation({ summary: 'Fetch multiple taxonomy categories (Public)' })
+  @ApiOperation({ summary: "Fetch multiple taxonomy categories (Public)" })
   @ApiQuery({
-    name: 'categories',
-    description: 'Comma-separated list of category IDs',
-    example: 'make,model,color',
+    name: "categories",
+    description: "Comma-separated list of category IDs",
+    example: "make,model,color",
   })
   @ApiResponse({
     status: 200,
-    description: 'Taxonomies retrieved successfully',
+    description: "Taxonomies retrieved successfully",
   })
   async findBulk(@Query() query: BulkGetTaxonomiesDto) {
     return this.taxonomiesService.findBulk(query);
@@ -84,18 +84,18 @@ export class TaxonomiesController {
    * GET /taxonomies/:categoryId
    * Get a single taxonomy (full object + options)
    */
-  @Get(':categoryId')
+  @Get(":categoryId")
   @SkipAuth()
-  @ApiOperation({ summary: 'Get taxonomy by category ID (Public)' })
+  @ApiOperation({ summary: "Get taxonomy by category ID (Public)" })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
-  @ApiResponse({ status: 200, description: 'Taxonomy retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Taxonomy not found' })
+  @ApiResponse({ status: 200, description: "Taxonomy retrieved successfully" })
+  @ApiResponse({ status: 404, description: "Taxonomy not found" })
   async findOne(
-    @Param('categoryId') categoryId: string,
+    @Param("categoryId") categoryId: string,
     @Query() query: GetTaxonomyOptionsDto,
   ) {
     return this.taxonomiesService.findOne(categoryId, query);
@@ -105,23 +105,23 @@ export class TaxonomiesController {
    * GET /taxonomies/:categoryId/options
    * Get options for a taxonomy (for select dropdowns)
    */
-  @Get(':categoryId/options')
+  @Get(":categoryId/options")
   @SkipAuth()
   @ApiOperation({
-    summary: 'Get taxonomy options for dropdowns (Public)',
+    summary: "Get taxonomy options for dropdowns (Public)",
   })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
   @ApiResponse({
     status: 200,
-    description: 'Taxonomy options retrieved successfully',
+    description: "Taxonomy options retrieved successfully",
   })
-  @ApiResponse({ status: 404, description: 'Taxonomy not found' })
+  @ApiResponse({ status: 404, description: "Taxonomy not found" })
   async findOptions(
-    @Param('categoryId') categoryId: string,
+    @Param("categoryId") categoryId: string,
     @Query() query: GetTaxonomyOptionsDto,
   ) {
     return this.taxonomiesService.findOptions(categoryId, query);
@@ -133,10 +133,10 @@ export class TaxonomiesController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create new taxonomy category (Admin only)' })
-  @ApiResponse({ status: 201, description: 'Taxonomy created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
-  @ApiResponse({ status: 409, description: 'Taxonomy already exists' })
+  @ApiOperation({ summary: "Create new taxonomy category (Admin only)" })
+  @ApiResponse({ status: 201, description: "Taxonomy created successfully" })
+  @ApiResponse({ status: 400, description: "Bad request - validation error" })
+  @ApiResponse({ status: 409, description: "Taxonomy already exists" })
   async create(@Body() createTaxonomyDto: CreateTaxonomyDto) {
     return this.taxonomiesService.create(createTaxonomyDto);
   }
@@ -145,18 +145,18 @@ export class TaxonomiesController {
    * PATCH /taxonomies/:categoryId
    * Update taxonomy metadata or replace full options
    */
-  @Patch(':categoryId')
+  @Patch(":categoryId")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update taxonomy (Admin only)' })
+  @ApiOperation({ summary: "Update taxonomy (Admin only)" })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
-  @ApiResponse({ status: 200, description: 'Taxonomy updated successfully' })
-  @ApiResponse({ status: 404, description: 'Taxonomy not found' })
+  @ApiResponse({ status: 200, description: "Taxonomy updated successfully" })
+  @ApiResponse({ status: 404, description: "Taxonomy not found" })
   async update(
-    @Param('categoryId') categoryId: string,
+    @Param("categoryId") categoryId: string,
     @Body() updateTaxonomyDto: UpdateTaxonomyDto,
   ) {
     return this.taxonomiesService.update(categoryId, updateTaxonomyDto);
@@ -166,19 +166,19 @@ export class TaxonomiesController {
    * POST /taxonomies/:categoryId/options
    * Add one or more options to a taxonomy
    */
-  @Post(':categoryId/options')
+  @Post(":categoryId/options")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Add options to taxonomy (Admin only)' })
+  @ApiOperation({ summary: "Add options to taxonomy (Admin only)" })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
-  @ApiResponse({ status: 201, description: 'Options added successfully' })
-  @ApiResponse({ status: 404, description: 'Taxonomy not found' })
-  @ApiResponse({ status: 409, description: 'Option ID or value conflicts' })
+  @ApiResponse({ status: 201, description: "Options added successfully" })
+  @ApiResponse({ status: 404, description: "Taxonomy not found" })
+  @ApiResponse({ status: 409, description: "Option ID or value conflicts" })
   async addOptions(
-    @Param('categoryId') categoryId: string,
+    @Param("categoryId") categoryId: string,
     @Body() addOptionsDto: AddTaxonomyOptionsDto,
   ) {
     return this.taxonomiesService.addOptions(categoryId, addOptionsDto);
@@ -188,24 +188,24 @@ export class TaxonomiesController {
    * PATCH /taxonomies/:categoryId/options/:optionId
    * Update a single option (label, slug, isActive, etc.)
    */
-  @Patch(':categoryId/options/:optionId')
+  @Patch(":categoryId/options/:optionId")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update taxonomy option (Admin only)' })
+  @ApiOperation({ summary: "Update taxonomy option (Admin only)" })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
   @ApiParam({
-    name: 'optionId',
-    description: 'Option ID',
+    name: "optionId",
+    description: "Option ID",
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Option updated successfully' })
-  @ApiResponse({ status: 404, description: 'Taxonomy or option not found' })
+  @ApiResponse({ status: 200, description: "Option updated successfully" })
+  @ApiResponse({ status: 404, description: "Taxonomy or option not found" })
   async updateOption(
-    @Param('categoryId') categoryId: string,
-    @Param('optionId', ParseIntPipe) optionId: number,
+    @Param("categoryId") categoryId: string,
+    @Param("optionId", ParseIntPipe) optionId: number,
     @Body() updateOptionDto: UpdateTaxonomyOptionDto,
   ) {
     return this.taxonomiesService.updateOption(
@@ -219,24 +219,24 @@ export class TaxonomiesController {
    * DELETE /taxonomies/:categoryId/options/:optionId
    * Soft-delete / disable an option (set isActive = false)
    */
-  @Delete(':categoryId/options/:optionId')
+  @Delete(":categoryId/options/:optionId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft-delete taxonomy option (Admin only)' })
+  @ApiOperation({ summary: "Soft-delete taxonomy option (Admin only)" })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
   @ApiParam({
-    name: 'optionId',
-    description: 'Option ID',
+    name: "optionId",
+    description: "Option ID",
     example: 1,
   })
-  @ApiResponse({ status: 204, description: 'Option disabled successfully' })
-  @ApiResponse({ status: 404, description: 'Taxonomy or option not found' })
+  @ApiResponse({ status: 204, description: "Option disabled successfully" })
+  @ApiResponse({ status: 404, description: "Taxonomy or option not found" })
   async deleteOption(
-    @Param('categoryId') categoryId: string,
-    @Param('optionId', ParseIntPipe) optionId: number,
+    @Param("categoryId") categoryId: string,
+    @Param("optionId", ParseIntPipe) optionId: number,
   ) {
     await this.taxonomiesService.deleteOption(categoryId, optionId);
   }

@@ -4,8 +4,8 @@
  */
 export interface RoleDocument {
   id: string;
-  type: 'role';
-  scope: 'system';
+  type: "role";
+  scope: "system";
   name: string;
   description: string;
   permissions: RolePermission[];

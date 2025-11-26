@@ -3,18 +3,21 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { PaginatedResponse } from '@/common/types/pagination.type';
-import { SellerReviewDocument, PublicSellerReview } from './interfaces/seller-review.interface';
-import { CreateSellerReviewDto } from './dto/create-seller-review.dto';
+} from "@nestjs/common";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { PaginatedResponse } from "@/common/types/pagination.type";
+import {
+  SellerReviewDocument,
+  PublicSellerReview,
+} from "./interfaces/seller-review.interface";
+import { CreateSellerReviewDto } from "./dto/create-seller-review.dto";
 import {
   UpdateSellerReviewDto,
   CreateSellerResponseDto,
   UpdateReviewModerationDto,
-} from './dto/update-seller-review.dto';
-import { QuerySellerReviewsDto } from './dto/query-seller-reviews.dto';
-import { UserDocument } from '@/modules/auth/interfaces/user.interface';
+} from "./dto/update-seller-review.dto";
+import { QuerySellerReviewsDto } from "./dto/query-seller-reviews.dto";
+import { UserDocument } from "@/modules/auth/interfaces/user.interface";
 
 /**
  * Seller Reviews Service
@@ -22,9 +25,9 @@ import { UserDocument } from '@/modules/auth/interfaces/user.interface';
  */
 @Injectable()
 export class SellerReviewsService {
-  private readonly REVIEWS_CONTAINER = 'seller_reviews';
-  private readonly USERS_CONTAINER = 'users';
-  private readonly ORDERS_CONTAINER = 'orders';
+  private readonly REVIEWS_CONTAINER = "seller_reviews";
+  private readonly USERS_CONTAINER = "users";
+  private readonly ORDERS_CONTAINER = "orders";
 
   constructor(private readonly cosmosService: CosmosService) {}
 
@@ -35,58 +38,63 @@ export class SellerReviewsService {
     sellerId: string,
     query: QuerySellerReviewsDto,
   ): Promise<PaginatedResponse<PublicSellerReview>> {
-    let sqlQuery = 'SELECT * FROM c WHERE c.sellerId = @sellerId';
-    const parameters: any[] = [{ name: '@sellerId', value: sellerId }];
+    let sqlQuery = "SELECT * FROM c WHERE c.sellerId = @sellerId";
+    const parameters: any[] = [{ name: "@sellerId", value: sellerId }];
 
     // Filter by reviewer user ID
     if (query.userId) {
-      sqlQuery += ' AND c.reviewer.userId = @userId';
-      parameters.push({ name: '@userId', value: query.userId });
+      sqlQuery += " AND c.reviewer.userId = @userId";
+      parameters.push({ name: "@userId", value: query.userId });
     }
 
     // Filter by minimum rating
     if (query.minRating !== undefined) {
-      sqlQuery += ' AND c.rating.overall >= @minRating';
-      parameters.push({ name: '@minRating', value: query.minRating });
+      sqlQuery += " AND c.rating.overall >= @minRating";
+      parameters.push({ name: "@minRating", value: query.minRating });
     }
 
     // Filter by maximum rating
     if (query.maxRating !== undefined) {
-      sqlQuery += ' AND c.rating.overall <= @maxRating';
-      parameters.push({ name: '@maxRating', value: query.maxRating });
+      sqlQuery += " AND c.rating.overall <= @maxRating";
+      parameters.push({ name: "@maxRating", value: query.maxRating });
     }
 
     // Filter by verified purchase
     if (query.isVerifiedPurchase !== undefined) {
-      sqlQuery += ' AND c.verification.isVerifiedPurchase = @isVerifiedPurchase';
-      parameters.push({ name: '@isVerifiedPurchase', value: query.isVerifiedPurchase });
+      sqlQuery +=
+        " AND c.verification.isVerifiedPurchase = @isVerifiedPurchase";
+      parameters.push({
+        name: "@isVerifiedPurchase",
+        value: query.isVerifiedPurchase,
+      });
     }
 
     // Filter by moderation status
     if (query.status) {
-      sqlQuery += ' AND c.moderation.status = @status';
-      parameters.push({ name: '@status', value: query.status });
+      sqlQuery += " AND c.moderation.status = @status";
+      parameters.push({ name: "@status", value: query.status });
     }
 
     // Filter by seller response presence
     if (query.hasResponse !== undefined) {
       if (query.hasResponse) {
-        sqlQuery += ' AND IS_DEFINED(c.engagement.sellerResponse)';
+        sqlQuery += " AND IS_DEFINED(c.engagement.sellerResponse)";
       } else {
-        sqlQuery += ' AND NOT IS_DEFINED(c.engagement.sellerResponse)';
+        sqlQuery += " AND NOT IS_DEFINED(c.engagement.sellerResponse)";
       }
     }
 
     // Order by creation date (newest first)
-    sqlQuery += ' ORDER BY c.audit.createdAt DESC';
+    sqlQuery += " ORDER BY c.audit.createdAt DESC";
 
-    const { items, continuationToken } = await this.cosmosService.queryItems<SellerReviewDocument>(
-      this.REVIEWS_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
+    const { items, continuationToken } =
+      await this.cosmosService.queryItems<SellerReviewDocument>(
+        this.REVIEWS_CONTAINER,
+        sqlQuery,
+        parameters,
+        query.limit,
+        query.cursor,
+      );
 
     return {
       items: items.map((review) => this.toPublicSellerReview(review)),
@@ -108,8 +116,8 @@ export class SellerReviewsService {
     if (!review || review.sellerId !== sellerId) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Review not found',
+        error: "Not Found",
+        message: "Review not found",
       });
     }
 
@@ -134,8 +142,8 @@ export class SellerReviewsService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -145,21 +153,22 @@ export class SellerReviewsService {
       WHERE c.sellerId = @sellerId
       AND c.reviewer.userId = @userId
     `;
-    const { items: existingReviews } = await this.cosmosService.queryItems<SellerReviewDocument>(
-      this.REVIEWS_CONTAINER,
-      existingReviewQuery,
-      [
-        { name: '@sellerId', value: sellerId },
-        { name: '@userId', value: userId },
-      ],
-      1,
-    );
+    const { items: existingReviews } =
+      await this.cosmosService.queryItems<SellerReviewDocument>(
+        this.REVIEWS_CONTAINER,
+        existingReviewQuery,
+        [
+          { name: "@sellerId", value: sellerId },
+          { name: "@userId", value: userId },
+        ],
+        1,
+      );
 
     if (existingReviews.length > 0) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'You have already reviewed this seller',
+        error: "Bad Request",
+        message: "You have already reviewed this seller",
       });
     }
 
@@ -167,7 +176,7 @@ export class SellerReviewsService {
     const reviewId = this.cosmosService.generateId();
 
     // Check if orderId is provided and verify purchase
-    let transactionInfo = null;
+    const transactionInfo = null;
     let isVerifiedPurchase = false;
 
     if (dto.orderId) {
@@ -179,7 +188,7 @@ export class SellerReviewsService {
 
     const review: SellerReviewDocument = {
       id: reviewId,
-      type: 'seller_review',
+      type: "seller_review",
       sellerId: sellerId,
       reviewer: {
         userId: user.id,
@@ -203,11 +212,11 @@ export class SellerReviewsService {
       },
       verification: {
         isVerifiedPurchase: isVerifiedPurchase,
-        verificationMethod: isVerifiedPurchase ? 'order' : null,
+        verificationMethod: isVerifiedPurchase ? "order" : null,
         verifiedAt: isVerifiedPurchase ? now : null,
       },
       moderation: {
-        status: 'pending', // Default to pending for review
+        status: "pending", // Default to pending for review
         flaggedAt: null,
         flaggedBy: null,
         flagReason: null,
@@ -254,8 +263,8 @@ export class SellerReviewsService {
     if (!review || review.sellerId !== sellerId) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Review not found',
+        error: "Not Found",
+        message: "Review not found",
       });
     }
 
@@ -263,8 +272,8 @@ export class SellerReviewsService {
     if (review.reviewer.userId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You can only update your own reviews',
+        error: "Forbidden",
+        message: "You can only update your own reviews",
       });
     }
 
@@ -287,9 +296,11 @@ export class SellerReviewsService {
       review.rating = {
         overall: dto.rating.overall ?? review.rating.overall,
         communication: dto.rating.communication ?? review.rating.communication,
-        vehicleCondition: dto.rating.vehicleCondition ?? review.rating.vehicleCondition,
+        vehicleCondition:
+          dto.rating.vehicleCondition ?? review.rating.vehicleCondition,
         pricing: dto.rating.pricing ?? review.rating.pricing,
-        processSmoothness: dto.rating.processSmoothness ?? review.rating.processSmoothness,
+        processSmoothness:
+          dto.rating.processSmoothness ?? review.rating.processSmoothness,
       };
     }
 
@@ -308,7 +319,12 @@ export class SellerReviewsService {
   /**
    * Delete review (by reviewer only)
    */
-  async delete(sellerId: string, id: string, userId: string, isAdmin: boolean): Promise<void> {
+  async delete(
+    sellerId: string,
+    id: string,
+    userId: string,
+    isAdmin: boolean,
+  ): Promise<void> {
     const review = await this.cosmosService.readItem<SellerReviewDocument>(
       this.REVIEWS_CONTAINER,
       id,
@@ -318,8 +334,8 @@ export class SellerReviewsService {
     if (!review || review.sellerId !== sellerId) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Review not found',
+        error: "Not Found",
+        message: "Review not found",
       });
     }
 
@@ -327,8 +343,8 @@ export class SellerReviewsService {
     if (!isAdmin && review.reviewer.userId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You can only delete your own reviews',
+        error: "Forbidden",
+        message: "You can only delete your own reviews",
       });
     }
 
@@ -354,8 +370,8 @@ export class SellerReviewsService {
     if (!review || review.sellerId !== sellerId) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Review not found',
+        error: "Not Found",
+        message: "Review not found",
       });
     }
 
@@ -365,8 +381,8 @@ export class SellerReviewsService {
     if (review.engagement.sellerResponse) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'Seller has already responded to this review',
+        error: "Bad Request",
+        message: "Seller has already responded to this review",
       });
     }
 
@@ -380,8 +396,8 @@ export class SellerReviewsService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -422,8 +438,8 @@ export class SellerReviewsService {
     if (!review || review.sellerId !== sellerId) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Review not found',
+        error: "Not Found",
+        message: "Review not found",
       });
     }
 
@@ -435,10 +451,10 @@ export class SellerReviewsService {
       review.moderation.moderatedBy = moderatorId;
 
       // Handle flagging
-      if (dto.status === 'flagged') {
+      if (dto.status === "flagged") {
         review.moderation.flaggedAt = now;
         review.moderation.flaggedBy = moderatorId;
-        review.moderation.flagReason = dto.flagReason || 'No reason provided';
+        review.moderation.flagReason = dto.flagReason || "No reason provided";
       } else {
         review.moderation.flaggedAt = null;
         review.moderation.flaggedBy = null;
@@ -465,7 +481,9 @@ export class SellerReviewsService {
   /**
    * Helper: Convert SellerReviewDocument to PublicSellerReview
    */
-  private toPublicSellerReview(review: SellerReviewDocument): PublicSellerReview {
+  private toPublicSellerReview(
+    review: SellerReviewDocument,
+  ): PublicSellerReview {
     return review;
   }
 }

@@ -1,13 +1,13 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   CosmosClient,
   Database,
   Container,
   FeedResponse,
   Resource,
-} from '@azure/cosmos';
-import { AppConfig } from '@/config/app.config';
+} from "@azure/cosmos";
+import { AppConfig } from "@/config/app.config";
 
 /**
  * Azure Cosmos DB Service
@@ -21,25 +21,25 @@ export class CosmosService implements OnModuleInit {
 
   // Container names from specification
   private readonly containerNames = [
-    'users',
-    'sellers',
-    'sellerGroups',
-    'sellerReviews',
-    'listings',
-    'vehicles',
-    'listingOffers',
-    'listingOfferChats',
-    'listingOfferChatMessages',
-    'orders',
-    'orderTransactions',
-    'subscriptionPlans',
-    'userSubscriptions',
-    'subscriptionInvoices',
-    'billings',
-    'notifications',
-    'taxonomies',
-    'roles',
-    'permissions',
+    "users",
+    "sellers",
+    "sellerGroups",
+    "sellerReviews",
+    "listings",
+    "vehicles",
+    "listingOffers",
+    "listingOfferChats",
+    "listingOfferChatMessages",
+    "orders",
+    "orderTransactions",
+    "subscriptionPlans",
+    "userSubscriptions",
+    "subscriptionInvoices",
+    "billings",
+    "notifications",
+    "taxonomies",
+    "roles",
+    "permissions",
   ];
 
   constructor(private configService: ConfigService<AppConfig>) {}
@@ -53,18 +53,20 @@ export class CosmosService implements OnModuleInit {
    */
   private async connect(): Promise<void> {
     try {
-      const endpoint = this.configService.get('cosmosEndpoint', { infer: true })!;
-      const key = this.configService.get('cosmosKey', { infer: true })!;
-      const databaseId = this.configService.get('cosmosDatabase', { infer: true })!;
+      const endpoint = this.configService.get("cosmosEndpoint", {
+        infer: true,
+      })!;
+      const key = this.configService.get("cosmosKey", { infer: true })!;
+      const databaseId = this.configService.get("cosmosDatabase", {
+        infer: true,
+      })!;
 
       this.client = new CosmosClient({ endpoint, key });
       this.database = this.client.database(databaseId);
 
-      this.logger.log(
-        `Connected to Cosmos DB: ${databaseId} at ${endpoint}`,
-      );
+      this.logger.log(`Connected to Cosmos DB: ${databaseId} at ${endpoint}`);
     } catch (error) {
-      this.logger.error('Failed to connect to Cosmos DB', error);
+      this.logger.error("Failed to connect to Cosmos DB", error);
       throw error;
     }
   }

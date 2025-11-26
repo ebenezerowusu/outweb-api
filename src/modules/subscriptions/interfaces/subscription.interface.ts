@@ -4,7 +4,7 @@
  */
 export interface SubscriptionDocument {
   id: string;
-  type: 'subscription';
+  type: "subscription";
   userId: string;
   sellerId: string | null;
   plan: SubscriptionPlan;
@@ -20,8 +20,8 @@ export interface SubscriptionDocument {
  * Subscription Plan
  */
 export interface SubscriptionPlan {
-  category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
-  interval: 'monthly' | 'yearly';
+  category: "cashoffer" | "dealer_wholesale" | "dealer_advertising";
+  interval: "monthly" | "yearly";
   productId: string;
   priceId: string;
   amount: number;
@@ -66,25 +66,25 @@ export interface SubscriptionStatus {
  * Subscription State
  */
 export type SubscriptionState =
-  | 'incomplete'
-  | 'incomplete_expired'
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'canceled'
-  | 'unpaid';
+  | "incomplete"
+  | "incomplete_expired"
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "unpaid";
 
 /**
  * Payment Status
  */
-export type PaymentStatus = 'pending' | 'succeeded' | 'failed';
+export type PaymentStatus = "pending" | "succeeded" | "failed";
 
 /**
  * Scheduled Change (for upgrades/downgrades)
  */
 export interface ScheduledChange {
-  newCategory: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
-  newInterval: 'monthly' | 'yearly';
+  newCategory: "cashoffer" | "dealer_wholesale" | "dealer_advertising";
+  newInterval: "monthly" | "yearly";
   newPriceId: string;
   effectiveDate: string;
 }
@@ -128,7 +128,7 @@ export interface SubscriptionAudit {
  */
 export interface InvoiceDocument {
   id: string;
-  type: 'invoice';
+  type: "invoice";
   subscriptionId: string;
   userId: string;
   stripe: InvoiceStripe;
@@ -176,7 +176,7 @@ export interface InvoiceLineItem {
  * Invoice Payment
  */
 export interface InvoicePayment {
-  status: 'draft' | 'open' | 'paid' | 'uncollectible' | 'void';
+  status: "draft" | "open" | "paid" | "uncollectible" | "void";
   paidAt: string | null;
   attemptCount: number;
   nextAttempt: string | null;

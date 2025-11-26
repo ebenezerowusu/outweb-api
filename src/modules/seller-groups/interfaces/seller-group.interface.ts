@@ -4,7 +4,7 @@
  */
 export interface SellerGroupDocument {
   id: string;
-  type: 'seller_group';
+  type: "seller_group";
   profile: SellerGroupProfile;
   headquarters: SellerGroupHeadquarters;
   members: SellerGroupMember[];
@@ -49,7 +49,7 @@ export interface SellerGroupHeadquarters {
  */
 export interface SellerGroupMember {
   sellerId: string;
-  role: 'primary' | 'member';
+  role: "primary" | "member";
   joinedAt: string;
   addedBy: string;
 }

@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { SubscriptionsController } from './subscriptions.controller';
-import { SubscriptionsService } from './subscriptions.service';
-import { CosmosService } from '@/common/services/cosmos.service';
+import { Module } from "@nestjs/common";
+import { SubscriptionsController } from "./subscriptions.controller";
+import { SubscriptionsService } from "./subscriptions.service";
+import { CosmosService } from "@/common/services/cosmos.service";
 
 /**
  * Subscriptions Module

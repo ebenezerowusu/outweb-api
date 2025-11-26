@@ -1,6 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean, IsInt, Min, Max, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsInt,
+  Min,
+  Max,
+  IsEnum,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Query Seller Reviews DTO
@@ -8,7 +16,7 @@ import { Type } from 'class-transformer';
  */
 export class QuerySellerReviewsDto {
   @ApiProperty({
-    description: 'Filter by reviewer user ID',
+    description: "Filter by reviewer user ID",
     required: false,
   })
   @IsString()
@@ -16,7 +24,7 @@ export class QuerySellerReviewsDto {
   userId?: string;
 
   @ApiProperty({
-    description: 'Filter by minimum rating (1-5)',
+    description: "Filter by minimum rating (1-5)",
     minimum: 1,
     maximum: 5,
     required: false,
@@ -29,7 +37,7 @@ export class QuerySellerReviewsDto {
   minRating?: number;
 
   @ApiProperty({
-    description: 'Filter by maximum rating (1-5)',
+    description: "Filter by maximum rating (1-5)",
     minimum: 1,
     maximum: 5,
     required: false,
@@ -42,7 +50,7 @@ export class QuerySellerReviewsDto {
   maxRating?: number;
 
   @ApiProperty({
-    description: 'Filter by verified purchase status',
+    description: "Filter by verified purchase status",
     required: false,
   })
   @Type(() => Boolean)
@@ -51,16 +59,16 @@ export class QuerySellerReviewsDto {
   isVerifiedPurchase?: boolean;
 
   @ApiProperty({
-    description: 'Filter by moderation status',
-    enum: ['pending', 'approved', 'rejected', 'flagged'],
+    description: "Filter by moderation status",
+    enum: ["pending", "approved", "rejected", "flagged"],
     required: false,
   })
-  @IsEnum(['pending', 'approved', 'rejected', 'flagged'])
+  @IsEnum(["pending", "approved", "rejected", "flagged"])
   @IsOptional()
-  status?: 'pending' | 'approved' | 'rejected' | 'flagged';
+  status?: "pending" | "approved" | "rejected" | "flagged";
 
   @ApiProperty({
-    description: 'Filter by presence of seller response',
+    description: "Filter by presence of seller response",
     required: false,
   })
   @Type(() => Boolean)
@@ -69,7 +77,7 @@ export class QuerySellerReviewsDto {
   hasResponse?: boolean;
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     example: 20,
     required: false,
     minimum: 1,
@@ -83,7 +91,7 @@ export class QuerySellerReviewsDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token from previous page',
+    description: "Continuation token from previous page",
     required: false,
   })
   @IsString()

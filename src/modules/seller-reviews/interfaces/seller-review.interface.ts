@@ -4,7 +4,7 @@
  */
 export interface SellerReviewDocument {
   id: string;
-  type: 'seller_review';
+  type: "seller_review";
   sellerId: string;
   reviewer: ReviewerInfo;
   transaction: TransactionInfo | null;
@@ -62,7 +62,7 @@ export interface ReviewContent {
  */
 export interface ReviewVerification {
   isVerifiedPurchase: boolean;
-  verificationMethod: 'order' | 'manual' | null;
+  verificationMethod: "order" | "manual" | null;
   verifiedAt: string | null;
 }
 
@@ -70,7 +70,7 @@ export interface ReviewVerification {
  * Review Moderation
  */
 export interface ReviewModeration {
-  status: 'pending' | 'approved' | 'rejected' | 'flagged';
+  status: "pending" | "approved" | "rejected" | "flagged";
   flaggedAt: string | null;
   flaggedBy: string | null;
   flagReason: string | null;
