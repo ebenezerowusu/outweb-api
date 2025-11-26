@@ -111,9 +111,12 @@ export class SellersService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const sellerItems = items || [];
+
     return {
-      items: items.map((seller) => this.toPublicSeller(seller)),
-      count: items.length,
+      items: sellerItems.map((seller) => this.toPublicSeller(seller)),
+      count: sellerItems.length,
       nextCursor: continuationToken || null,
     };
   }
