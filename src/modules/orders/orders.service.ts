@@ -102,8 +102,11 @@ export class OrdersService {
         continuationToken,
       );
 
+    // Handle case where items might be undefined
+    const orderItems = items || [];
+
     return {
-      items: items.map((order) => this.toPublicOrder(order)),
+      items: orderItems.map((order) => this.toPublicOrder(order)),
       continuationToken: nextToken,
     };
   }

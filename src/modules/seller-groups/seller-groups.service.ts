@@ -86,9 +86,12 @@ export class SellerGroupsService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const groupItems = items || [];
+
     return {
-      items: items.map((group) => this.toPublicSellerGroup(group)),
-      count: items.length,
+      items: groupItems.map((group) => this.toPublicSellerGroup(group)),
+      count: groupItems.length,
       nextCursor: continuationToken || null,
     };
   }

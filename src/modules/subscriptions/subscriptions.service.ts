@@ -292,9 +292,12 @@ export class SubscriptionsService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const subscriptionItems = items || [];
+
     return {
-      items: items.map((sub) => this.toPublicSubscription(sub)),
-      count: items.length,
+      items: subscriptionItems.map((sub) => this.toPublicSubscription(sub)),
+      count: subscriptionItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -638,9 +641,12 @@ export class SubscriptionsService {
         query.cursor,
       );
 
+    // Handle case where items might be undefined
+    const invoiceItems = items || [];
+
     return {
-      items: items.map((invoice) => this.toPublicInvoice(invoice)),
-      count: items.length,
+      items: invoiceItems.map((invoice) => this.toPublicInvoice(invoice)),
+      count: invoiceItems.length,
       nextCursor: continuationToken || null,
     };
   }
