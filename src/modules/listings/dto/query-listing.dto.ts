@@ -29,12 +29,20 @@ export class QueryListingsDto {
   @IsOptional()
   sellerId?: string;
 
-  @ApiProperty({ description: "Filter by make taxonomy ID", required: false })
+  @ApiProperty({
+    description: "Filter by make taxonomy ID (use /taxonomies/make for options)",
+    example: "make",
+    required: false
+  })
   @IsString()
   @IsOptional()
   makeId?: string;
 
-  @ApiProperty({ description: "Filter by model taxonomy ID", required: false })
+  @ApiProperty({
+    description: "Filter by model taxonomy ID (use /taxonomies/model for options)",
+    example: "model",
+    required: false
+  })
   @IsString()
   @IsOptional()
   modelId?: string;
@@ -88,7 +96,8 @@ export class QueryListingsDto {
   maxMileage?: number;
 
   @ApiProperty({
-    description: "Filter by exterior color taxonomy ID",
+    description: "Filter by exterior color taxonomy ID (use /taxonomies/exteriorColor for options)",
+    example: "exteriorColor",
     required: false,
   })
   @IsString()
@@ -96,7 +105,8 @@ export class QueryListingsDto {
   exteriorColorId?: string;
 
   @ApiProperty({
-    description: "Filter by interior color taxonomy ID",
+    description: "Filter by interior color taxonomy ID (use /taxonomies/interiorColor for options)",
+    example: "interiorColor",
     required: false,
   })
   @IsString()
@@ -104,7 +114,8 @@ export class QueryListingsDto {
   interiorColorId?: string;
 
   @ApiProperty({
-    description: "Filter by body type taxonomy ID",
+    description: "Filter by body style taxonomy ID (use /taxonomies/bodyStyle for options)",
+    example: "bodyStyle",
     required: false,
   })
   @IsString()
@@ -112,7 +123,8 @@ export class QueryListingsDto {
   bodyTypeId?: string;
 
   @ApiProperty({
-    description: "Filter by drivetrain taxonomy ID",
+    description: "Filter by drivetrain taxonomy ID (use /taxonomies/drivetrain for options)",
+    example: "drivetrain",
     required: false,
   })
   @IsString()
@@ -120,45 +132,39 @@ export class QueryListingsDto {
   drivetrainId?: string;
 
   @ApiProperty({
-    description: "Filter by condition",
-    enum: ["excellent", "good", "fair", "needs_work"],
+    description: "Filter by condition taxonomy ID (use /taxonomies/condition for options: Excellent, Very Good, Good, Fair, Poor)",
+    example: "condition",
     required: false,
   })
-  @IsEnum(["excellent", "good", "fair", "needs_work"])
+  @IsString()
   @IsOptional()
-  condition?: "excellent" | "good" | "fair" | "needs_work";
+  condition?: string;
 
   @ApiProperty({
-    description: "Filter by listing state",
+    description: "Filter by listing status (use /taxonomies/listingStatus for options: Published, Pending, Sold, Expired, Draft)",
     enum: [
-      "draft",
-      "pending_review",
-      "published",
-      "sold",
-      "expired",
-      "suspended",
-      "archived",
+      "Published",
+      "Pending",
+      "Sold",
+      "Expired",
+      "Draft",
     ],
     required: false,
   })
   @IsEnum([
-    "draft",
-    "pending_review",
-    "published",
-    "sold",
-    "expired",
-    "suspended",
-    "archived",
+    "Published",
+    "Pending",
+    "Sold",
+    "Expired",
+    "Draft",
   ])
   @IsOptional()
   state?:
-    | "draft"
-    | "pending_review"
-    | "published"
-    | "sold"
-    | "expired"
-    | "suspended"
-    | "archived";
+    | "Published"
+    | "Pending"
+    | "Sold"
+    | "Expired"
+    | "Draft";
 
   @ApiProperty({ description: "Filter by featured status", required: false })
   @Type(() => Boolean)

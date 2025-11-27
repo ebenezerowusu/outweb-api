@@ -25,7 +25,7 @@ export interface ListingDocument {
 export interface ListingSeller {
   id: string;
   name: string;
-  type: "dealer" | "private";
+  type: "Dealer" | "Private Seller";
   rating: number | null;
   reviewCount: number;
 }

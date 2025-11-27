@@ -7,7 +7,7 @@ import {
 import { CosmosService } from "@/common/services/cosmos.service";
 import { PaginatedResponse } from "@/common/types/pagination.type";
 import { SellerDocument, PublicSeller } from "./interfaces/seller.interface";
-import { CreateSellerDto } from "./dto/create-seller.dto";
+import { CreateSellerDto, SellerType } from "./dto/create-seller.dto";
 import {
   UpdateSellerDto,
   UpdateSellerStatusDto,
@@ -165,7 +165,7 @@ export class SellersService {
     createdBy: string,
   ): Promise<PublicSeller> {
     // Validate seller type matches provided details
-    if (dto.sellerType === "dealer" && !dto.dealerDetails) {
+    if (dto.sellerType === SellerType.DEALER && !dto.dealerDetails) {
       throw new BadRequestException({
         statusCode: 400,
         error: "Bad Request",
@@ -173,7 +173,7 @@ export class SellersService {
       });
     }
 
-    if (dto.sellerType === "private" && !dto.privateDetails) {
+    if (dto.sellerType === SellerType.PRIVATE && !dto.privateDetails) {
       throw new BadRequestException({
         statusCode: 400,
         error: "Bad Request",
@@ -325,7 +325,7 @@ export class SellersService {
     }
 
     // Update dealer details
-    if (seller.sellerType === "dealer" && seller.dealerDetails) {
+    if (seller.sellerType === "Dealer" && seller.dealerDetails) {
       if (dto.companyName !== undefined) {
         seller.dealerDetails.companyName = dto.companyName;
       }
@@ -373,7 +373,7 @@ export class SellersService {
     }
 
     // Update private details
-    if (seller.sellerType === "private" && seller.privateDetails) {
+    if (seller.sellerType === "Private Seller" && seller.privateDetails) {
       if (dto.fullName !== undefined) {
         seller.privateDetails.fullName = dto.fullName;
       }
