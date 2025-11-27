@@ -40,4 +40,3 @@ jobs:
         run: |
           docker tag  $REGISTRY/$IMAGE_NAME:${{ env.SHA_TAG }}  $REGISTRY/$IMAGE_NAME:latest
           docker push $REGISTRY/$IMAGE_NAME:latest
-
