@@ -2,17 +2,22 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-} from '@nestjs/common';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { PaginatedResponse } from '@/common/types/pagination.type';
+  BadRequestException,
+} from "@nestjs/common";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { PaginatedResponse } from "@/common/types/pagination.type";
 import {
   UserDocument,
   PublicUser,
-} from '@/modules/auth/interfaces/user.interface';
-import { UpdateUserDto, UpdateUserStatusDto, UpdateUserMarketDto } from './dto/update-user.dto';
-import { UpdateUserRolesDto } from './dto/user-roles.dto';
-import { UpdateUserPermissionsDto } from './dto/user-permissions.dto';
-import { QueryUsersDto } from './dto/query-users.dto';
+} from "@/modules/auth/interfaces/user.interface";
+import {
+  UpdateUserDto,
+  UpdateUserStatusDto,
+  UpdateUserMarketDto,
+} from "./dto/update-user.dto";
+import { UpdateUserRolesDto } from "./dto/user-roles.dto";
+import { UpdateUserPermissionsDto } from "./dto/user-permissions.dto";
+import { QueryUsersDto } from "./dto/query-users.dto";
 
 /**
  * Users Service
@@ -20,8 +25,8 @@ import { QueryUsersDto } from './dto/query-users.dto';
  */
 @Injectable()
 export class UsersService {
-  private readonly USERS_CONTAINER = 'users';
-  private readonly ROLES_CONTAINER = 'roles';
+  private readonly USERS_CONTAINER = "users";
+  private readonly ROLES_CONTAINER = "roles";
 
   constructor(private readonly cosmosService: CosmosService) {}
 
@@ -29,49 +34,56 @@ export class UsersService {
    * List users with filters and pagination (Admin only)
    */
   async findAll(query: QueryUsersDto): Promise<PaginatedResponse<PublicUser>> {
-    let sqlQuery = 'SELECT * FROM c WHERE 1=1';
+    let sqlQuery = "SELECT * FROM c WHERE 1=1";
     const parameters: any[] = [];
 
     // Build filters
     if (query.email) {
-      sqlQuery += ' AND c.profile.email = @email';
-      parameters.push({ name: '@email', value: query.email.toLowerCase() });
+      sqlQuery += " AND c.profile.email = @email";
+      parameters.push({ name: "@email", value: query.email.toLowerCase() });
     }
 
     if (query.username) {
-      sqlQuery += ' AND c.auth.username = @username';
-      parameters.push({ name: '@username', value: query.username.toLowerCase() });
+      sqlQuery += " AND c.auth.username = @username";
+      parameters.push({
+        name: "@username",
+        value: query.username.toLowerCase(),
+      });
     }
 
     if (query.isActive !== undefined) {
-      sqlQuery += ' AND c.status.isActive = @isActive';
-      parameters.push({ name: '@isActive', value: query.isActive });
+      sqlQuery += " AND c.status.isActive = @isActive";
+      parameters.push({ name: "@isActive", value: query.isActive });
     }
 
     if (query.blocked !== undefined) {
-      sqlQuery += ' AND c.status.blocked = @blocked';
-      parameters.push({ name: '@blocked', value: query.blocked });
+      sqlQuery += " AND c.status.blocked = @blocked";
+      parameters.push({ name: "@blocked", value: query.blocked });
     }
 
     if (query.roleId) {
       sqlQuery += ' AND ARRAY_CONTAINS(c.roles, {"roleId": @roleId}, true)';
-      parameters.push({ name: '@roleId', value: query.roleId });
+      parameters.push({ name: "@roleId", value: query.roleId });
     }
 
     // Order by creation date
-    sqlQuery += ' ORDER BY c.metadata.createdAt DESC';
+    sqlQuery += " ORDER BY c.metadata.createdAt DESC";
 
-    const { items, continuationToken } = await this.cosmosService.queryItems<UserDocument>(
-      this.USERS_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
+    const { items, continuationToken } =
+      await this.cosmosService.queryItems<UserDocument>(
+        this.USERS_CONTAINER,
+        sqlQuery,
+        parameters,
+        query.limit,
+        query.cursor,
+      );
+
+    // Handle case where items might be undefined
+    const userItems = items || [];
 
     return {
-      items: items.map((user) => this.toPublicUser(user)),
-      count: items.length,
+      items: userItems.map((user) => this.toPublicUser(user)),
+      count: userItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -79,7 +91,11 @@ export class UsersService {
   /**
    * Get single user by ID
    */
-  async findOne(id: string, requestingUserId: string, isAdmin: boolean): Promise<PublicUser> {
+  async findOne(
+    id: string,
+    requestingUserId: string,
+    isAdmin: boolean,
+  ): Promise<PublicUser> {
     const user = await this.cosmosService.readItem<UserDocument>(
       this.USERS_CONTAINER,
       id,
@@ -89,8 +105,8 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -98,8 +114,8 @@ export class UsersService {
     if (!isAdmin && requestingUserId !== id) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You can only view your own profile',
+        error: "Forbidden",
+        message: "You can only view your own profile",
       });
     }
 
@@ -124,8 +140,8 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -133,8 +149,8 @@ export class UsersService {
     if (!isAdmin && requestingUserId !== id) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You can only update your own profile',
+        error: "Forbidden",
+        message: "You can only update your own profile",
       });
     }
 
@@ -191,7 +207,10 @@ export class UsersService {
   /**
    * Update user status (Admin only)
    */
-  async updateStatus(id: string, dto: UpdateUserStatusDto): Promise<PublicUser> {
+  async updateStatus(
+    id: string,
+    dto: UpdateUserStatusDto,
+  ): Promise<PublicUser> {
     const user = await this.cosmosService.readItem<UserDocument>(
       this.USERS_CONTAINER,
       id,
@@ -201,8 +220,8 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -214,7 +233,7 @@ export class UsersService {
       user.status.blocked = dto.blocked;
       if (dto.blocked) {
         user.status.blockedAt = new Date().toISOString();
-        user.status.blockedReason = dto.blockedReason || 'No reason provided';
+        user.status.blockedReason = dto.blockedReason || "No reason provided";
       } else {
         user.status.blockedAt = null;
         user.status.blockedReason = null;
@@ -235,7 +254,10 @@ export class UsersService {
   /**
    * Update user market (Admin only)
    */
-  async updateMarket(id: string, dto: UpdateUserMarketDto): Promise<PublicUser> {
+  async updateMarket(
+    id: string,
+    dto: UpdateUserMarketDto,
+  ): Promise<PublicUser> {
     const user = await this.cosmosService.readItem<UserDocument>(
       this.USERS_CONTAINER,
       id,
@@ -245,8 +267,8 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -285,8 +307,17 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
+      });
+    }
+
+    // Validate that roles array is not empty
+    if (!dto.roles || dto.roles.length === 0) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "At least one role is required",
       });
     }
 
@@ -307,7 +338,10 @@ export class UsersService {
   /**
    * Update user custom permissions (Admin only)
    */
-  async updatePermissions(id: string, dto: UpdateUserPermissionsDto): Promise<PublicUser> {
+  async updatePermissions(
+    id: string,
+    dto: UpdateUserPermissionsDto,
+  ): Promise<PublicUser> {
     const user = await this.cosmosService.readItem<UserDocument>(
       this.USERS_CONTAINER,
       id,
@@ -317,8 +351,8 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 
@@ -354,8 +388,8 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'User not found',
+        error: "Not Found",
+        message: "User not found",
       });
     }
 

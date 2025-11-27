@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsString, IsOptional, IsInt, Min, Max } from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Suggest Permissions DTO
@@ -8,8 +8,8 @@ import { Type } from 'class-transformer';
  */
 export class SuggestPermissionsDto {
   @ApiProperty({
-    description: 'Search query for permission suggestions',
-    example: 'manage',
+    description: "Search query for permission suggestions",
+    example: "manage",
     required: false,
   })
   @IsString()
@@ -17,7 +17,7 @@ export class SuggestPermissionsDto {
   query?: string;
 
   @ApiProperty({
-    description: 'Limit number of suggestions',
+    description: "Limit number of suggestions",
     example: 10,
     minimum: 1,
     maximum: 50,
@@ -37,8 +37,8 @@ export class SuggestPermissionsDto {
  */
 export class SuggestRolesDto {
   @ApiProperty({
-    description: 'Search query for role suggestions',
-    example: 'admin',
+    description: "Search query for role suggestions",
+    example: "admin",
     required: false,
   })
   @IsString()
@@ -46,7 +46,7 @@ export class SuggestRolesDto {
   query?: string;
 
   @ApiProperty({
-    description: 'Limit number of suggestions',
+    description: "Limit number of suggestions",
     example: 10,
     minimum: 1,
     maximum: 50,

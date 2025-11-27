@@ -2,16 +2,16 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-} from '@nestjs/common';
-import { CosmosService } from '@/common/services/cosmos.service';
+} from "@nestjs/common";
+import { CosmosService } from "@/common/services/cosmos.service";
 import {
   TaxonomyDocument,
   TaxonomyOption,
   SeoTaxonomyOption,
   SeoListingContext,
   SeoBreadcrumb,
-} from '../taxonomies/interfaces/taxonomy.interface';
-import { SeoListingContextDto } from './dto/seo.dto';
+} from "../taxonomies/interfaces/taxonomy.interface";
+import { SeoListingContextDto } from "./dto/seo.dto";
 
 /**
  * SEO Service
@@ -19,7 +19,7 @@ import { SeoListingContextDto } from './dto/seo.dto';
  */
 @Injectable()
 export class SeoService {
-  private readonly TAXONOMIES_CONTAINER = 'taxonomies';
+  private readonly TAXONOMIES_CONTAINER = "taxonomies";
 
   constructor(private readonly cosmosService: CosmosService) {}
 
@@ -40,7 +40,7 @@ export class SeoService {
     if (!taxonomy) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
+        error: "Not Found",
         message: `Taxonomy '${categoryId}' not found`,
       });
     }
@@ -81,7 +81,7 @@ export class SeoService {
     if (!taxonomy) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
+        error: "Not Found",
         message: `Taxonomy '${categoryId}' not found`,
       });
     }
@@ -96,7 +96,7 @@ export class SeoService {
     if (!option) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
+        error: "Not Found",
         message: `Option with slug '${slug}' not found in taxonomy '${categoryId}'`,
       });
     }
@@ -125,7 +125,7 @@ export class SeoService {
     // Resolve all provided slugs
     if (dto.makeSlug) {
       try {
-        const result = await this.resolveTaxonomySlug('make', dto.makeSlug);
+        const result = await this.resolveTaxonomySlug("make", dto.makeSlug);
         if (result.option) {
           context.make = {
             label: result.option.label,
@@ -139,7 +139,7 @@ export class SeoService {
 
     if (dto.modelSlug) {
       try {
-        const result = await this.resolveTaxonomySlug('model', dto.modelSlug);
+        const result = await this.resolveTaxonomySlug("model", dto.modelSlug);
         if (result.option) {
           context.model = {
             label: result.option.label,
@@ -153,7 +153,7 @@ export class SeoService {
 
     if (dto.trimSlug) {
       try {
-        const result = await this.resolveTaxonomySlug('trim', dto.trimSlug);
+        const result = await this.resolveTaxonomySlug("trim", dto.trimSlug);
         if (result.option) {
           context.trim = {
             label: result.option.label,
@@ -168,7 +168,7 @@ export class SeoService {
     if (dto.bodyStyleSlug) {
       try {
         const result = await this.resolveTaxonomySlug(
-          'bodyStyle',
+          "bodyStyle",
           dto.bodyStyleSlug,
         );
         if (result.option) {
@@ -185,7 +185,7 @@ export class SeoService {
     if (dto.countrySlug) {
       try {
         const result = await this.resolveTaxonomySlug(
-          'country',
+          "country",
           dto.countrySlug,
         );
         if (result.option) {
@@ -202,7 +202,7 @@ export class SeoService {
     if (dto.conditionSlug) {
       try {
         const result = await this.resolveTaxonomySlug(
-          'condition',
+          "condition",
           dto.conditionSlug,
         );
         if (result.option) {
@@ -218,7 +218,7 @@ export class SeoService {
 
     if (dto.colorSlug) {
       try {
-        const result = await this.resolveTaxonomySlug('color', dto.colorSlug);
+        const result = await this.resolveTaxonomySlug("color", dto.colorSlug);
         if (result.option) {
           context.color = {
             label: result.option.label,
@@ -233,7 +233,7 @@ export class SeoService {
     if (dto.vehicleConditionSlug) {
       try {
         const result = await this.resolveTaxonomySlug(
-          'vehicleCondition',
+          "vehicleCondition",
           dto.vehicleConditionSlug,
         );
         if (result.option) {
@@ -253,8 +253,8 @@ export class SeoService {
     if (errors.length > 0) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'Invalid slug(s) provided',
+        error: "Bad Request",
+        message: "Invalid slug(s) provided",
         errors,
       });
     }
@@ -307,7 +307,9 @@ export class SeoService {
   /**
    * Helper: Build SEO title
    */
-  private buildTitle(context: Record<string, { label: string; slug: string }>): string {
+  private buildTitle(
+    context: Record<string, { label: string; slug: string }>,
+  ): string {
     const parts: string[] = [];
 
     if (context.vehicleCondition) {
@@ -321,12 +323,12 @@ export class SeoService {
     if (context.trim) parts.push(context.trim.label);
     if (context.bodyStyle) parts.push(context.bodyStyle.label);
 
-    parts.push('for Sale');
+    parts.push("for Sale");
 
     if (context.country) parts.push(`in ${context.country.label}`);
     if (context.color) parts.push(`– ${context.color.label}`);
 
-    const title = parts.join(' ') + ' | OnlyUsedTesla';
+    const title = parts.join(" ") + " | OnlyUsedTesla";
 
     return title;
   }
@@ -337,7 +339,7 @@ export class SeoService {
   private buildDescription(
     context: Record<string, { label: string; slug: string }>,
   ): string {
-    const parts: string[] = ['Browse verified'];
+    const parts: string[] = ["Browse verified"];
 
     if (context.vehicleCondition) {
       parts.push(context.vehicleCondition.label.toLowerCase());
@@ -349,16 +351,16 @@ export class SeoService {
     if (context.model) parts.push(context.model.label);
     if (context.bodyStyle) parts.push(context.bodyStyle.label);
 
-    parts.push('listings');
+    parts.push("listings");
 
     if (context.country) parts.push(`in ${context.country.label}`);
     if (context.color) parts.push(`with ${context.color.label} exterior`);
 
     parts.push(
-      '. Compare prices, trims, features and dealer offers on OnlyUsedTesla.',
+      ". Compare prices, trims, features and dealer offers on OnlyUsedTesla.",
     );
 
-    return parts.join(' ');
+    return parts.join(" ");
   }
 
   /**
@@ -382,7 +384,7 @@ export class SeoService {
     if (context.country) parts.push(context.country.slug);
     if (context.color) parts.push(context.color.slug);
 
-    return '/' + parts.filter(Boolean).join('/');
+    return "/" + parts.filter(Boolean).join("/");
   }
 
   /**
@@ -391,11 +393,9 @@ export class SeoService {
   private buildBreadcrumbs(
     context: Record<string, { label: string; slug: string }>,
   ): SeoBreadcrumb[] {
-    const breadcrumbs: SeoBreadcrumb[] = [
-      { label: 'Home', path: '/' },
-    ];
+    const breadcrumbs: SeoBreadcrumb[] = [{ label: "Home", path: "/" }];
 
-    let path = '';
+    let path = "";
 
     if (context.vehicleCondition) {
       path += `/${context.vehicleCondition.slug}`;
@@ -460,7 +460,7 @@ export class SeoService {
   private generateSlug(str: string): string {
     return str
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 }

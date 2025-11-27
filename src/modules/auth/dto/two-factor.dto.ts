@@ -1,9 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export enum TwoFactorMethod {
-  SMS = 'sms',
-  AUTHENTICATOR_APP = 'authenticatorApp',
+  SMS = "sms",
+  AUTHENTICATOR_APP = "authenticatorApp",
 }
 
 /**
@@ -11,7 +11,7 @@ export enum TwoFactorMethod {
  */
 export class Setup2FaDto {
   @ApiProperty({
-    description: 'Two-factor authentication method',
+    description: "Two-factor authentication method",
     enum: TwoFactorMethod,
     example: TwoFactorMethod.SMS,
   })
@@ -27,7 +27,7 @@ export class Setup2FaDto {
  */
 export class Disable2FaDto {
   @ApiProperty({
-    description: 'Two-factor authentication method to disable',
+    description: "Two-factor authentication method to disable",
     enum: TwoFactorMethod,
     example: TwoFactorMethod.SMS,
     required: false,

@@ -4,7 +4,7 @@
  */
 export interface NotificationDocument {
   id: string;
-  type: 'notification';
+  type: "notification";
 
   // Recipient
   userId: string;
@@ -41,51 +41,51 @@ export interface NotificationDetails {
 
 export type NotificationType =
   // Order notifications
-  | 'order_created'
-  | 'order_status_changed'
-  | 'payment_received'
-  | 'payment_failed'
-  | 'inspection_scheduled'
-  | 'inspection_completed'
-  | 'delivery_scheduled'
-  | 'order_delivered'
-  | 'order_completed'
-  | 'order_canceled'
+  | "order_created"
+  | "order_status_changed"
+  | "payment_received"
+  | "payment_failed"
+  | "inspection_scheduled"
+  | "inspection_completed"
+  | "delivery_scheduled"
+  | "order_delivered"
+  | "order_completed"
+  | "order_canceled"
 
   // Listing notifications
-  | 'listing_approved'
-  | 'listing_rejected'
-  | 'listing_expired'
-  | 'listing_sold'
-  | 'new_offer_received'
-  | 'offer_accepted'
-  | 'offer_rejected'
-  | 'offer_countered'
+  | "listing_approved"
+  | "listing_rejected"
+  | "listing_expired"
+  | "listing_sold"
+  | "new_offer_received"
+  | "offer_accepted"
+  | "offer_rejected"
+  | "offer_countered"
 
   // Subscription notifications
-  | 'subscription_created'
-  | 'subscription_renewed'
-  | 'subscription_canceled'
-  | 'subscription_expiring'
-  | 'payment_method_expiring'
-  | 'invoice_paid'
-  | 'invoice_failed'
+  | "subscription_created"
+  | "subscription_renewed"
+  | "subscription_canceled"
+  | "subscription_expiring"
+  | "payment_method_expiring"
+  | "invoice_paid"
+  | "invoice_failed"
 
   // Review notifications
-  | 'new_review_received'
-  | 'review_response_posted'
+  | "new_review_received"
+  | "review_response_posted"
 
   // Chat notifications
-  | 'new_message_received'
-  | 'offer_chat_started'
+  | "new_message_received"
+  | "offer_chat_started"
 
   // System notifications
-  | 'account_verified'
-  | 'password_changed'
-  | 'security_alert'
-  | 'system_announcement';
+  | "account_verified"
+  | "password_changed"
+  | "security_alert"
+  | "system_announcement";
 
-export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type NotificationPriority = "low" | "normal" | "high" | "urgent";
 
 /**
  * Notification channel (in-app, email, SMS, push)
@@ -100,9 +100,14 @@ export interface NotificationChannel {
   externalId: string | null; // Email ID, SMS ID, etc.
 }
 
-export type ChannelType = 'in_app' | 'email' | 'sms' | 'push';
+export type ChannelType = "in_app" | "email" | "sms" | "push";
 
-export type ChannelStatus = 'pending' | 'sent' | 'delivered' | 'failed' | 'skipped';
+export type ChannelStatus =
+  | "pending"
+  | "sent"
+  | "delivered"
+  | "failed"
+  | "skipped";
 
 /**
  * Notification status
@@ -146,7 +151,7 @@ export type PublicNotification = NotificationDocument;
  */
 export interface NotificationPreferencesDocument {
   id: string;
-  type: 'notification_preferences';
+  type: "notification_preferences";
   userId: string;
 
   preferences: ChannelPreferences;

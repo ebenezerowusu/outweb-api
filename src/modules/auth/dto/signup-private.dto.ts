@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsEmail,
   IsNotEmpty,
@@ -8,15 +8,15 @@ import {
   IsBoolean,
   IsOptional,
   Matches,
-} from 'class-validator';
+} from "class-validator";
 
 /**
  * Sign Up Private User Request DTO
  */
 export class SignUpPrivateDto {
   @ApiProperty({
-    description: 'First name',
-    example: 'Akua',
+    description: "First name",
+    example: "Akua",
     minLength: 1,
     maxLength: 100,
   })
@@ -27,8 +27,8 @@ export class SignUpPrivateDto {
   firstName: string;
 
   @ApiProperty({
-    description: 'Last name',
-    example: 'Mensah',
+    description: "Last name",
+    example: "Mensah",
     minLength: 1,
     maxLength: 100,
   })
@@ -39,17 +39,17 @@ export class SignUpPrivateDto {
   lastName: string;
 
   @ApiProperty({
-    description: 'Email address',
-    example: 'akua.mensah@gmail.com',
+    description: "Email address",
+    example: "akua.mensah@gmail.com",
   })
-  @IsEmail({}, { message: 'Invalid email format' })
+  @IsEmail({}, { message: "Invalid email format" })
   @MaxLength(254)
   @IsNotEmpty()
   email: string;
 
   @ApiProperty({
-    description: 'Phone number (E.164 or international format)',
-    example: '+233244123456',
+    description: "Phone number (E.164 or international format)",
+    example: "+233244123456",
   })
   @IsString()
   @MinLength(5)
@@ -58,8 +58,8 @@ export class SignUpPrivateDto {
   phone: string;
 
   @ApiProperty({
-    description: 'ZIP/Postal code',
-    example: '00233',
+    description: "ZIP/Postal code",
+    example: "00233",
     required: false,
   })
   @IsString()
@@ -68,25 +68,25 @@ export class SignUpPrivateDto {
   zipCode?: string;
 
   @ApiProperty({
-    description: 'Password (min 8 chars, recommended: letters + numbers)',
-    example: 'StrongPassword123!',
+    description: "Password (min 8 chars, recommended: letters + numbers)",
+    example: "StrongPassword123!",
     minLength: 8,
   })
   @IsString()
-  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  @MinLength(8, { message: "Password must be at least 8 characters" })
   @IsNotEmpty()
   password: string;
 
   @ApiProperty({
-    description: 'Password confirmation (must match password)',
-    example: 'StrongPassword123!',
+    description: "Password confirmation (must match password)",
+    example: "StrongPassword123!",
   })
   @IsString()
   @IsNotEmpty()
   confirmPassword: string;
 
   @ApiProperty({
-    description: 'Must accept terms of service',
+    description: "Must accept terms of service",
     example: true,
   })
   @IsBoolean()

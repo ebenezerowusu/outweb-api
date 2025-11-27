@@ -6,23 +6,18 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-} from '@nestjs/swagger';
-import { SeoService } from './seo.service';
-import { SeoListingContextDto } from './dto/seo.dto';
-import { SkipAuth } from '@/common/decorators/auth.decorators';
+} from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from "@nestjs/swagger";
+import { SeoService } from "./seo.service";
+import { SeoListingContextDto } from "./dto/seo.dto";
+import { SkipAuth } from "@/common/decorators/auth.decorators";
 
 /**
  * SEO Controller
  * Handles SEO metadata generation using taxonomy slugs
  */
-@ApiTags('SEO')
-@Controller('seo')
+@ApiTags("SEO")
+@Controller("seo")
 export class SeoController {
   constructor(private readonly seoService: SeoService) {}
 
@@ -30,25 +25,25 @@ export class SeoController {
    * GET /seo/taxonomies/:categoryId
    * SEO-ready options for one taxonomy
    */
-  @Get('taxonomies/:categoryId')
+  @Get("taxonomies/:categoryId")
   @SkipAuth()
   @ApiOperation({
-    summary: 'Get SEO-ready taxonomy options (Public)',
+    summary: "Get SEO-ready taxonomy options (Public)",
   })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
   @ApiResponse({
     status: 200,
-    description: 'SEO taxonomy options retrieved successfully',
+    description: "SEO taxonomy options retrieved successfully",
   })
   @ApiResponse({
     status: 404,
-    description: 'Taxonomy not found',
+    description: "Taxonomy not found",
   })
-  async getTaxonomySeo(@Param('categoryId') categoryId: string) {
+  async getTaxonomySeo(@Param("categoryId") categoryId: string) {
     return this.seoService.getTaxonomySeo(categoryId);
   }
 
@@ -56,32 +51,32 @@ export class SeoController {
    * GET /seo/taxonomies/:categoryId/:slug
    * Resolve a single slug
    */
-  @Get('taxonomies/:categoryId/:slug')
+  @Get("taxonomies/:categoryId/:slug")
   @SkipAuth()
   @ApiOperation({
-    summary: 'Resolve taxonomy slug to label and value (Public)',
+    summary: "Resolve taxonomy slug to label and value (Public)",
   })
   @ApiParam({
-    name: 'categoryId',
-    description: 'Taxonomy category ID',
-    example: 'make',
+    name: "categoryId",
+    description: "Taxonomy category ID",
+    example: "make",
   })
   @ApiParam({
-    name: 'slug',
-    description: 'Option slug',
-    example: 'tesla',
+    name: "slug",
+    description: "Option slug",
+    example: "tesla",
   })
   @ApiResponse({
     status: 200,
-    description: 'Slug resolved successfully',
+    description: "Slug resolved successfully",
   })
   @ApiResponse({
     status: 404,
-    description: 'Taxonomy or slug not found',
+    description: "Taxonomy or slug not found",
   })
   async resolveTaxonomySlug(
-    @Param('categoryId') categoryId: string,
-    @Param('slug') slug: string,
+    @Param("categoryId") categoryId: string,
+    @Param("slug") slug: string,
   ) {
     return this.seoService.resolveTaxonomySlug(categoryId, slug);
   }
@@ -90,19 +85,19 @@ export class SeoController {
    * POST /seo/listings/context
    * Build meta title/description/canonical from taxonomy slugs
    */
-  @Post('listings/context')
+  @Post("listings/context")
   @SkipAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Generate SEO metadata from taxonomy slugs (Public)',
+    summary: "Generate SEO metadata from taxonomy slugs (Public)",
   })
   @ApiResponse({
     status: 200,
-    description: 'SEO metadata generated successfully',
+    description: "SEO metadata generated successfully",
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid slug(s) provided',
+    description: "Invalid slug(s) provided",
   })
   async buildListingContext(@Body() dto: SeoListingContextDto) {
     return this.seoService.buildListingContext(dto);
@@ -112,32 +107,32 @@ export class SeoController {
    * GET /seo/listings/:makeSlug/:modelSlug
    * SEO metadata for make + model combination
    */
-  @Get('listings/:makeSlug/:modelSlug')
+  @Get("listings/:makeSlug/:modelSlug")
   @SkipAuth()
   @ApiOperation({
-    summary: 'Get SEO metadata for make + model (Public)',
+    summary: "Get SEO metadata for make + model (Public)",
   })
   @ApiParam({
-    name: 'makeSlug',
-    description: 'Make slug',
-    example: 'tesla',
+    name: "makeSlug",
+    description: "Make slug",
+    example: "tesla",
   })
   @ApiParam({
-    name: 'modelSlug',
-    description: 'Model slug',
-    example: 'model-s',
+    name: "modelSlug",
+    description: "Model slug",
+    example: "model-s",
   })
   @ApiResponse({
     status: 200,
-    description: 'SEO metadata retrieved successfully',
+    description: "SEO metadata retrieved successfully",
   })
   @ApiResponse({
     status: 404,
-    description: 'Make or model not found',
+    description: "Make or model not found",
   })
   async getModelSeo(
-    @Param('makeSlug') makeSlug: string,
-    @Param('modelSlug') modelSlug: string,
+    @Param("makeSlug") makeSlug: string,
+    @Param("modelSlug") modelSlug: string,
   ) {
     return this.seoService.getModelSeo(makeSlug, modelSlug);
   }
@@ -146,38 +141,38 @@ export class SeoController {
    * GET /seo/listings/:makeSlug/:modelSlug/:trimSlug
    * SEO metadata for make + model + trim combination
    */
-  @Get('listings/:makeSlug/:modelSlug/:trimSlug')
+  @Get("listings/:makeSlug/:modelSlug/:trimSlug")
   @SkipAuth()
   @ApiOperation({
-    summary: 'Get SEO metadata for make + model + trim (Public)',
+    summary: "Get SEO metadata for make + model + trim (Public)",
   })
   @ApiParam({
-    name: 'makeSlug',
-    description: 'Make slug',
-    example: 'tesla',
+    name: "makeSlug",
+    description: "Make slug",
+    example: "tesla",
   })
   @ApiParam({
-    name: 'modelSlug',
-    description: 'Model slug',
-    example: 'model-s',
+    name: "modelSlug",
+    description: "Model slug",
+    example: "model-s",
   })
   @ApiParam({
-    name: 'trimSlug',
-    description: 'Trim slug',
-    example: 'p100d',
+    name: "trimSlug",
+    description: "Trim slug",
+    example: "p100d",
   })
   @ApiResponse({
     status: 200,
-    description: 'SEO metadata retrieved successfully',
+    description: "SEO metadata retrieved successfully",
   })
   @ApiResponse({
     status: 404,
-    description: 'Make, model, or trim not found',
+    description: "Make, model, or trim not found",
   })
   async getTrimSeo(
-    @Param('makeSlug') makeSlug: string,
-    @Param('modelSlug') modelSlug: string,
-    @Param('trimSlug') trimSlug: string,
+    @Param("makeSlug") makeSlug: string,
+    @Param("modelSlug") modelSlug: string,
+    @Param("trimSlug") trimSlug: string,
   ) {
     return this.seoService.getTrimSeo(makeSlug, modelSlug, trimSlug);
   }

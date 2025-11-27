@@ -3,23 +3,30 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { PaginatedResponse } from '@/common/types/pagination.type';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { PaginatedResponse } from "@/common/types/pagination.type";
 import {
   SubscriptionDocument,
   PublicSubscription,
   InvoiceDocument,
   PublicInvoice,
   SubscriptionFeatures,
-} from './interfaces/subscription.interface';
-import { CreateCheckoutSessionDto, CreateOneTimeCheckoutDto, CreateSubscriptionFromWebhookDto } from './dto/create-subscription.dto';
+} from "./interfaces/subscription.interface";
+import {
+  CreateCheckoutSessionDto,
+  CreateOneTimeCheckoutDto,
+  CreateSubscriptionFromWebhookDto,
+} from "./dto/create-subscription.dto";
 import {
   UpdateSubscriptionPlanDto,
   CancelSubscriptionDto,
-} from './dto/update-subscription.dto';
-import { QuerySubscriptionsDto, QueryInvoicesDto } from './dto/query-subscription.dto';
+} from "./dto/update-subscription.dto";
+import {
+  QuerySubscriptionsDto,
+  QueryInvoicesDto,
+} from "./dto/query-subscription.dto";
 
 /**
  * Subscriptions Service
@@ -27,8 +34,8 @@ import { QuerySubscriptionsDto, QueryInvoicesDto } from './dto/query-subscriptio
  */
 @Injectable()
 export class SubscriptionsService {
-  private readonly SUBSCRIPTIONS_CONTAINER = 'subscriptions';
-  private readonly INVOICES_CONTAINER = 'invoices';
+  private readonly SUBSCRIPTIONS_CONTAINER = "subscriptions";
+  private readonly INVOICES_CONTAINER = "invoices";
 
   constructor(
     private readonly cosmosService: CosmosService,
@@ -39,7 +46,9 @@ export class SubscriptionsService {
    * Get subscription plan features based on category
    * TODO: Consider moving this to a database-driven approach using the subscription-plans.data.ts
    */
-  private getPlanFeatures(category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising'): SubscriptionFeatures {
+  private getPlanFeatures(
+    category: "cashoffer" | "dealer_wholesale" | "dealer_advertising",
+  ): SubscriptionFeatures {
     const featuresMap: Record<string, SubscriptionFeatures> = {
       cashoffer: {
         maxListings: 50,
@@ -82,12 +91,15 @@ export class SubscriptionsService {
   /**
    * Get price ID for plan using subscription-plans.data.ts structure
    */
-  private getPriceId(category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising', interval: 'monthly'): string {
+  private getPriceId(
+    category: "cashoffer" | "dealer_wholesale" | "dealer_advertising",
+    interval: "monthly",
+  ): string {
     // Map category to Stripe price ID
     const priceIdMap: Record<string, string> = {
-      cashoffer: 'price_cashoffer_monthly',
-      dealer_wholesale: 'price_dealer_wholesale_monthly',
-      dealer_advertising: 'price_dealer_advertising_monthly',
+      cashoffer: "price_cashoffer_monthly",
+      dealer_wholesale: "price_dealer_wholesale_monthly",
+      dealer_advertising: "price_dealer_advertising_monthly",
     };
 
     const priceId = priceIdMap[category];
@@ -95,7 +107,7 @@ export class SubscriptionsService {
     if (!priceId) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
+        error: "Bad Request",
         message: `Price ID not configured for ${category} ${interval} plan`,
       });
     }
@@ -106,12 +118,14 @@ export class SubscriptionsService {
   /**
    * Get product ID for plan using subscription-plans.data.ts structure
    */
-  private getProductId(category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising'): string {
+  private getProductId(
+    category: "cashoffer" | "dealer_wholesale" | "dealer_advertising",
+  ): string {
     // Map category to Stripe product ID
     const productIdMap: Record<string, string> = {
-      cashoffer: 'prod_cashoffer',
-      dealer_wholesale: 'prod_dealer_wholesale',
-      dealer_advertising: 'prod_dealer_advertising',
+      cashoffer: "prod_cashoffer",
+      dealer_wholesale: "prod_dealer_wholesale",
+      dealer_advertising: "prod_dealer_advertising",
     };
 
     const productId = productIdMap[category];
@@ -119,7 +133,7 @@ export class SubscriptionsService {
     if (!productId) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
+        error: "Bad Request",
         message: `Product ID not configured for ${category} plan`,
       });
     }
@@ -159,7 +173,7 @@ export class SubscriptionsService {
 
     // Placeholder response
     return {
-      sessionId: 'cs_test_placeholder',
+      sessionId: "cs_test_placeholder",
       url: dto.successUrl,
     };
   }
@@ -173,15 +187,25 @@ export class SubscriptionsService {
   ): Promise<{ sessionId: string; url: string }> {
     // Map product type to Stripe IDs
     const productIdMap: Record<string, string> = {
-      featured_listing: this.configService.get('stripeProductIdFeaturedListing') || 'prod_featured',
-      bump_listing: this.configService.get('stripeProductIdBumpListing') || 'prod_bump',
-      highlight_listing: this.configService.get('stripeProductIdHighlightListing') || 'prod_highlight',
+      featured_listing:
+        this.configService.get("stripeProductIdFeaturedListing") ||
+        "prod_featured",
+      bump_listing:
+        this.configService.get("stripeProductIdBumpListing") || "prod_bump",
+      highlight_listing:
+        this.configService.get("stripeProductIdHighlightListing") ||
+        "prod_highlight",
     };
 
     const priceIdMap: Record<string, string> = {
-      featured_listing: this.configService.get('stripePriceIdFeaturedListing') || 'price_featured',
-      bump_listing: this.configService.get('stripePriceIdBumpListing') || 'price_bump',
-      highlight_listing: this.configService.get('stripePriceIdHighlightListing') || 'price_highlight',
+      featured_listing:
+        this.configService.get("stripePriceIdFeaturedListing") ||
+        "price_featured",
+      bump_listing:
+        this.configService.get("stripePriceIdBumpListing") || "price_bump",
+      highlight_listing:
+        this.configService.get("stripePriceIdHighlightListing") ||
+        "price_highlight",
     };
 
     const productId = productIdMap[dto.productType];
@@ -190,7 +214,7 @@ export class SubscriptionsService {
     if (!productId || !priceId) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
+        error: "Bad Request",
         message: `Product or price ID not configured for ${dto.productType}`,
       });
     }
@@ -218,7 +242,7 @@ export class SubscriptionsService {
 
     // Placeholder response
     return {
-      sessionId: 'cs_test_onetime_placeholder',
+      sessionId: "cs_test_onetime_placeholder",
       url: dto.successUrl,
     };
   }
@@ -226,48 +250,54 @@ export class SubscriptionsService {
   /**
    * List subscriptions with filters
    */
-  async findAll(query: QuerySubscriptionsDto): Promise<PaginatedResponse<PublicSubscription>> {
-    let sqlQuery = 'SELECT * FROM c WHERE 1=1';
+  async findAll(
+    query: QuerySubscriptionsDto,
+  ): Promise<PaginatedResponse<PublicSubscription>> {
+    let sqlQuery = "SELECT * FROM c WHERE 1=1";
     const parameters: any[] = [];
 
     // Filter by user ID
     if (query.userId) {
-      sqlQuery += ' AND c.userId = @userId';
-      parameters.push({ name: '@userId', value: query.userId });
+      sqlQuery += " AND c.userId = @userId";
+      parameters.push({ name: "@userId", value: query.userId });
     }
 
     // Filter by seller ID
     if (query.sellerId) {
-      sqlQuery += ' AND c.sellerId = @sellerId';
-      parameters.push({ name: '@sellerId', value: query.sellerId });
+      sqlQuery += " AND c.sellerId = @sellerId";
+      parameters.push({ name: "@sellerId", value: query.sellerId });
     }
 
     // Filter by category
     if (query.category) {
-      sqlQuery += ' AND c.plan.category = @category';
-      parameters.push({ name: '@category', value: query.category });
+      sqlQuery += " AND c.plan.category = @category";
+      parameters.push({ name: "@category", value: query.category });
     }
 
     // Filter by state
     if (query.state) {
-      sqlQuery += ' AND c.status.state = @state';
-      parameters.push({ name: '@state', value: query.state });
+      sqlQuery += " AND c.status.state = @state";
+      parameters.push({ name: "@state", value: query.state });
     }
 
     // Order by creation date
-    sqlQuery += ' ORDER BY c.audit.createdAt DESC';
+    sqlQuery += " ORDER BY c.audit.createdAt DESC";
 
-    const { items, continuationToken } = await this.cosmosService.queryItems<SubscriptionDocument>(
-      this.SUBSCRIPTIONS_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
+    const { items, continuationToken } =
+      await this.cosmosService.queryItems<SubscriptionDocument>(
+        this.SUBSCRIPTIONS_CONTAINER,
+        sqlQuery,
+        parameters,
+        query.limit,
+        query.cursor,
+      );
+
+    // Handle case where items might be undefined
+    const subscriptionItems = items || [];
 
     return {
-      items: items.map((sub) => this.toPublicSubscription(sub)),
-      count: items.length,
+      items: subscriptionItems.map((sub) => this.toPublicSubscription(sub)),
+      count: subscriptionItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -275,18 +305,23 @@ export class SubscriptionsService {
   /**
    * Get single subscription by ID
    */
-  async findOne(id: string, userId: string, isAdmin: boolean): Promise<PublicSubscription> {
-    const subscription = await this.cosmosService.readItem<SubscriptionDocument>(
-      this.SUBSCRIPTIONS_CONTAINER,
-      id,
-      id,
-    );
+  async findOne(
+    id: string,
+    userId: string,
+    isAdmin: boolean,
+  ): Promise<PublicSubscription> {
+    const subscription =
+      await this.cosmosService.readItem<SubscriptionDocument>(
+        this.SUBSCRIPTIONS_CONTAINER,
+        id,
+        id,
+      );
 
     if (!subscription) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Subscription not found',
+        error: "Not Found",
+        message: "Subscription not found",
       });
     }
 
@@ -294,8 +329,8 @@ export class SubscriptionsService {
     if (!isAdmin && subscription.userId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have access to this subscription',
+        error: "Forbidden",
+        message: "You do not have access to this subscription",
       });
     }
 
@@ -305,13 +340,15 @@ export class SubscriptionsService {
   /**
    * Create subscription from webhook (internal)
    */
-  async createFromWebhook(dto: CreateSubscriptionFromWebhookDto): Promise<PublicSubscription> {
+  async createFromWebhook(
+    dto: CreateSubscriptionFromWebhookDto,
+  ): Promise<PublicSubscription> {
     const now = new Date().toISOString();
     const subscriptionId = this.cosmosService.generateId();
 
     const subscription: SubscriptionDocument = {
       id: subscriptionId,
-      type: 'subscription',
+      type: "subscription",
       userId: dto.userId,
       sellerId: dto.sellerId,
       plan: {
@@ -340,7 +377,7 @@ export class SubscriptionsService {
       },
       status: {
         state: dto.status as any,
-        paymentStatus: 'pending',
+        paymentStatus: "pending",
         autoRenew: true,
         scheduledChanges: null,
       },
@@ -374,17 +411,18 @@ export class SubscriptionsService {
     dto: UpdateSubscriptionPlanDto,
     userId: string,
   ): Promise<PublicSubscription> {
-    const subscription = await this.cosmosService.readItem<SubscriptionDocument>(
-      this.SUBSCRIPTIONS_CONTAINER,
-      id,
-      id,
-    );
+    const subscription =
+      await this.cosmosService.readItem<SubscriptionDocument>(
+        this.SUBSCRIPTIONS_CONTAINER,
+        id,
+        id,
+      );
 
     if (!subscription) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Subscription not found',
+        error: "Not Found",
+        message: "Subscription not found",
       });
     }
 
@@ -392,8 +430,8 @@ export class SubscriptionsService {
     if (subscription.userId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have access to this subscription',
+        error: "Forbidden",
+        message: "You do not have access to this subscription",
       });
     }
 
@@ -436,17 +474,18 @@ export class SubscriptionsService {
     dto: CancelSubscriptionDto,
     userId: string,
   ): Promise<PublicSubscription> {
-    const subscription = await this.cosmosService.readItem<SubscriptionDocument>(
-      this.SUBSCRIPTIONS_CONTAINER,
-      id,
-      id,
-    );
+    const subscription =
+      await this.cosmosService.readItem<SubscriptionDocument>(
+        this.SUBSCRIPTIONS_CONTAINER,
+        id,
+        id,
+      );
 
     if (!subscription) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Subscription not found',
+        error: "Not Found",
+        message: "Subscription not found",
       });
     }
 
@@ -454,8 +493,8 @@ export class SubscriptionsService {
     if (subscription.userId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have access to this subscription',
+        error: "Forbidden",
+        message: "You do not have access to this subscription",
       });
     }
 
@@ -469,7 +508,7 @@ export class SubscriptionsService {
     const now = new Date().toISOString();
 
     if (dto.immediately) {
-      subscription.status.state = 'canceled';
+      subscription.status.state = "canceled";
       subscription.billing.canceledAt = now;
       subscription.billing.cancelAt = now;
     } else {
@@ -493,17 +532,18 @@ export class SubscriptionsService {
    * Reactivate canceled subscription
    */
   async reactivate(id: string, userId: string): Promise<PublicSubscription> {
-    const subscription = await this.cosmosService.readItem<SubscriptionDocument>(
-      this.SUBSCRIPTIONS_CONTAINER,
-      id,
-      id,
-    );
+    const subscription =
+      await this.cosmosService.readItem<SubscriptionDocument>(
+        this.SUBSCRIPTIONS_CONTAINER,
+        id,
+        id,
+      );
 
     if (!subscription) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Subscription not found',
+        error: "Not Found",
+        message: "Subscription not found",
       });
     }
 
@@ -511,8 +551,8 @@ export class SubscriptionsService {
     if (subscription.userId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have access to this subscription',
+        error: "Forbidden",
+        message: "You do not have access to this subscription",
       });
     }
 
@@ -520,8 +560,8 @@ export class SubscriptionsService {
     if (!subscription.billing.cancelAt) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'Subscription is not scheduled for cancellation',
+        error: "Bad Request",
+        message: "Subscription is not scheduled for cancellation",
       });
     }
 
@@ -556,50 +596,57 @@ export class SubscriptionsService {
     isAdmin: boolean,
   ): Promise<PaginatedResponse<PublicInvoice>> {
     // Verify subscription access
-    const subscription = await this.cosmosService.readItem<SubscriptionDocument>(
-      this.SUBSCRIPTIONS_CONTAINER,
-      subscriptionId,
-      subscriptionId,
-    );
+    const subscription =
+      await this.cosmosService.readItem<SubscriptionDocument>(
+        this.SUBSCRIPTIONS_CONTAINER,
+        subscriptionId,
+        subscriptionId,
+      );
 
     if (!subscription) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Subscription not found',
+        error: "Not Found",
+        message: "Subscription not found",
       });
     }
 
     if (!isAdmin && subscription.userId !== userId) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have access to this subscription',
+        error: "Forbidden",
+        message: "You do not have access to this subscription",
       });
     }
 
     // Query invoices
-    let sqlQuery = 'SELECT * FROM c WHERE c.subscriptionId = @subscriptionId';
-    const parameters: any[] = [{ name: '@subscriptionId', value: subscriptionId }];
+    let sqlQuery = "SELECT * FROM c WHERE c.subscriptionId = @subscriptionId";
+    const parameters: any[] = [
+      { name: "@subscriptionId", value: subscriptionId },
+    ];
 
     if (query.status) {
-      sqlQuery += ' AND c.payment.status = @status';
-      parameters.push({ name: '@status', value: query.status });
+      sqlQuery += " AND c.payment.status = @status";
+      parameters.push({ name: "@status", value: query.status });
     }
 
-    sqlQuery += ' ORDER BY c.audit.createdAt DESC';
+    sqlQuery += " ORDER BY c.audit.createdAt DESC";
 
-    const { items, continuationToken } = await this.cosmosService.queryItems<InvoiceDocument>(
-      this.INVOICES_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
+    const { items, continuationToken } =
+      await this.cosmosService.queryItems<InvoiceDocument>(
+        this.INVOICES_CONTAINER,
+        sqlQuery,
+        parameters,
+        query.limit,
+        query.cursor,
+      );
+
+    // Handle case where items might be undefined
+    const invoiceItems = items || [];
 
     return {
-      items: items.map((invoice) => this.toPublicInvoice(invoice)),
-      count: items.length,
+      items: invoiceItems.map((invoice) => this.toPublicInvoice(invoice)),
+      count: invoiceItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -630,13 +677,15 @@ export class SubscriptionsService {
     // - bump_listing (stripeProductIdBumpListing)
     // - highlight_listing (stripeProductIdHighlightListing)
 
-    console.log('Webhook received:', event.type);
+    console.log("Webhook received:", event.type);
   }
 
   /**
    * Helper: Convert SubscriptionDocument to PublicSubscription
    */
-  private toPublicSubscription(subscription: SubscriptionDocument): PublicSubscription {
+  private toPublicSubscription(
+    subscription: SubscriptionDocument,
+  ): PublicSubscription {
     return subscription;
   }
 

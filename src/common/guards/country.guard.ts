@@ -3,15 +3,15 @@ import {
   CanActivate,
   ExecutionContext,
   BadRequestException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { FastifyRequest } from 'fastify';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { FastifyRequest } from "fastify";
 
 /**
  * Country Guard Metadata Key
  * Use @SetMetadata('skipCountryGuard', true) to bypass for specific routes
  */
-export const SKIP_COUNTRY_GUARD_KEY = 'skipCountryGuard';
+export const SKIP_COUNTRY_GUARD_KEY = "skipCountryGuard";
 
 /**
  * Country Guard
@@ -28,11 +28,40 @@ export const SKIP_COUNTRY_GUARD_KEY = 'skipCountryGuard';
 export class CountryGuard implements CanActivate {
   // ISO 3166-1 alpha-2 country codes (subset of common ones, extend as needed)
   private readonly validCountryCodes = new Set([
-    'US', 'CA', 'GB', 'GH', 'NG', 'KE', 'ZA',
-    'DE', 'FR', 'IT', 'ES', 'NL', 'SE', 'NO',
-    'DK', 'FI', 'PL', 'PT', 'IE', 'AT', 'CH',
-    'AU', 'NZ', 'JP', 'CN', 'IN', 'SG', 'MY',
-    'BR', 'MX', 'AR', 'CL', 'CO', 'PE',
+    "US",
+    "CA",
+    "GB",
+    "GH",
+    "NG",
+    "KE",
+    "ZA",
+    "DE",
+    "FR",
+    "IT",
+    "ES",
+    "NL",
+    "SE",
+    "NO",
+    "DK",
+    "FI",
+    "PL",
+    "PT",
+    "IE",
+    "AT",
+    "CH",
+    "AU",
+    "NZ",
+    "JP",
+    "CN",
+    "IN",
+    "SG",
+    "MY",
+    "BR",
+    "MX",
+    "AR",
+    "CL",
+    "CO",
+    "PE",
   ]);
 
   constructor(private reflector: Reflector) {}
@@ -52,23 +81,23 @@ export class CountryGuard implements CanActivate {
     const path = request.url;
 
     // Skip for health endpoints
-    if (path.startsWith('/health')) {
+    if (path.startsWith("/health")) {
       return true;
     }
 
     // Skip for webhook endpoints (authenticated via provider-specific signatures)
-    if (path.startsWith('/webhooks/')) {
+    if (path.startsWith("/webhooks/")) {
       return true;
     }
 
     // Get X-Country header
-    const country = request.headers['x-country'] as string;
+    const country = request.headers["x-country"] as string;
 
     if (!country) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'X-Country header is required',
+        error: "Bad Request",
+        message: "X-Country header is required",
       });
     }
 
@@ -78,8 +107,9 @@ export class CountryGuard implements CanActivate {
     if (countryCode.length !== 2 || !/^[A-Z]{2}$/.test(countryCode)) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'X-Country must be a valid 2-letter ISO 3166-1 alpha-2 country code',
+        error: "Bad Request",
+        message:
+          "X-Country must be a valid 2-letter ISO 3166-1 alpha-2 country code",
       });
     }
 
@@ -87,7 +117,7 @@ export class CountryGuard implements CanActivate {
     if (!this.validCountryCodes.has(countryCode)) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
+        error: "Bad Request",
         message: `Unsupported country code: ${countryCode}`,
       });
     }

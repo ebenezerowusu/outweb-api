@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsOptional,
   IsString,
@@ -8,8 +8,8 @@ import {
   Min,
   Max,
   Length,
-} from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+} from "class-validator";
+import { Type, Transform } from "class-transformer";
 
 /**
  * Query Taxonomies DTO (GET /taxonomies)
@@ -17,24 +17,24 @@ import { Type, Transform } from 'class-transformer';
  */
 export class QueryTaxonomiesDto {
   @ApiProperty({
-    description: 'Include empty categories (with no options)',
+    description: "Include empty categories (with no options)",
     required: false,
     default: true,
   })
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   includeEmpty?: boolean = true;
 
   @ApiProperty({
-    description: 'Sort by field',
-    enum: ['order', 'id'],
+    description: "Sort by field",
+    enum: ["order", "id"],
     required: false,
-    default: 'order',
+    default: "order",
   })
-  @IsEnum(['order', 'id'])
+  @IsEnum(["order", "id"])
   @IsOptional()
-  sortBy?: 'order' | 'id' = 'order';
+  sortBy?: "order" | "id" = "order";
 }
 
 /**
@@ -42,27 +42,27 @@ export class QueryTaxonomiesDto {
  */
 export class GetTaxonomyOptionsDto {
   @ApiProperty({
-    description: 'Return only active options',
+    description: "Return only active options",
     required: false,
     default: true,
   })
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   activeOnly?: boolean = true;
 
   @ApiProperty({
-    description: 'Sort options by field',
-    enum: ['order', 'label'],
+    description: "Sort options by field",
+    enum: ["order", "label"],
     required: false,
-    default: 'order',
+    default: "order",
   })
-  @IsEnum(['order', 'label'])
+  @IsEnum(["order", "label"])
   @IsOptional()
-  sortBy?: 'order' | 'label' = 'order';
+  sortBy?: "order" | "label" = "order";
 
   @ApiProperty({
-    description: 'Filter models by make (only for model taxonomy)',
+    description: "Filter models by make (only for model taxonomy)",
     required: false,
   })
   @IsString()
@@ -70,7 +70,7 @@ export class GetTaxonomyOptionsDto {
   make?: string;
 
   @ApiProperty({
-    description: 'Search query (case-insensitive search in label)',
+    description: "Search query (case-insensitive search in label)",
     required: false,
     minLength: 1,
     maxLength: 64,
@@ -81,7 +81,7 @@ export class GetTaxonomyOptionsDto {
   q?: string;
 
   @ApiProperty({
-    description: 'Limit number of results',
+    description: "Limit number of results",
     required: false,
     default: 100,
     minimum: 1,
@@ -95,7 +95,7 @@ export class GetTaxonomyOptionsDto {
   limit?: number = 100;
 
   @ApiProperty({
-    description: 'Cursor for pagination',
+    description: "Cursor for pagination",
     required: false,
   })
   @IsString()
@@ -108,19 +108,19 @@ export class GetTaxonomyOptionsDto {
  */
 export class BulkGetTaxonomiesDto {
   @ApiProperty({
-    description: 'Comma-separated list of category IDs',
-    example: 'make,model,color,bodyStyle,drivetrain',
+    description: "Comma-separated list of category IDs",
+    example: "make,model,color,bodyStyle,drivetrain",
     required: true,
   })
   @IsString()
   categories: string;
 
   @ApiProperty({
-    description: 'Return only active options',
+    description: "Return only active options",
     required: false,
     default: true,
   })
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === "true" || value === true)
   @IsBoolean()
   @IsOptional()
   activeOnly?: boolean = true;

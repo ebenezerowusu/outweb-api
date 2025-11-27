@@ -2,18 +2,21 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-} from '@nestjs/common';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { PaginatedResponse } from '@/common/types/pagination.type';
-import { SellerGroupDocument, PublicSellerGroup } from './interfaces/seller-group.interface';
-import { CreateSellerGroupDto } from './dto/create-seller-group.dto';
+} from "@nestjs/common";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { PaginatedResponse } from "@/common/types/pagination.type";
+import {
+  SellerGroupDocument,
+  PublicSellerGroup,
+} from "./interfaces/seller-group.interface";
+import { CreateSellerGroupDto } from "./dto/create-seller-group.dto";
 import {
   UpdateSellerGroupDto,
   UpdateSellerGroupSettingsDto,
   UpdateSellerGroupMembersDto,
   UpdateSellerGroupMetaDto,
-} from './dto/update-seller-group.dto';
-import { QuerySellerGroupsDto } from './dto/query-seller-groups.dto';
+} from "./dto/update-seller-group.dto";
+import { QuerySellerGroupsDto } from "./dto/query-seller-groups.dto";
 
 /**
  * Seller Groups Service
@@ -21,67 +24,74 @@ import { QuerySellerGroupsDto } from './dto/query-seller-groups.dto';
  */
 @Injectable()
 export class SellerGroupsService {
-  private readonly SELLER_GROUPS_CONTAINER = 'seller_groups';
+  private readonly SELLER_GROUPS_CONTAINER = "seller_groups";
 
   constructor(private readonly cosmosService: CosmosService) {}
 
   /**
    * List seller groups with filters and pagination
    */
-  async findAll(query: QuerySellerGroupsDto): Promise<PaginatedResponse<PublicSellerGroup>> {
-    let sqlQuery = 'SELECT * FROM c WHERE 1=1';
+  async findAll(
+    query: QuerySellerGroupsDto,
+  ): Promise<PaginatedResponse<PublicSellerGroup>> {
+    let sqlQuery = "SELECT * FROM c WHERE 1=1";
     const parameters: any[] = [];
 
     // Filter by name (partial match)
     if (query.name) {
-      sqlQuery += ' AND CONTAINS(LOWER(c.profile.name), @name)';
-      parameters.push({ name: '@name', value: query.name.toLowerCase() });
+      sqlQuery += " AND CONTAINS(LOWER(c.profile.name), @name)";
+      parameters.push({ name: "@name", value: query.name.toLowerCase() });
     }
 
     // Filter by email
     if (query.email) {
-      sqlQuery += ' AND c.profile.email = @email';
-      parameters.push({ name: '@email', value: query.email.toLowerCase() });
+      sqlQuery += " AND c.profile.email = @email";
+      parameters.push({ name: "@email", value: query.email.toLowerCase() });
     }
 
     // Filter by city
     if (query.city) {
-      sqlQuery += ' AND LOWER(c.headquarters.address.city) = @city';
-      parameters.push({ name: '@city', value: query.city.toLowerCase() });
+      sqlQuery += " AND LOWER(c.headquarters.address.city) = @city";
+      parameters.push({ name: "@city", value: query.city.toLowerCase() });
     }
 
     // Filter by state
     if (query.state) {
-      sqlQuery += ' AND LOWER(c.headquarters.address.state) = @state';
-      parameters.push({ name: '@state', value: query.state.toLowerCase() });
+      sqlQuery += " AND LOWER(c.headquarters.address.state) = @state";
+      parameters.push({ name: "@state", value: query.state.toLowerCase() });
     }
 
     // Filter by country
     if (query.country) {
-      sqlQuery += ' AND c.headquarters.address.country = @country';
-      parameters.push({ name: '@country', value: query.country.toUpperCase() });
+      sqlQuery += " AND c.headquarters.address.country = @country";
+      parameters.push({ name: "@country", value: query.country.toUpperCase() });
     }
 
     // Filter by seller membership
     if (query.sellerId) {
-      sqlQuery += ' AND ARRAY_CONTAINS(c.members, {\"sellerId\": @sellerId}, true)';
-      parameters.push({ name: '@sellerId', value: query.sellerId });
+      sqlQuery +=
+        ' AND ARRAY_CONTAINS(c.members, {\"sellerId\": @sellerId}, true)';
+      parameters.push({ name: "@sellerId", value: query.sellerId });
     }
 
     // Order by creation date
-    sqlQuery += ' ORDER BY c.audit.createdAt DESC';
+    sqlQuery += " ORDER BY c.audit.createdAt DESC";
 
-    const { items, continuationToken } = await this.cosmosService.queryItems<SellerGroupDocument>(
-      this.SELLER_GROUPS_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
+    const { items, continuationToken } =
+      await this.cosmosService.queryItems<SellerGroupDocument>(
+        this.SELLER_GROUPS_CONTAINER,
+        sqlQuery,
+        parameters,
+        query.limit,
+        query.cursor,
+      );
+
+    // Handle case where items might be undefined
+    const groupItems = items || [];
 
     return {
-      items: items.map((group) => this.toPublicSellerGroup(group)),
-      count: items.length,
+      items: groupItems.map((group) => this.toPublicSellerGroup(group)),
+      count: groupItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -89,7 +99,11 @@ export class SellerGroupsService {
   /**
    * Get single seller group by ID
    */
-  async findOne(id: string, requestingUserId: string, isAdmin: boolean): Promise<PublicSellerGroup> {
+  async findOne(
+    id: string,
+    requestingUserId: string,
+    isAdmin: boolean,
+  ): Promise<PublicSellerGroup> {
     const group = await this.cosmosService.readItem<SellerGroupDocument>(
       this.SELLER_GROUPS_CONTAINER,
       id,
@@ -99,8 +113,8 @@ export class SellerGroupsService {
     if (!group) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller group not found',
+        error: "Not Found",
+        message: "Seller group not found",
       });
     }
 
@@ -114,13 +128,16 @@ export class SellerGroupsService {
   /**
    * Create new seller group
    */
-  async create(dto: CreateSellerGroupDto, createdBy: string): Promise<PublicSellerGroup> {
+  async create(
+    dto: CreateSellerGroupDto,
+    createdBy: string,
+  ): Promise<PublicSellerGroup> {
     const now = new Date().toISOString();
     const groupId = this.cosmosService.generateId();
 
     const group: SellerGroupDocument = {
       id: groupId,
-      type: 'seller_group',
+      type: "seller_group",
       profile: {
         name: dto.name,
         description: dto.description || null,
@@ -144,12 +161,13 @@ export class SellerGroupsService {
         contactEmail: dto.headquarters.contactEmail?.toLowerCase() || null,
         contactPhone: dto.headquarters.contactPhone || null,
       },
-      members: dto.members?.map((member) => ({
-        sellerId: member.sellerId,
-        role: member.role,
-        joinedAt: now,
-        addedBy: createdBy,
-      })) || [],
+      members:
+        dto.members?.map((member) => ({
+          sellerId: member.sellerId,
+          role: member.role,
+          joinedAt: now,
+          addedBy: createdBy,
+        })) || [],
       settings: {
         sharedInventory: false,
         sharedPricing: false,
@@ -198,8 +216,8 @@ export class SellerGroupsService {
     if (!group) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller group not found',
+        error: "Not Found",
+        message: "Seller group not found",
       });
     }
 
@@ -208,8 +226,8 @@ export class SellerGroupsService {
     if (!isAdmin) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have permission to update this seller group',
+        error: "Forbidden",
+        message: "You do not have permission to update this seller group",
       });
     }
 
@@ -248,7 +266,8 @@ export class SellerGroupsService {
         group.headquarters.contactPerson = dto.headquarters.contactPerson;
       }
       if (dto.headquarters.contactEmail !== undefined) {
-        group.headquarters.contactEmail = dto.headquarters.contactEmail?.toLowerCase() || null;
+        group.headquarters.contactEmail =
+          dto.headquarters.contactEmail?.toLowerCase() || null;
       }
       if (dto.headquarters.contactPhone !== undefined) {
         group.headquarters.contactPhone = dto.headquarters.contactPhone;
@@ -286,8 +305,8 @@ export class SellerGroupsService {
     if (!group) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller group not found',
+        error: "Not Found",
+        message: "Seller group not found",
       });
     }
 
@@ -295,8 +314,8 @@ export class SellerGroupsService {
     if (!isAdmin) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have permission to update group settings',
+        error: "Forbidden",
+        message: "You do not have permission to update group settings",
       });
     }
 
@@ -311,7 +330,8 @@ export class SellerGroupsService {
       group.settings.sharedBranding = dto.sharedBranding;
     }
     if (dto.allowCrossLocationTransfers !== undefined) {
-      group.settings.allowCrossLocationTransfers = dto.allowCrossLocationTransfers;
+      group.settings.allowCrossLocationTransfers =
+        dto.allowCrossLocationTransfers;
     }
     if (dto.centralizedPayments !== undefined) {
       group.settings.centralizedPayments = dto.centralizedPayments;
@@ -347,8 +367,8 @@ export class SellerGroupsService {
     if (!group) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller group not found',
+        error: "Not Found",
+        message: "Seller group not found",
       });
     }
 
@@ -356,8 +376,8 @@ export class SellerGroupsService {
     if (!isAdmin) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have permission to manage group members',
+        error: "Forbidden",
+        message: "You do not have permission to manage group members",
       });
     }
 
@@ -366,7 +386,9 @@ export class SellerGroupsService {
     // Update members array
     group.members = dto.members.map((member) => {
       // Check if member already exists
-      const existingMember = group.members.find((m) => m.sellerId === member.sellerId);
+      const existingMember = group.members.find(
+        (m) => m.sellerId === member.sellerId,
+      );
       return {
         sellerId: member.sellerId,
         role: member.role,
@@ -393,7 +415,10 @@ export class SellerGroupsService {
   /**
    * Update seller group meta (Admin only - typically system updates)
    */
-  async updateMeta(id: string, dto: UpdateSellerGroupMetaDto): Promise<PublicSellerGroup> {
+  async updateMeta(
+    id: string,
+    dto: UpdateSellerGroupMetaDto,
+  ): Promise<PublicSellerGroup> {
     const group = await this.cosmosService.readItem<SellerGroupDocument>(
       this.SELLER_GROUPS_CONTAINER,
       id,
@@ -403,8 +428,8 @@ export class SellerGroupsService {
     if (!group) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller group not found',
+        error: "Not Found",
+        message: "Seller group not found",
       });
     }
 

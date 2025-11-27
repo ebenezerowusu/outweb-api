@@ -4,7 +4,7 @@
  */
 export interface PermissionDocument {
   id: string;
-  type: 'permission';
+  type: "permission";
   category: string;
   name: string;
   description: string;

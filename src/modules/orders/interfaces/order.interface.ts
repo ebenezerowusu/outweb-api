@@ -4,7 +4,7 @@
  */
 export interface OrderDocument {
   id: string;
-  type: 'order';
+  type: "order";
 
   // Parties
   buyerId: string;
@@ -79,18 +79,18 @@ export interface OrderStatus {
 }
 
 export type OrderState =
-  | 'pending_deposit'      // Waiting for buyer deposit
-  | 'deposit_paid'         // Deposit received, pending inspection
-  | 'inspection_scheduled' // Inspection arranged
-  | 'inspection_completed' // Inspection done, awaiting approval
-  | 'pending_payment'      // Awaiting balance payment
-  | 'payment_completed'    // Full payment received
-  | 'ready_for_delivery'   // Vehicle ready for handover
-  | 'in_transit'           // Vehicle being delivered
-  | 'delivered'            // Vehicle delivered to buyer
-  | 'completed'            // Order fully completed
-  | 'canceled'             // Order canceled
-  | 'disputed';            // Dispute raised
+  | "pending_deposit" // Waiting for buyer deposit
+  | "deposit_paid" // Deposit received, pending inspection
+  | "inspection_scheduled" // Inspection arranged
+  | "inspection_completed" // Inspection done, awaiting approval
+  | "pending_payment" // Awaiting balance payment
+  | "payment_completed" // Full payment received
+  | "ready_for_delivery" // Vehicle ready for handover
+  | "in_transit" // Vehicle being delivered
+  | "delivered" // Vehicle delivered to buyer
+  | "completed" // Order fully completed
+  | "canceled" // Order canceled
+  | "disputed"; // Dispute raised
 
 /**
  * Order timeline events
@@ -118,19 +118,19 @@ export interface OrderEvent {
 }
 
 export type OrderEventType =
-  | 'order_created'
-  | 'deposit_received'
-  | 'inspection_scheduled'
-  | 'inspection_approved'
-  | 'inspection_rejected'
-  | 'payment_received'
-  | 'delivery_scheduled'
-  | 'in_transit'
-  | 'delivered'
-  | 'completed'
-  | 'canceled'
-  | 'dispute_raised'
-  | 'dispute_resolved';
+  | "order_created"
+  | "deposit_received"
+  | "inspection_scheduled"
+  | "inspection_approved"
+  | "inspection_rejected"
+  | "payment_received"
+  | "delivery_scheduled"
+  | "in_transit"
+  | "delivered"
+  | "completed"
+  | "canceled"
+  | "dispute_raised"
+  | "dispute_resolved";
 
 /**
  * Delivery information
@@ -145,7 +145,7 @@ export interface OrderDelivery {
   specialInstructions: string | null;
 }
 
-export type DeliveryMethod = 'pickup' | 'delivery' | 'shipping';
+export type DeliveryMethod = "pickup" | "delivery" | "shipping";
 
 export interface DeliveryAddress {
   street: string;
@@ -193,9 +193,9 @@ export interface OrderAudit {
 /**
  * Public Order (excludes sensitive information)
  */
-export type PublicOrder = Omit<OrderDocument, 'listing'> & {
-  listing: Omit<OrderListing, 'vehicle'> & {
-    vehicle: Omit<OrderListing['vehicle'], 'vin'>;
+export type PublicOrder = Omit<OrderDocument, "listing"> & {
+  listing: Omit<OrderListing, "vehicle"> & {
+    vehicle: Omit<OrderListing["vehicle"], "vin">;
   };
 };
 
@@ -205,7 +205,7 @@ export type PublicOrder = Omit<OrderDocument, 'listing'> & {
  */
 export interface OrderTransactionDocument {
   id: string;
-  type: 'order_transaction';
+  type: "order_transaction";
 
   // Order reference
   orderId: string;
@@ -231,15 +231,10 @@ export interface TransactionDetails {
   metadata: Record<string, any>;
 }
 
-export type TransactionType =
-  | 'deposit'
-  | 'balance'
-  | 'refund'
-  | 'fee'
-  | 'tax';
+export type TransactionType = "deposit" | "balance" | "refund" | "fee" | "tax";
 
 export interface PaymentDetails {
-  provider: 'stripe' | 'manual' | 'other';
+  provider: "stripe" | "manual" | "other";
   paymentIntentId: string | null;
   chargeId: string | null;
   paymentMethodType: string | null;
@@ -255,12 +250,12 @@ export interface TransactionStatus {
 }
 
 export type TransactionState =
-  | 'pending'
-  | 'processing'
-  | 'succeeded'
-  | 'failed'
-  | 'canceled'
-  | 'refunded';
+  | "pending"
+  | "processing"
+  | "succeeded"
+  | "failed"
+  | "canceled"
+  | "refunded";
 
 export interface TransactionAudit {
   createdAt: string;

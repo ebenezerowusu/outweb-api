@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsBoolean, IsOptional } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEnum, IsBoolean, IsOptional } from "class-validator";
 
 /**
  * Update Subscription Plan DTO
@@ -7,24 +7,24 @@ import { IsEnum, IsBoolean, IsOptional } from 'class-validator';
  */
 export class UpdateSubscriptionPlanDto {
   @ApiProperty({
-    description: 'New subscription category',
-    enum: ['cashoffer', 'dealer_wholesale', 'dealer_advertising'],
-    example: 'dealer_wholesale',
+    description: "New subscription category",
+    enum: ["cashoffer", "dealer_wholesale", "dealer_advertising"],
+    example: "dealer_wholesale",
   })
-  @IsEnum(['cashoffer', 'dealer_wholesale', 'dealer_advertising'])
-  category: 'cashoffer' | 'dealer_wholesale' | 'dealer_advertising';
+  @IsEnum(["cashoffer", "dealer_wholesale", "dealer_advertising"])
+  category: "cashoffer" | "dealer_wholesale" | "dealer_advertising";
 
   @ApiProperty({
-    description: 'New billing interval (currently only monthly is supported)',
-    enum: ['monthly'],
-    example: 'monthly',
-    default: 'monthly',
+    description: "New billing interval (currently only monthly is supported)",
+    enum: ["monthly"],
+    example: "monthly",
+    default: "monthly",
   })
-  @IsEnum(['monthly'])
-  interval: 'monthly';
+  @IsEnum(["monthly"])
+  interval: "monthly";
 
   @ApiProperty({
-    description: 'Prorate the change (charge/credit immediately)',
+    description: "Prorate the change (charge/credit immediately)",
     default: true,
     required: false,
   })
@@ -39,7 +39,7 @@ export class UpdateSubscriptionPlanDto {
  */
 export class CancelSubscriptionDto {
   @ApiProperty({
-    description: 'Cancel immediately or at period end',
+    description: "Cancel immediately or at period end",
     default: false,
     required: false,
   })
@@ -48,7 +48,7 @@ export class CancelSubscriptionDto {
   immediately?: boolean = false;
 
   @ApiProperty({
-    description: 'Cancellation reason',
+    description: "Cancellation reason",
     required: false,
   })
   @IsOptional()

@@ -4,7 +4,7 @@
  */
 export interface ListingDocument {
   id: string;
-  type: 'listing';
+  type: "listing";
   sellerId: string;
   seller: ListingSeller;
   vehicle: ListingVehicle;
@@ -25,7 +25,7 @@ export interface ListingDocument {
 export interface ListingSeller {
   id: string;
   name: string;
-  type: 'dealer' | 'private';
+  type: "dealer" | "private";
   rating: number | null;
   reviewCount: number;
 }
@@ -155,7 +155,7 @@ export interface ListingFeatures {
  * Listing Condition
  */
 export interface ListingCondition {
-  overall: 'excellent' | 'good' | 'fair' | 'needs_work';
+  overall: "excellent" | "good" | "fair" | "needs_work";
   exteriorRating: number;
   interiorRating: number;
   mechanicalRating: number;
@@ -207,13 +207,13 @@ export interface ListingStatus {
  * Listing State
  */
 export type ListingState =
-  | 'draft'
-  | 'pending_review'
-  | 'published'
-  | 'sold'
-  | 'expired'
-  | 'suspended'
-  | 'archived';
+  | "draft"
+  | "pending_review"
+  | "published"
+  | "sold"
+  | "expired"
+  | "suspended"
+  | "archived";
 
 /**
  * Listing Visibility
@@ -252,6 +252,6 @@ export interface ListingAudit {
 /**
  * Public Listing (safe for API responses)
  */
-export type PublicListing = Omit<ListingDocument, 'vehicle'> & {
-  vehicle: Omit<ListingVehicle, 'vin'> & { vinLastFour: string };
+export type PublicListing = Omit<ListingDocument, "vehicle"> & {
+  vehicle: Omit<ListingVehicle, "vin"> & { vinLastFour: string };
 };
