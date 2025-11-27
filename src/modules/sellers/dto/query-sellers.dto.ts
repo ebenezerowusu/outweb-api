@@ -11,8 +11,8 @@ import {
 import { Type } from "class-transformer";
 
 export enum SellerTypeFilter {
-  DEALER = "dealer",
-  PRIVATE = "private",
+  DEALER = "Dealer",
+  PRIVATE = "Private Seller",
 }
 
 /**
@@ -21,7 +21,7 @@ export enum SellerTypeFilter {
  */
 export class QuerySellersDto {
   @ApiProperty({
-    description: "Filter by seller type",
+    description: "Filter by seller type (use /taxonomies/sellerType for options: Dealer, Private Seller)",
     enum: SellerTypeFilter,
     required: false,
   })

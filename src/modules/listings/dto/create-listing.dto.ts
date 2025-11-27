@@ -31,20 +31,26 @@ export class CreateListingVehicleDto {
   vin: string;
 
   @ApiProperty({
-    description: "Vehicle make taxonomy ID",
-    example: "tax_make_tesla",
+    description: "Vehicle make taxonomy ID (use /taxonomies/make for options)",
+    example: "make",
+    enum: ['make'],
   })
   @IsString()
   makeId: string;
 
   @ApiProperty({
-    description: "Vehicle model taxonomy ID",
-    example: "tax_model_model3",
+    description: "Vehicle model taxonomy ID (use /taxonomies/model for options)",
+    example: "model",
+    enum: ['model'],
   })
   @IsString()
   modelId: string;
 
-  @ApiProperty({ description: "Vehicle trim taxonomy ID", required: false })
+  @ApiProperty({
+    description: "Vehicle trim taxonomy ID (use /taxonomies/trim for options)",
+    example: "trim",
+    required: false
+  })
   @IsString()
   @IsOptional()
   trimId?: string;
@@ -65,23 +71,44 @@ export class CreateListingVehicleDto {
   @Min(0)
   mileage: number;
 
-  @ApiProperty({ description: "Exterior color taxonomy ID" })
+  @ApiProperty({
+    description: "Exterior color taxonomy ID (use /taxonomies/exteriorColor for options)",
+    example: "exteriorColor",
+    enum: ['exteriorColor'],
+  })
   @IsString()
   exteriorColorId: string;
 
-  @ApiProperty({ description: "Interior color taxonomy ID" })
+  @ApiProperty({
+    description: "Interior color taxonomy ID (use /taxonomies/interiorColor for options)",
+    example: "interiorColor",
+    enum: ['interiorColor'],
+  })
   @IsString()
   interiorColorId: string;
 
-  @ApiProperty({ description: "Body type taxonomy ID" })
+  @ApiProperty({
+    description: "Body style taxonomy ID (use /taxonomies/bodyStyle for options)",
+    example: "bodyStyle",
+    enum: ['bodyStyle'],
+  })
   @IsString()
   bodyTypeId: string;
 
-  @ApiProperty({ description: "Drivetrain taxonomy ID" })
+  @ApiProperty({
+    description: "Drivetrain taxonomy ID (use /taxonomies/drivetrain for options)",
+    example: "drivetrain",
+    enum: ['drivetrain'],
+  })
   @IsString()
   drivetrainId: string;
 
-  @ApiProperty({ description: "Battery size taxonomy ID", required: false })
+  @ApiProperty({
+    description: "Battery size taxonomy ID (use /taxonomies/batterySize for options)",
+    example: "batterySize",
+    enum: ['batterySize'],
+    required: false
+  })
   @IsString()
   @IsOptional()
   batterySizeId?: string;
@@ -102,7 +129,12 @@ export class CreateListingVehicleDto {
   @IsOptional()
   range?: number;
 
-  @ApiProperty({ description: "Autopilot version", required: false })
+  @ApiProperty({
+    description: "Autopilot package taxonomy ID (use /taxonomies/autopilotPackage for options)",
+    example: "autopilotPackage",
+    enum: ['autopilotPackage'],
+    required: false
+  })
   @IsString()
   @IsOptional()
   autopilotVersion?: string;
