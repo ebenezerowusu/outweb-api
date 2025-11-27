@@ -130,7 +130,7 @@ export class CreateListingVehicleDto {
   range?: number;
 
   @ApiProperty({
-    description: "Autopilot package taxonomy ID (use /taxonomies/autopilotPackage for options)",
+    description: "Autopilot package taxonomy ID (use /taxonomies/autopilotPackage for options: No Autopilot, Standard Autopilot, Enhanced Autopilot (EAP), Full Self-Driving (FSD), etc.)",
     example: "autopilotPackage",
     enum: ['autopilotPackage'],
     required: false
@@ -138,6 +138,46 @@ export class CreateListingVehicleDto {
   @IsString()
   @IsOptional()
   autopilotVersion?: string;
+
+  @ApiProperty({
+    description: "Wheel type taxonomy ID (use /taxonomies/wheelType for options: 18\" Aero Wheels, 19\" Sport Wheels, 20\" Induction Wheels, etc.)",
+    example: "wheelType",
+    enum: ['wheelType'],
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  wheelTypeId?: string;
+
+  @ApiProperty({
+    description: "Insurance category taxonomy ID (use /taxonomies/insuranceCategory for options: Standard, Premium, Luxury, High-Performance, etc.)",
+    example: "insuranceCategory",
+    enum: ['insuranceCategory'],
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  insuranceCategoryId?: string;
+
+  @ApiProperty({
+    description: "Charging connector taxonomy ID (use /taxonomies/chargingConnector for options: Tesla Supercharger, CCS Combo, NACS, etc.)",
+    example: "chargingConnector",
+    enum: ['chargingConnector'],
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  chargingConnectorId?: string;
+
+  @ApiProperty({
+    description: "Vehicle condition taxonomy ID (use /taxonomies/vehicleCondition for options: New, Used, Certified Pre-Owned, Demo, etc.)",
+    example: "vehicleCondition",
+    enum: ['vehicleCondition'],
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  vehicleConditionId?: string;
 
   @ApiProperty({ description: "Full Self-Driving capable", required: false })
   @IsBoolean()
@@ -324,7 +364,28 @@ export class CreateListingDto {
   condition: CreateListingConditionDto;
 
   @ApiProperty({
-    description: "Standard features (taxonomy IDs)",
+    description: "Sale type (use /taxonomies/saleTypes for options: Cash, Financing, Lease, Trade-in, Other)",
+    example: "Cash",
+    enum: ['Cash', 'Financing', 'Lease', 'Trade-in', 'Other'],
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  saleType?: string;
+
+  @ApiProperty({
+    description: "Publish type (use /taxonomies/publishTypes for options: Public, Private, Draft, Scheduled, Archived, Unlisted, Other)",
+    example: "Public",
+    enum: ['Public', 'Private', 'Draft', 'Scheduled', 'Archived', 'Unlisted', 'Other'],
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  publishType?: string;
+
+  @ApiProperty({
+    description: "Standard features - multiple feature taxonomy IDs (use /taxonomies/feature for options: Premium Interior, Glass Roof, Heated Seats, Premium Audio, Autopilot, etc.)",
+    example: ["Premium Interior", "Glass Roof", "Heated Seats"],
     type: [String],
     required: false,
   })
@@ -334,7 +395,8 @@ export class CreateListingDto {
   standardFeatures?: string[];
 
   @ApiProperty({
-    description: "Optional features (taxonomy IDs)",
+    description: "Optional features - multiple feature taxonomy IDs (use /taxonomies/feature for options: Full Self-Driving, Air Suspension, Premium Audio, Ludicrous Mode, etc.)",
+    example: ["Full Self-Driving", "Air Suspension"],
     type: [String],
     required: false,
   })
@@ -344,7 +406,8 @@ export class CreateListingDto {
   optionalFeatures?: string[];
 
   @ApiProperty({
-    description: "Highlight features",
+    description: "Highlight features - multiple feature taxonomy IDs (use /taxonomies/feature for options: Autopilot, Track Mode, Bioweapon Defense Mode, Smart Summon, etc.)",
+    example: ["Autopilot", "Sentry Mode", "Dog Mode"],
     type: [String],
     required: false,
   })

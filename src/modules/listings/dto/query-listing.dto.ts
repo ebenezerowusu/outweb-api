@@ -185,7 +185,82 @@ export class QueryListingsDto {
   fsdCapable?: boolean;
 
   @ApiProperty({
-    description: "Filter by required features (taxonomy IDs)",
+    description: "Filter by battery size taxonomy ID (use /taxonomies/batterySize for options: 50 kWh, 60 kWh, 75 kWh, 100 kWh, etc.)",
+    example: "batterySize",
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  batterySizeId?: string;
+
+  @ApiProperty({
+    description: "Filter by autopilot version taxonomy ID (use /taxonomies/autopilotPackage for options)",
+    example: "autopilotPackage",
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  autopilotVersion?: string;
+
+  @ApiProperty({
+    description: "Filter by wheel type taxonomy ID (use /taxonomies/wheelType for options)",
+    example: "wheelType",
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  wheelTypeId?: string;
+
+  @ApiProperty({
+    description: "Filter by insurance category taxonomy ID (use /taxonomies/insuranceCategory for options)",
+    example: "insuranceCategory",
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  insuranceCategoryId?: string;
+
+  @ApiProperty({
+    description: "Filter by charging connector taxonomy ID (use /taxonomies/chargingConnector for options)",
+    example: "chargingConnector",
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  chargingConnectorId?: string;
+
+  @ApiProperty({
+    description: "Filter by vehicle condition taxonomy ID (use /taxonomies/vehicleCondition for options: New, Used, Certified Pre-Owned, etc.)",
+    example: "vehicleCondition",
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  vehicleConditionId?: string;
+
+  @ApiProperty({
+    description: "Filter by sale type (use /taxonomies/saleTypes for options: Cash, Financing, Lease, Trade-in, Other)",
+    example: "Cash",
+    enum: ['Cash', 'Financing', 'Lease', 'Trade-in', 'Other'],
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  saleType?: string;
+
+  @ApiProperty({
+    description: "Filter by publish type (use /taxonomies/publishTypes for options: Public, Private, Draft, Scheduled, Archived, Unlisted, Other)",
+    example: "Public",
+    enum: ['Public', 'Private', 'Draft', 'Scheduled', 'Archived', 'Unlisted', 'Other'],
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  publishType?: string;
+
+  @ApiProperty({
+    description: "Filter by required features - multiple feature taxonomy IDs (use /taxonomies/feature for options: Premium Interior, Glass Roof, Heated Seats, Autopilot, Full Self-Driving, etc.)",
+    example: ["Autopilot", "Premium Audio"],
     type: [String],
     required: false,
   })
