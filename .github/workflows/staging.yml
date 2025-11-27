@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: onlyusedtesla.azurecr.io
-  IMAGE_NAME: out-api-v2Playground
+  IMAGE_NAME: out-api-v2playground
   SHA_TAG: ${{ github.sha }}
 
 jobs:
