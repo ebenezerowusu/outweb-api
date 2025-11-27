@@ -1,15 +1,15 @@
-name: Build & Push API Image (Staging)
+name: Build & Push API Image (Production)
 
 on:
   push:
-    branches: [ staging ]
+    branches: [ production ]
   pull_request:
-    branches: [ staging ]
+    branches: [ production ]
   workflow_dispatch:
 
 env:
   REGISTRY: onlyusedtesla.azurecr.io
-  IMAGE_NAME: out-api-v2Playground
+  IMAGE_NAME: out-api-v2
   SHA_TAG: ${{ github.sha }}
 
 jobs:
