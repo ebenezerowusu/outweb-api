@@ -1038,7 +1038,7 @@ export class AuthService {
    * Helper: Generate seller ID
    */
   private generateSellerId(): string {
-    return `dealer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    return `seller_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
