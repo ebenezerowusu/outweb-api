@@ -16,7 +16,7 @@ export interface TokenResponse {
   /**
    * Token type (always "Bearer" for this API)
    */
-  tokenType: 'Bearer';
+  tokenType: "Bearer";
 
   /**
    * Access token lifetime in seconds

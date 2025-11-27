@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsEmail,
   IsString,
@@ -11,8 +11,8 @@ import {
   MinLength,
   MaxLength,
   ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from "class-validator";
+import { Type } from "class-transformer";
 
 class UpdateAddressDto {
   @ApiProperty({ required: false })
@@ -71,12 +71,22 @@ export class UpdateSellerDto {
   @IsOptional()
   companyName?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: "Dealer brand type (use /taxonomies/dealerBrand for options: Independent, Franchise, OEM-owned, Group-affiliated, Corporate-owned, Private, Other)",
+    example: "Independent",
+    enum: ['Independent', 'Franchise', 'OEM-owned', 'Group-affiliated', 'Corporate-owned', 'Private', 'Other'],
+    required: false,
+  })
   @IsString()
   @IsOptional()
   dealerType?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: "Business type (use /taxonomies/businessType for options: Single Dealer, Dealer group, Group-affiliated dealership, Franchise dealership, OEM, Fleet, Vendor, Other)",
+    example: "Franchise dealership",
+    enum: ['Single Dealer', 'Dealer group', 'Group-affiliated dealership', 'Franchise dealership', 'OEM', 'Fleet', 'Vendor', 'Other'],
+    required: false,
+  })
   @IsString()
   @IsOptional()
   businessType?: string;
@@ -85,6 +95,72 @@ export class UpdateSellerDto {
   @IsString()
   @IsOptional()
   licenseExpiration?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  logoUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  bannerUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licensePhotoUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licenseNumber?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insuranceProvider?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insurancePolicyNumber?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  insuranceExpiration?: string;
+
+  @ApiProperty({
+    description: "Syndication system (use /taxonomies/syndicationSystem for options: vAuto, Authenticom, Dealertrack, HomeNet, CDK Global, AutoManager, Chrome Inventory, ReyRey, CDKDrive, Dealer eProcess, DealerSocket, Dominion, Elead, Frazer, VinSolutions, Xtime, Other)",
+    example: "vAuto",
+    enum: ['vAuto', 'Authenticom', 'Dealertrack', 'HomeNet', 'CDK Global', 'AutoManager', 'Chrome Inventory', 'ReyRey', 'CDKDrive', 'Dealer eProcess', 'DealerSocket', 'Dominion', 'Elead', 'Frazer', 'VinSolutions', 'Xtime', 'Other'],
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  syndicationSystem?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  syndicationApiKey?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  businessSiteLocations?: string[];
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  fullName?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  idVerificationPhotoUrl?: string;
 }
 
 /**
@@ -105,6 +181,16 @@ export class UpdateSellerStatusDto {
   @IsBoolean()
   @IsOptional()
   blocked?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  blockedReason?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  licenseStatus?: string;
 }
 
 /**
@@ -129,17 +215,54 @@ export class UpdateSellerMetaDto {
   @IsString({ each: true })
   @IsOptional()
   tags?: string[];
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  totalListings?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  activeListings?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  soldListings?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  @IsOptional()
+  averageRating?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  totalReviews?: number;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  totalSales?: number;
 }
 
 /**
  * Update Seller Users DTO
  */
 class SellerUserItemDto {
-  @ApiProperty({ example: 'usr_123' })
+  @ApiProperty({ example: "usr_123" })
   @IsString()
   userId: string;
 
-  @ApiProperty({ example: 'owner' })
+  @ApiProperty({ example: "owner" })
   @IsString()
   role: string;
 }

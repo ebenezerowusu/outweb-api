@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsEmail,
   IsNotEmpty,
@@ -12,15 +12,15 @@ import {
   IsInt,
   Min,
   Max,
-} from 'class-validator';
+} from "class-validator";
 
 /**
  * Sign Up Dealer User Request DTO
  */
 export class SignUpDealerDto {
   @ApiProperty({
-    description: 'First name',
-    example: 'John',
+    description: "First name",
+    example: "Kwame",
   })
   @IsString()
   @MinLength(1)
@@ -29,8 +29,8 @@ export class SignUpDealerDto {
   firstName: string;
 
   @ApiProperty({
-    description: 'Last name',
-    example: 'Smith',
+    description: "Last name",
+    example: "Boateng",
   })
   @IsString()
   @MinLength(1)
@@ -39,17 +39,17 @@ export class SignUpDealerDto {
   lastName: string;
 
   @ApiProperty({
-    description: 'Email address',
-    example: 'john.smith@dealers.com',
+    description: "Email address",
+    example: "kwame.boateng@accramotors.com",
   })
-  @IsEmail({}, { message: 'Invalid email format' })
+  @IsEmail({}, { message: "Invalid email format" })
   @MaxLength(254)
   @IsNotEmpty()
   email: string;
 
   @ApiProperty({
-    description: 'Phone number',
-    example: '+15559876543',
+    description: "Phone number",
+    example: "+233302123456",
   })
   @IsString()
   @MinLength(5)
@@ -58,8 +58,8 @@ export class SignUpDealerDto {
   phone: string;
 
   @ApiProperty({
-    description: 'Business address',
-    example: '123 Main Street, City, State',
+    description: "Business address",
+    example: "Independence Avenue, Accra, Greater Accra",
   })
   @IsString()
   @MinLength(5)
@@ -68,8 +68,8 @@ export class SignUpDealerDto {
   address: string;
 
   @ApiProperty({
-    description: 'Password',
-    example: 'StrongPassword123!',
+    description: "Password",
+    example: "StrongPassword123!",
     minLength: 8,
   })
   @IsString()
@@ -78,24 +78,25 @@ export class SignUpDealerDto {
   password: string;
 
   @ApiProperty({
-    description: 'Password confirmation',
-    example: 'StrongPassword123!',
+    description: "Password confirmation",
+    example: "StrongPassword123!",
   })
   @IsString()
   @IsNotEmpty()
   confirmPassword: string;
 
   @ApiProperty({
-    description: 'Who are you representing (e.g., "dealer_group")',
-    example: 'dealer_group',
+    description: 'Who are you representing (use /taxonomies/whoYouRepresenting for options: Single Dealer, Group Dealer, Fleet Operator, Financial Company, Rental Company, Other)',
+    example: "Single Dealer",
+    enum: ['Single Dealer', 'Group Dealer', 'Fleet Operator', 'Financial Company', 'Rental Company', 'Other'],
   })
   @IsString()
   @IsNotEmpty()
   whoAreYouRepresenting: string;
 
   @ApiProperty({
-    description: 'Group name (required when representing dealer_group)',
-    example: 'Premium EV Dealers Group',
+    description: "Group name (required when representing dealer_group)",
+    example: "Accra Premium Auto Group",
     required: false,
   })
   @IsString()
@@ -104,16 +105,17 @@ export class SignUpDealerDto {
   groupName?: string;
 
   @ApiProperty({
-    description: 'Number of rooftops',
-    example: '4',
+    description: "Number of rooftops",
+    example: "4",
     required: false,
   })
   @IsString()
   rooftop?: string;
 
   @ApiProperty({
-    description: 'Business type',
-    example: 'used_tesla_dealer',
+    description: "Business type (use /taxonomies/businessType for options: Single Dealer, Dealer group, Group-affiliated dealership, Franchise dealership, OEM, Fleet, Vendor, Other)",
+    example: "Single Dealer",
+    enum: ['Single Dealer', 'Dealer group', 'Group-affiliated dealership', 'Franchise dealership', 'OEM', 'Fleet', 'Vendor', 'Other'],
   })
   @IsString()
   @MinLength(1)
@@ -122,8 +124,8 @@ export class SignUpDealerDto {
   businessType: string;
 
   @ApiProperty({
-    description: 'Company name',
-    example: 'Premium Used Tesla',
+    description: "Company name",
+    example: "Accra Motors",
   })
   @IsString()
   @MinLength(1)
@@ -132,8 +134,9 @@ export class SignUpDealerDto {
   companyName: string;
 
   @ApiProperty({
-    description: 'Syndication system',
-    example: 'internal_crm',
+    description: "Syndication system (use /taxonomies/syndicationSystem for options: vAuto, Authenticom, Dealertrack, HomeNet, CDK Global, AutoManager, Chrome Inventory, ReyRey, CDKDrive, Dealer eProcess, DealerSocket, Dominion, Elead, Frazer, VinSolutions, Xtime, Other)",
+    example: "vAuto",
+    enum: ['vAuto', 'Authenticom', 'Dealertrack', 'HomeNet', 'CDK Global', 'AutoManager', 'Chrome Inventory', 'ReyRey', 'CDKDrive', 'Dealer eProcess', 'DealerSocket', 'Dominion', 'Elead', 'Frazer', 'VinSolutions', 'Xtime', 'Other'],
   })
   @IsString()
   @MinLength(1)
@@ -142,7 +145,7 @@ export class SignUpDealerDto {
   syndicationSystem: string;
 
   @ApiProperty({
-    description: 'Is owner of the business',
+    description: "Is owner of the business",
     example: true,
   })
   @IsBoolean()
@@ -150,8 +153,11 @@ export class SignUpDealerDto {
   owner: boolean;
 
   @ApiProperty({
-    description: 'Business site locations (1-20 locations)',
-    example: ['Downtown branch - 123 Main Street', 'Airport branch - Terminal Road'],
+    description: "Business site locations (1-20 locations)",
+    example: [
+      "Osu branch - Oxford Street, Accra",
+      "Airport City branch - Liberation Road",
+    ],
     type: [String],
   })
   @IsArray()
@@ -162,8 +168,8 @@ export class SignUpDealerDto {
   businessSiteLocations: string[];
 
   @ApiProperty({
-    description: 'Stripe subscription product IDs (at least 1)',
-    example: ['prod_dealer_wholesale', 'prod_dealer_advertisement'],
+    description: "Stripe subscription product IDs (at least 1)",
+    example: ["prod_dealer_wholesale", "prod_dealer_advertisement"],
     type: [String],
   })
   @IsArray()
@@ -173,7 +179,7 @@ export class SignUpDealerDto {
   subscriptionIds: string[];
 
   @ApiProperty({
-    description: 'Must accept terms of service',
+    description: "Must accept terms of service",
     example: true,
   })
   @IsBoolean()

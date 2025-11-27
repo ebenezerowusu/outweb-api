@@ -1,0 +1,49 @@
+name: Build & Push API Image (Staging)
+
+on:
+  push:
+    branches: [ staging ]
+  pull_request:
+    branches: [ staging ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: onlyusedtesla.azurecr.io
+  IMAGE_NAME: out-api-v2playground
+  SHA_TAG: ${{ github.sha }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate date time string.
+        id: datetime
+        run: |
+          DATE=$(date +"%y%m%d-%H%M")
+          echo "datetime=$DATE" >> $GITHUB_OUTPUT
+
+      - name: ACR Login
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ env.REGISTRY }}
+          username: ${{ secrets.PRODUCTION_REGISTRY_USERNAME }}
+          password: ${{ secrets.PRODUCTION_REGISTRY_PASSWORD }}
+
+      - name: Build
+        run: |
+          docker build \
+            --build-arg BASE_IMAGE=${{ env.REGISTRY }}/base/node:20-alpine \
+            --build-arg TAG=${{ steps.datetime.outputs.datetime }} \
+            -t $REGISTRY/$IMAGE_NAME:${{ steps.datetime.outputs.datetime }} .
+
+      - name: Push
+        run: docker push $REGISTRY/$IMAGE_NAME:${{ steps.datetime.outputs.datetime }}
+
+      - name: Tag & Push latest
+        if: github.ref == 'refs/heads/staging'
+        run: |
+          docker tag  $REGISTRY/$IMAGE_NAME:${{ steps.datetime.outputs.datetime }}  $REGISTRY/$IMAGE_NAME:latest
+          docker push $REGISTRY/$IMAGE_NAME:latest
+

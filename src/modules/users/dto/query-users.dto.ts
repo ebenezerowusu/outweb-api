@@ -1,6 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsInt,
+  Min,
+  Max,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Query Users DTO
@@ -8,8 +15,8 @@ import { Type } from 'class-transformer';
  */
 export class QueryUsersDto {
   @ApiProperty({
-    description: 'Filter by email (supports wildcards with ilike)',
-    example: 'jane.doe@example.com',
+    description: "Filter by email (supports wildcards with ilike)",
+    example: "akua.mensah@gmail.com",
     required: false,
   })
   @IsString()
@@ -17,8 +24,8 @@ export class QueryUsersDto {
   email?: string;
 
   @ApiProperty({
-    description: 'Filter by username',
-    example: 'janedoe',
+    description: "Filter by username",
+    example: "akuamensah",
     required: false,
   })
   @IsString()
@@ -26,7 +33,7 @@ export class QueryUsersDto {
   username?: string;
 
   @ApiProperty({
-    description: 'Filter by active status',
+    description: "Filter by active status",
     example: true,
     required: false,
   })
@@ -36,7 +43,7 @@ export class QueryUsersDto {
   isActive?: boolean;
 
   @ApiProperty({
-    description: 'Filter by blocked status',
+    description: "Filter by blocked status",
     example: false,
     required: false,
   })
@@ -46,8 +53,8 @@ export class QueryUsersDto {
   blocked?: boolean;
 
   @ApiProperty({
-    description: 'Filter by role ID',
-    example: 'role_admin',
+    description: "Filter by role ID",
+    example: "role_admin",
     required: false,
   })
   @IsString()
@@ -55,7 +62,7 @@ export class QueryUsersDto {
   roleId?: string;
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     example: 20,
     required: false,
     minimum: 1,
@@ -69,7 +76,7 @@ export class QueryUsersDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token from previous page',
+    description: "Continuation token from previous page",
     required: false,
   })
   @IsString()
