@@ -1,11 +1,11 @@
-import { SetMetadata } from '@nestjs/common';
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
+import { createParamDecorator, ExecutionContext } from "@nestjs/common";
 import {
   SKIP_AUTH_KEY,
   REQUIRED_PERMISSIONS_KEY,
   REQUIRED_ROLES_KEY,
-} from '../guards/rbac.guard';
-import { SKIP_COUNTRY_GUARD_KEY } from '../guards/country.guard';
+} from "../guards/rbac.guard";
+import { SKIP_COUNTRY_GUARD_KEY } from "../guards/country.guard";
 
 /**
  * Skip Authentication
@@ -40,7 +40,8 @@ export const RequireRoles = (...roles: string[]) =>
 export const CurrentUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
-    return request.user;
+    // In NestJS with Fastify, the user is set on the raw request
+    return request.user || request.raw?.user;
   },
 );
 

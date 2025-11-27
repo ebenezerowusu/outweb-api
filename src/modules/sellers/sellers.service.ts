@@ -3,18 +3,18 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { CosmosService } from '@/common/services/cosmos.service';
-import { PaginatedResponse } from '@/common/types/pagination.type';
-import { SellerDocument, PublicSeller } from './interfaces/seller.interface';
-import { CreateSellerDto } from './dto/create-seller.dto';
+} from "@nestjs/common";
+import { CosmosService } from "@/common/services/cosmos.service";
+import { PaginatedResponse } from "@/common/types/pagination.type";
+import { SellerDocument, PublicSeller } from "./interfaces/seller.interface";
+import { CreateSellerDto, SellerType } from "./dto/create-seller.dto";
 import {
   UpdateSellerDto,
   UpdateSellerStatusDto,
   UpdateSellerMetaDto,
   UpdateSellerUsersDto,
-} from './dto/update-seller.dto';
-import { QuerySellersDto } from './dto/query-sellers.dto';
+} from "./dto/update-seller.dto";
+import { QuerySellersDto } from "./dto/query-sellers.dto";
 
 /**
  * Sellers Service
@@ -22,91 +22,101 @@ import { QuerySellersDto } from './dto/query-sellers.dto';
  */
 @Injectable()
 export class SellersService {
-  private readonly SELLERS_CONTAINER = 'sellers';
+  private readonly SELLERS_CONTAINER = "sellers";
 
   constructor(private readonly cosmosService: CosmosService) {}
 
   /**
    * List sellers with filters and pagination
    */
-  async findAll(query: QuerySellersDto): Promise<PaginatedResponse<PublicSeller>> {
-    let sqlQuery = 'SELECT * FROM c WHERE 1=1';
+  async findAll(
+    query: QuerySellersDto,
+  ): Promise<PaginatedResponse<PublicSeller>> {
+    let sqlQuery = "SELECT * FROM c WHERE 1=1";
     const parameters: any[] = [];
 
     // Filter by seller type
     if (query.sellerType) {
-      sqlQuery += ' AND c.sellerType = @sellerType';
-      parameters.push({ name: '@sellerType', value: query.sellerType });
+      sqlQuery += " AND c.sellerType = @sellerType";
+      parameters.push({ name: "@sellerType", value: query.sellerType });
     }
 
     // Filter by email
     if (query.email) {
-      sqlQuery += ' AND c.profile.email = @email';
-      parameters.push({ name: '@email', value: query.email.toLowerCase() });
+      sqlQuery += " AND c.profile.email = @email";
+      parameters.push({ name: "@email", value: query.email.toLowerCase() });
     }
 
     // Filter by company name (dealers only)
     if (query.companyName) {
-      sqlQuery += ' AND CONTAINS(LOWER(c.dealerDetails.companyName), @companyName)';
-      parameters.push({ name: '@companyName', value: query.companyName.toLowerCase() });
+      sqlQuery +=
+        " AND CONTAINS(LOWER(c.dealerDetails.companyName), @companyName)";
+      parameters.push({
+        name: "@companyName",
+        value: query.companyName.toLowerCase(),
+      });
     }
 
     // Filter by city
     if (query.city) {
-      sqlQuery += ' AND LOWER(c.profile.address.city) = @city';
-      parameters.push({ name: '@city', value: query.city.toLowerCase() });
+      sqlQuery += " AND LOWER(c.profile.address.city) = @city";
+      parameters.push({ name: "@city", value: query.city.toLowerCase() });
     }
 
     // Filter by state
     if (query.state) {
-      sqlQuery += ' AND LOWER(c.profile.address.state) = @state';
-      parameters.push({ name: '@state', value: query.state.toLowerCase() });
+      sqlQuery += " AND LOWER(c.profile.address.state) = @state";
+      parameters.push({ name: "@state", value: query.state.toLowerCase() });
     }
 
     // Filter by country
     if (query.country) {
-      sqlQuery += ' AND c.market.country = @country';
-      parameters.push({ name: '@country', value: query.country.toUpperCase() });
+      sqlQuery += " AND c.market.country = @country";
+      parameters.push({ name: "@country", value: query.country.toUpperCase() });
     }
 
     // Filter by verified status
     if (query.verified !== undefined) {
-      sqlQuery += ' AND c.status.verified = @verified';
-      parameters.push({ name: '@verified', value: query.verified });
+      sqlQuery += " AND c.status.verified = @verified";
+      parameters.push({ name: "@verified", value: query.verified });
     }
 
     // Filter by approved status
     if (query.approved !== undefined) {
-      sqlQuery += ' AND c.status.approved = @approved';
-      parameters.push({ name: '@approved', value: query.approved });
+      sqlQuery += " AND c.status.approved = @approved";
+      parameters.push({ name: "@approved", value: query.approved });
     }
 
     // Filter by blocked status
     if (query.blocked !== undefined) {
-      sqlQuery += ' AND c.status.blocked = @blocked';
-      parameters.push({ name: '@blocked', value: query.blocked });
+      sqlQuery += " AND c.status.blocked = @blocked";
+      parameters.push({ name: "@blocked", value: query.blocked });
     }
 
     // Filter by user membership
     if (query.userId) {
       sqlQuery += ' AND ARRAY_CONTAINS(c.users, {\"userId\": @userId}, true)';
-      parameters.push({ name: '@userId', value: query.userId });
+      parameters.push({ name: "@userId", value: query.userId });
     }
 
     // Order by creation date
-    sqlQuery += ' ORDER BY c.audit.createdAt DESC';
+    sqlQuery += " ORDER BY c.audit.createdAt DESC";
 
-    const { items, continuationToken } = await this.cosmosService.queryItems<SellerDocument>(
-      this.SELLERS_CONTAINER,
-      sqlQuery,
-      parameters,
-      query.limit,
-      query.cursor,
-    );
+    const { items, continuationToken } =
+      await this.cosmosService.queryItems<SellerDocument>(
+        this.SELLERS_CONTAINER,
+        sqlQuery,
+        parameters,
+        query.limit,
+        query.cursor,
+      );
+
+    // Handle case where items might be undefined
+    const sellerItems = items || [];
 
     return {
-      items: items.map((seller) => this.toPublicSeller(seller)),
-      count: items.length,
+      items: sellerItems.map((seller) => this.toPublicSeller(seller)),
+      count: sellerItems.length,
       nextCursor: continuationToken || null,
     };
   }
@@ -114,7 +124,11 @@ export class SellersService {
   /**
    * Get single seller by ID
    */
-  async findOne(id: string, requestingUserId: string, isAdmin: boolean): Promise<PublicSeller> {
+  async findOne(
+    id: string,
+    requestingUserId: string,
+    isAdmin: boolean,
+  ): Promise<PublicSeller> {
     const seller = await this.cosmosService.readItem<SellerDocument>(
       this.SELLERS_CONTAINER,
       id,
@@ -124,8 +138,8 @@ export class SellersService {
     if (!seller) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller not found',
+        error: "Not Found",
+        message: "Seller not found",
       });
     }
 
@@ -134,8 +148,8 @@ export class SellersService {
     if (!isAdmin && !isMember) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have access to this seller',
+        error: "Forbidden",
+        message: "You do not have access to this seller",
       });
     }
 
@@ -145,21 +159,25 @@ export class SellersService {
   /**
    * Create new seller (dealer or private)
    */
-  async create(dto: CreateSellerDto, country: string, createdBy: string): Promise<PublicSeller> {
+  async create(
+    dto: CreateSellerDto,
+    country: string,
+    createdBy: string,
+  ): Promise<PublicSeller> {
     // Validate seller type matches provided details
-    if (dto.sellerType === 'dealer' && !dto.dealerDetails) {
+    if (dto.sellerType === SellerType.DEALER && !dto.dealerDetails) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'Dealer details are required for dealer sellers',
+        error: "Bad Request",
+        message: "Dealer details are required for dealer sellers",
       });
     }
 
-    if (dto.sellerType === 'private' && !dto.privateDetails) {
+    if (dto.sellerType === SellerType.PRIVATE && !dto.privateDetails) {
       throw new BadRequestException({
         statusCode: 400,
-        error: 'Bad Request',
-        message: 'Private details are required for private sellers',
+        error: "Bad Request",
+        message: "Private details are required for private sellers",
       });
     }
 
@@ -176,7 +194,8 @@ export class SellersService {
       },
       market: {
         country: country,
-        source: 'web',
+        allowedCountries: [country],
+        source: "web",
       },
       dealerDetails: dto.dealerDetails
         ? {
@@ -191,21 +210,31 @@ export class SellersService {
             licensePhoto: dto.dealerDetails.licensePhotoUrl || null,
             licenseNumber: dto.dealerDetails.licenseNumber || null,
             licenseExpiration: dto.dealerDetails.licenseExpiration || null,
-            licenseStatus: 'pending',
+            licenseStatus: "pending",
+            resaleCertificatePhoto: null,
+            sellersPermitPhoto: null,
+            owner: {
+              isOwner: true,
+              name: dto.dealerDetails.companyName,
+              email: dto.email,
+            },
             insuranceDetails: {
               provider: dto.dealerDetails.insuranceProvider || null,
               policyNumber: dto.dealerDetails.insurancePolicyNumber || null,
               expirationDate: dto.dealerDetails.insuranceExpiration || null,
             },
-            syndicationSystem: dto.dealerDetails.syndicationSystem,
+            syndicationSystem: dto.dealerDetails.syndicationSystem || "none",
             syndicationApiKey: dto.dealerDetails.syndicationApiKey || null,
-            businessSiteLocations: dto.dealerDetails.businessSiteLocations || [],
+            businessSite: {},
+            businessSiteLocations:
+              dto.dealerDetails.businessSiteLocations || [],
           }
         : null,
       privateDetails: dto.privateDetails
         ? {
             fullName: dto.privateDetails.fullName,
-            idVerificationPhoto: dto.privateDetails.idVerificationPhotoUrl || null,
+            idVerificationPhoto:
+              dto.privateDetails.idVerificationPhotoUrl || null,
           }
         : null,
       users: dto.users.map((user) => ({
@@ -222,6 +251,9 @@ export class SellersService {
         blockedReason: null,
       },
       meta: {
+        rating: null,
+        reviewsCount: 0,
+        tags: [],
         totalListings: 0,
         activeListings: 0,
         soldListings: 0,
@@ -263,8 +295,8 @@ export class SellersService {
     if (!seller) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller not found',
+        error: "Not Found",
+        message: "Seller not found",
       });
     }
 
@@ -273,8 +305,8 @@ export class SellersService {
     if (!isAdmin && !isMember) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have permission to update this seller',
+        error: "Forbidden",
+        message: "You do not have permission to update this seller",
       });
     }
 
@@ -293,7 +325,7 @@ export class SellersService {
     }
 
     // Update dealer details
-    if (seller.sellerType === 'dealer' && seller.dealerDetails) {
+    if (seller.sellerType === "Dealer" && seller.dealerDetails) {
       if (dto.companyName !== undefined) {
         seller.dealerDetails.companyName = dto.companyName;
       }
@@ -322,10 +354,12 @@ export class SellersService {
         seller.dealerDetails.insuranceDetails.provider = dto.insuranceProvider;
       }
       if (dto.insurancePolicyNumber !== undefined) {
-        seller.dealerDetails.insuranceDetails.policyNumber = dto.insurancePolicyNumber;
+        seller.dealerDetails.insuranceDetails.policyNumber =
+          dto.insurancePolicyNumber;
       }
       if (dto.insuranceExpiration !== undefined) {
-        seller.dealerDetails.insuranceDetails.expirationDate = dto.insuranceExpiration;
+        seller.dealerDetails.insuranceDetails.expirationDate =
+          dto.insuranceExpiration;
       }
       if (dto.syndicationSystem !== undefined) {
         seller.dealerDetails.syndicationSystem = dto.syndicationSystem;
@@ -339,7 +373,7 @@ export class SellersService {
     }
 
     // Update private details
-    if (seller.sellerType === 'private' && seller.privateDetails) {
+    if (seller.sellerType === "Private Seller" && seller.privateDetails) {
       if (dto.fullName !== undefined) {
         seller.privateDetails.fullName = dto.fullName;
       }
@@ -364,7 +398,10 @@ export class SellersService {
   /**
    * Update seller status (Admin only)
    */
-  async updateStatus(id: string, dto: UpdateSellerStatusDto): Promise<PublicSeller> {
+  async updateStatus(
+    id: string,
+    dto: UpdateSellerStatusDto,
+  ): Promise<PublicSeller> {
     const seller = await this.cosmosService.readItem<SellerDocument>(
       this.SELLERS_CONTAINER,
       id,
@@ -374,8 +411,8 @@ export class SellersService {
     if (!seller) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller not found',
+        error: "Not Found",
+        message: "Seller not found",
       });
     }
 
@@ -388,7 +425,9 @@ export class SellersService {
     }
     if (dto.blocked !== undefined) {
       seller.status.blocked = dto.blocked;
-      seller.status.blockedReason = dto.blocked ? dto.blockedReason || 'No reason provided' : null;
+      seller.status.blockedReason = dto.blocked
+        ? dto.blockedReason || "No reason provided"
+        : null;
     }
 
     // Update license status if provided (dealers only)
@@ -410,7 +449,10 @@ export class SellersService {
   /**
    * Update seller meta (Admin only - typically updated by system)
    */
-  async updateMeta(id: string, dto: UpdateSellerMetaDto): Promise<PublicSeller> {
+  async updateMeta(
+    id: string,
+    dto: UpdateSellerMetaDto,
+  ): Promise<PublicSeller> {
     const seller = await this.cosmosService.readItem<SellerDocument>(
       this.SELLERS_CONTAINER,
       id,
@@ -420,8 +462,8 @@ export class SellersService {
     if (!seller) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller not found',
+        error: "Not Found",
+        message: "Seller not found",
       });
     }
 
@@ -474,8 +516,8 @@ export class SellersService {
     if (!seller) {
       throw new NotFoundException({
         statusCode: 404,
-        error: 'Not Found',
-        message: 'Seller not found',
+        error: "Not Found",
+        message: "Seller not found",
       });
     }
 
@@ -484,8 +526,8 @@ export class SellersService {
     if (!isAdmin && !isMember) {
       throw new ForbiddenException({
         statusCode: 403,
-        error: 'Forbidden',
-        message: 'You do not have permission to manage users for this seller',
+        error: "Forbidden",
+        message: "You do not have permission to manage users for this seller",
       });
     }
 
@@ -519,17 +561,16 @@ export class SellersService {
    * Helper: Convert SellerDocument to PublicSeller
    */
   private toPublicSeller(seller: SellerDocument): PublicSeller {
-    // Remove sensitive fields like syndicationApiKey from response
-    const publicSeller: PublicSeller = {
-      ...seller,
-      dealerDetails: seller.dealerDetails
-        ? {
-            ...seller.dealerDetails,
-            syndicationApiKey: undefined, // Never expose API keys
-          }
-        : null,
-    };
+    // Remove sensitive fields like syndicationApiKey and syndicationSystem from response
+    if (seller.dealerDetails) {
+      const { syndicationSystem, syndicationApiKey, ...safeDealerDetails } =
+        seller.dealerDetails;
+      return {
+        ...seller,
+        dealerDetails: safeDealerDetails,
+      };
+    }
 
-    return publicSeller;
+    return seller as PublicSeller;
   }
 }

@@ -1,10 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean, IsInt, Min, Max, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsInt,
+  Min,
+  Max,
+  IsEnum,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 export enum SellerTypeFilter {
-  DEALER = 'dealer',
-  PRIVATE = 'private',
+  DEALER = "Dealer",
+  PRIVATE = "Private Seller",
 }
 
 /**
@@ -13,7 +21,7 @@ export enum SellerTypeFilter {
  */
 export class QuerySellersDto {
   @ApiProperty({
-    description: 'Filter by seller type',
+    description: "Filter by seller type (use /taxonomies/sellerType for options: Dealer, Private Seller)",
     enum: SellerTypeFilter,
     required: false,
   })
@@ -22,7 +30,7 @@ export class QuerySellersDto {
   sellerType?: SellerTypeFilter;
 
   @ApiProperty({
-    description: 'Filter by email',
+    description: "Filter by email",
     required: false,
   })
   @IsString()
@@ -30,7 +38,7 @@ export class QuerySellersDto {
   email?: string;
 
   @ApiProperty({
-    description: 'Filter by company name (dealers only)',
+    description: "Filter by company name (dealers only)",
     required: false,
   })
   @IsString()
@@ -38,7 +46,7 @@ export class QuerySellersDto {
   companyName?: string;
 
   @ApiProperty({
-    description: 'Filter by city',
+    description: "Filter by city",
     required: false,
   })
   @IsString()
@@ -46,7 +54,7 @@ export class QuerySellersDto {
   city?: string;
 
   @ApiProperty({
-    description: 'Filter by state',
+    description: "Filter by state",
     required: false,
   })
   @IsString()
@@ -54,7 +62,7 @@ export class QuerySellersDto {
   state?: string;
 
   @ApiProperty({
-    description: 'Filter by country',
+    description: "Filter by country",
     required: false,
   })
   @IsString()
@@ -62,7 +70,7 @@ export class QuerySellersDto {
   country?: string;
 
   @ApiProperty({
-    description: 'Filter by verified status',
+    description: "Filter by verified status",
     required: false,
   })
   @Type(() => Boolean)
@@ -71,7 +79,7 @@ export class QuerySellersDto {
   verified?: boolean;
 
   @ApiProperty({
-    description: 'Filter by approved status',
+    description: "Filter by approved status",
     required: false,
   })
   @Type(() => Boolean)
@@ -80,7 +88,7 @@ export class QuerySellersDto {
   approved?: boolean;
 
   @ApiProperty({
-    description: 'Filter by blocked status',
+    description: "Filter by blocked status",
     required: false,
   })
   @Type(() => Boolean)
@@ -89,7 +97,7 @@ export class QuerySellersDto {
   blocked?: boolean;
 
   @ApiProperty({
-    description: 'Filter by user ID (sellers that user belongs to)',
+    description: "Filter by user ID (sellers that user belongs to)",
     required: false,
   })
   @IsString()
@@ -97,7 +105,7 @@ export class QuerySellersDto {
   userId?: string;
 
   @ApiProperty({
-    description: 'Number of items per page (1-100)',
+    description: "Number of items per page (1-100)",
     example: 20,
     required: false,
     minimum: 1,
@@ -111,7 +119,7 @@ export class QuerySellersDto {
   limit?: number = 20;
 
   @ApiProperty({
-    description: 'Continuation token from previous page',
+    description: "Continuation token from previous page",
     required: false,
   })
   @IsString()

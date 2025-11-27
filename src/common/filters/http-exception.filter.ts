@@ -5,9 +5,9 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
-import { FastifyReply } from 'fastify';
-import { StandardError } from '../types/standard-error.type';
+} from "@nestjs/common";
+import { FastifyReply } from "fastify";
+import { StandardError } from "../types/standard-error.type";
 
 /**
  * Global HTTP Exception Filter
@@ -29,7 +29,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
-      if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      if (typeof exceptionResponse === "object" && exceptionResponse !== null) {
         const responseObj = exceptionResponse as any;
 
         errorResponse = {
@@ -50,10 +50,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       errorResponse = {
         statusCode: status,
-        error: 'Internal Server Error',
-        message: process.env.NODE_ENV === 'production'
-          ? 'An unexpected error occurred'
-          : exception.message,
+        error: "Internal Server Error",
+        message:
+          process.env.NODE_ENV === "production"
+            ? "An unexpected error occurred"
+            : exception.message,
       };
 
       // Log unexpected errors
@@ -71,11 +72,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       errorResponse = {
         statusCode: status,
-        error: 'Internal Server Error',
-        message: 'An unexpected error occurred',
+        error: "Internal Server Error",
+        message: "An unexpected error occurred",
       };
 
-      this.logger.error('Non-Error exception caught', exception);
+      this.logger.error("Non-Error exception caught", exception);
     }
 
     response.status(status).send(errorResponse);
@@ -86,18 +87,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
    */
   private getErrorName(status: number): string {
     const errorNames: Record<number, string> = {
-      400: 'Bad Request',
-      401: 'Unauthorized',
-      403: 'Forbidden',
-      404: 'Not Found',
-      409: 'Conflict',
-      422: 'Unprocessable Entity',
-      429: 'Too Many Requests',
-      500: 'Internal Server Error',
-      502: 'Bad Gateway',
-      503: 'Service Unavailable',
+      400: "Bad Request",
+      401: "Unauthorized",
+      403: "Forbidden",
+      404: "Not Found",
+      409: "Conflict",
+      422: "Unprocessable Entity",
+      429: "Too Many Requests",
+      500: "Internal Server Error",
+      502: "Bad Gateway",
+      503: "Service Unavailable",
     };
 
-    return errorNames[status] || 'Error';
+    return errorNames[status] || "Error";
   }
 }

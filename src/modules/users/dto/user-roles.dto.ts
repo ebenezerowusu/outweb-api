@@ -1,15 +1,23 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString, ArrayMinSize } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsArray,
+  IsString,
+  ArrayMinSize,
+  ValidateNested,
+  IsNotEmpty,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * User Role Item
  */
 export class UserRoleItem {
   @ApiProperty({
-    description: 'Role ID',
-    example: 'role_buyer',
+    description: "Role ID",
+    example: "role_private",
   })
   @IsString()
+  @IsNotEmpty()
   roleId: string;
 }
 
@@ -18,11 +26,13 @@ export class UserRoleItem {
  */
 export class UpdateUserRolesDto {
   @ApiProperty({
-    description: 'Array of roles to assign to user',
-    example: [{ roleId: 'role_buyer' }, { roleId: 'role_seller' }],
+    description: "Array of roles to assign to user (at least one required)",
+    example: [{ roleId: "role_private" }, { roleId: "role_dealer" }],
     type: [UserRoleItem],
   })
   @IsArray()
-  @ArrayMinSize(0)
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => UserRoleItem)
   roles: UserRoleItem[];
 }

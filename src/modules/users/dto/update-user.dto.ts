@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsOptional,
   IsString,
@@ -8,15 +8,15 @@ import {
   MinLength,
   IsUrl,
   IsArray,
-} from 'class-validator';
+} from "class-validator";
 
 /**
  * Update User Profile DTO
  */
 export class UpdateUserDto {
   @ApiProperty({
-    description: 'Display name',
-    example: 'Jane D.',
+    description: "Display name",
+    example: "Akua M.",
     required: false,
   })
   @IsString()
@@ -26,8 +26,8 @@ export class UpdateUserDto {
   displayName?: string;
 
   @ApiProperty({
-    description: 'First name',
-    example: 'Jane',
+    description: "First name",
+    example: "Akua",
     required: false,
   })
   @IsString()
@@ -37,8 +37,8 @@ export class UpdateUserDto {
   firstName?: string;
 
   @ApiProperty({
-    description: 'Last name',
-    example: 'Doe',
+    description: "Last name",
+    example: "Mensah",
     required: false,
   })
   @IsString()
@@ -48,8 +48,8 @@ export class UpdateUserDto {
   lastName?: string;
 
   @ApiProperty({
-    description: 'Phone number',
-    example: '+15550000000',
+    description: "Phone number",
+    example: "+233244123456",
     required: false,
   })
   @IsString()
@@ -59,8 +59,8 @@ export class UpdateUserDto {
   phoneNumber?: string;
 
   @ApiProperty({
-    description: 'ZIP/Postal code',
-    example: '00233',
+    description: "ZIP/Postal code",
+    example: "00233",
     required: false,
   })
   @IsString()
@@ -69,8 +69,8 @@ export class UpdateUserDto {
   zipCode?: string;
 
   @ApiProperty({
-    description: 'Avatar URL',
-    example: 'https://cdn.onlyusedtesla.com/avatars/usr_abc123.png',
+    description: "Avatar URL",
+    example: "https://cdn.onlyusedtesla.com/avatars/usr_abc123.png",
     required: false,
   })
   @IsUrl()
@@ -78,8 +78,8 @@ export class UpdateUserDto {
   avatarUrl?: string;
 
   @ApiProperty({
-    description: 'Preferred language',
-    example: 'en-US',
+    description: "Preferred language",
+    example: "en-US",
     required: false,
   })
   @IsString()
@@ -87,8 +87,8 @@ export class UpdateUserDto {
   language?: string;
 
   @ApiProperty({
-    description: 'Timezone',
-    example: 'America/Los_Angeles',
+    description: "Timezone",
+    example: "Africa/Accra",
     required: false,
   })
   @IsString()
@@ -96,7 +96,7 @@ export class UpdateUserDto {
   timezone?: string;
 
   @ApiProperty({
-    description: 'Email notifications enabled',
+    description: "Email notifications enabled",
     required: false,
   })
   @IsBoolean()
@@ -104,7 +104,7 @@ export class UpdateUserDto {
   notificationsEmail?: boolean;
 
   @ApiProperty({
-    description: 'SMS notifications enabled',
+    description: "SMS notifications enabled",
     required: false,
   })
   @IsBoolean()
@@ -112,7 +112,7 @@ export class UpdateUserDto {
   notificationsSms?: boolean;
 
   @ApiProperty({
-    description: 'Push notifications enabled',
+    description: "Push notifications enabled",
     required: false,
   })
   @IsBoolean()
@@ -125,7 +125,7 @@ export class UpdateUserDto {
  */
 export class UpdateUserStatusDto {
   @ApiProperty({
-    description: 'Is user active',
+    description: "Is user active",
     example: true,
     required: false,
   })
@@ -134,7 +134,7 @@ export class UpdateUserStatusDto {
   isActive?: boolean;
 
   @ApiProperty({
-    description: 'Is user blocked',
+    description: "Is user blocked",
     example: false,
     required: false,
   })
@@ -143,8 +143,8 @@ export class UpdateUserStatusDto {
   blocked?: boolean;
 
   @ApiProperty({
-    description: 'Reason for blocking',
-    example: 'Violation of terms of service',
+    description: "Reason for blocking",
+    example: "Violation of terms of service",
     required: false,
   })
   @IsString()
@@ -158,8 +158,8 @@ export class UpdateUserStatusDto {
  */
 export class UpdateUserMarketDto {
   @ApiProperty({
-    description: 'Primary country code',
-    example: 'US',
+    description: "Primary country code",
+    example: "GH",
     required: false,
   })
   @IsString()
@@ -169,8 +169,8 @@ export class UpdateUserMarketDto {
   country?: string;
 
   @ApiProperty({
-    description: 'Allowed countries',
-    example: ['US', 'CA'],
+    description: "Allowed countries",
+    example: ["GH", "NG"],
     type: [String],
     required: false,
   })
@@ -180,8 +180,8 @@ export class UpdateUserMarketDto {
   allowedCountries?: string[];
 
   @ApiProperty({
-    description: 'Source of country assignment',
-    example: 'user|phone|kyc',
+    description: "Source of country assignment",
+    example: "user|phone|kyc",
     required: false,
   })
   @IsString()
