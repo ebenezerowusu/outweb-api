@@ -4,7 +4,7 @@
  */
 export interface SellerDocument {
   id: string;
-  sellerType: "dealer" | "private";
+  sellerType: "Dealer" | "Private Seller";
   profile: SellerProfile;
   market: SellerMarket;
   dealerDetails: DealerDetails | null;

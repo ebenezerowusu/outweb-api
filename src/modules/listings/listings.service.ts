@@ -287,7 +287,7 @@ export class ListingsService {
       seller: {
         id: seller.id,
         name:
-          seller.sellerType === "dealer"
+          seller.sellerType === "Dealer"
             ? seller.dealerDetails!.companyName
             : seller.privateDetails!.fullName,
         type: seller.sellerType,

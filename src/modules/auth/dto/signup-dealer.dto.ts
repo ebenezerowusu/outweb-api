@@ -86,8 +86,9 @@ export class SignUpDealerDto {
   confirmPassword: string;
 
   @ApiProperty({
-    description: 'Who are you representing (e.g., "dealer_group")',
-    example: "dealer_group",
+    description: 'Who are you representing (use /taxonomies/whoYouRepresenting for options: Single Dealer, Group Dealer, Fleet Operator, Financial Company, Rental Company, Other)',
+    example: "Single Dealer",
+    enum: ['Single Dealer', 'Group Dealer', 'Fleet Operator', 'Financial Company', 'Rental Company', 'Other'],
   })
   @IsString()
   @IsNotEmpty()
@@ -112,8 +113,9 @@ export class SignUpDealerDto {
   rooftop?: string;
 
   @ApiProperty({
-    description: "Business type",
-    example: "used_tesla_dealer",
+    description: "Business type (use /taxonomies/businessType for options: Single Dealer, Dealer group, Group-affiliated dealership, Franchise dealership, OEM, Fleet, Vendor, Other)",
+    example: "Single Dealer",
+    enum: ['Single Dealer', 'Dealer group', 'Group-affiliated dealership', 'Franchise dealership', 'OEM', 'Fleet', 'Vendor', 'Other'],
   })
   @IsString()
   @MinLength(1)
@@ -132,8 +134,9 @@ export class SignUpDealerDto {
   companyName: string;
 
   @ApiProperty({
-    description: "Syndication system",
-    example: "internal_crm",
+    description: "Syndication system (use /taxonomies/syndicationSystem for options: vAuto, Authenticom, Dealertrack, HomeNet, CDK Global, AutoManager, Chrome Inventory, ReyRey, CDKDrive, Dealer eProcess, DealerSocket, Dominion, Elead, Frazer, VinSolutions, Xtime, Other)",
+    example: "vAuto",
+    enum: ['vAuto', 'Authenticom', 'Dealertrack', 'HomeNet', 'CDK Global', 'AutoManager', 'Chrome Inventory', 'ReyRey', 'CDKDrive', 'Dealer eProcess', 'DealerSocket', 'Dominion', 'Elead', 'Frazer', 'VinSolutions', 'Xtime', 'Other'],
   })
   @IsString()
   @MinLength(1)

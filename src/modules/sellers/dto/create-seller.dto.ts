@@ -14,8 +14,8 @@ import {
 import { Type } from "class-transformer";
 
 export enum SellerType {
-  DEALER = "dealer",
-  PRIVATE = "private",
+  DEALER = "Dealer",
+  PRIVATE = "Private Seller",
 }
 
 class AddressDto {
@@ -51,11 +51,19 @@ class DealerDetailsDto {
   @MaxLength(200)
   companyName: string;
 
-  @ApiProperty({ example: "single_dealership" })
+  @ApiProperty({
+    description: "Dealer brand type (use /taxonomies/dealerBrand for options: Independent, Franchise, OEM-owned, Group-affiliated, Corporate-owned, Private, Other)",
+    example: "Independent",
+    enum: ['Independent', 'Franchise', 'OEM-owned', 'Group-affiliated', 'Corporate-owned', 'Private', 'Other'],
+  })
   @IsString()
   dealerType: string;
 
-  @ApiProperty({ example: "franchise_dealership" })
+  @ApiProperty({
+    description: "Business type (use /taxonomies/businessType for options: Single Dealer, Dealer group, Group-affiliated dealership, Franchise dealership, OEM, Fleet, Vendor, Other)",
+    example: "Franchise dealership",
+    enum: ['Single Dealer', 'Dealer group', 'Group-affiliated dealership', 'Franchise dealership', 'OEM', 'Fleet', 'Vendor', 'Other'],
+  })
   @IsString()
   businessType: string;
 
@@ -76,7 +84,12 @@ class DealerDetailsDto {
   @IsBoolean()
   isOwner: boolean;
 
-  @ApiProperty({ example: "vAuto", required: false })
+  @ApiProperty({
+    description: "Syndication system (use /taxonomies/syndicationSystem for options: vAuto, Authenticom, Dealertrack, HomeNet, CDK Global, AutoManager, Chrome Inventory, ReyRey, CDKDrive, Dealer eProcess, DealerSocket, Dominion, Elead, Frazer, VinSolutions, Xtime, Other)",
+    example: "vAuto",
+    enum: ['vAuto', 'Authenticom', 'Dealertrack', 'HomeNet', 'CDK Global', 'AutoManager', 'Chrome Inventory', 'ReyRey', 'CDKDrive', 'Dealer eProcess', 'DealerSocket', 'Dominion', 'Elead', 'Frazer', 'VinSolutions', 'Xtime', 'Other'],
+    required: false,
+  })
   @IsString()
   @IsOptional()
   syndicationSystem?: string;
@@ -167,7 +180,11 @@ class SellerUserDto {
  * Create Seller DTO
  */
 export class CreateSellerDto {
-  @ApiProperty({ enum: SellerType, example: SellerType.DEALER })
+  @ApiProperty({
+    description: "Seller type (use /taxonomies/sellerType for options: Dealer, Private Seller)",
+    enum: SellerType,
+    example: SellerType.DEALER,
+  })
   @IsEnum(SellerType)
   sellerType: SellerType;
 

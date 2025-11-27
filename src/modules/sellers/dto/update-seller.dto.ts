@@ -71,12 +71,22 @@ export class UpdateSellerDto {
   @IsOptional()
   companyName?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: "Dealer brand type (use /taxonomies/dealerBrand for options: Independent, Franchise, OEM-owned, Group-affiliated, Corporate-owned, Private, Other)",
+    example: "Independent",
+    enum: ['Independent', 'Franchise', 'OEM-owned', 'Group-affiliated', 'Corporate-owned', 'Private', 'Other'],
+    required: false,
+  })
   @IsString()
   @IsOptional()
   dealerType?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: "Business type (use /taxonomies/businessType for options: Single Dealer, Dealer group, Group-affiliated dealership, Franchise dealership, OEM, Fleet, Vendor, Other)",
+    example: "Franchise dealership",
+    enum: ['Single Dealer', 'Dealer group', 'Group-affiliated dealership', 'Franchise dealership', 'OEM', 'Fleet', 'Vendor', 'Other'],
+    required: false,
+  })
   @IsString()
   @IsOptional()
   businessType?: string;
@@ -121,7 +131,12 @@ export class UpdateSellerDto {
   @IsOptional()
   insuranceExpiration?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: "Syndication system (use /taxonomies/syndicationSystem for options: vAuto, Authenticom, Dealertrack, HomeNet, CDK Global, AutoManager, Chrome Inventory, ReyRey, CDKDrive, Dealer eProcess, DealerSocket, Dominion, Elead, Frazer, VinSolutions, Xtime, Other)",
+    example: "vAuto",
+    enum: ['vAuto', 'Authenticom', 'Dealertrack', 'HomeNet', 'CDK Global', 'AutoManager', 'Chrome Inventory', 'ReyRey', 'CDKDrive', 'Dealer eProcess', 'DealerSocket', 'Dominion', 'Elead', 'Frazer', 'VinSolutions', 'Xtime', 'Other'],
+    required: false,
+  })
   @IsString()
   @IsOptional()
   syndicationSystem?: string;

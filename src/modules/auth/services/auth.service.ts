@@ -232,7 +232,7 @@ export class AuthService {
     // Create seller document for private seller
     const seller: SellerDocument = {
       id: sellerId,
-      sellerType: "private",
+      sellerType: "Private Seller",
       profile: {
         email: dto.email.toLowerCase(),
         phone: dto.phone,
@@ -459,7 +459,7 @@ export class AuthService {
 
     const seller: SellerDocument = {
       id: sellerId,
-      sellerType: "dealer",
+      sellerType: "Dealer",
       profile: {
         email: dto.email.toLowerCase(),
         phone: dto.phone,
