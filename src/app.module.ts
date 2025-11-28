@@ -22,6 +22,7 @@ import { OrdersModule } from "./modules/orders/orders.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { ListingOffersModule } from "./modules/listing-offers/listing-offers.module";
 import { WebhooksModule } from "./modules/webhooks/webhooks.module";
+import { EmailsModule } from "./modules/emails/emails.module";
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { WebhooksModule } from "./modules/webhooks/webhooks.module";
     SubscriptionPlansModule,
     BillingsModule,
     WebhooksModule,
+    EmailsModule,
     OrdersModule,
     NotificationsModule,
     ListingOffersModule,

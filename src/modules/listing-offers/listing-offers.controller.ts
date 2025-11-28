@@ -30,7 +30,7 @@ import { CurrentUser } from "@/common/decorators/auth.decorators";
  * Listing Offers Controller
  * Handles offers and negotiations on vehicle listings
  */
-@ApiTags("Listing Offers")
+@ApiTags("Offers")
 @Controller("offers")
 @ApiBearerAuth("Authorization")
 export class ListingOffersController {
