@@ -20,6 +20,7 @@ import { BillingsModule } from "./modules/billings/billings.module";
 import { OrdersModule } from "./modules/orders/orders.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { ListingOffersModule } from "./modules/listing-offers/listing-offers.module";
+import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ListingOffersModule } from "./modules/listing-offers/listing-offers.mod
     ListingsModule,
     SubscriptionsModule,
     BillingsModule,
+    WebhooksModule,
     OrdersModule,
     NotificationsModule,
     ListingOffersModule,

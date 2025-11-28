@@ -8,9 +8,6 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Headers,
-  RawBodyRequest,
-  Req,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -23,11 +20,9 @@ import { BillingsService } from "./billings.service";
 import {
   UpdateBillingStatusDto,
   CreateRefundDto,
-  UpdateBillingFromWebhookDto,
 } from "./dto/update-billing.dto";
 import { QueryBillingsDto } from "./dto/query-billing.dto";
-import { CurrentUser, SkipAuth } from "@/common/decorators/auth.decorators";
-import { BillingStatus } from "./interfaces/billing.interface";
+import { CurrentUser } from "@/common/decorators/auth.decorators";
 
 /**
  * Billings Controller
@@ -180,115 +175,5 @@ export class BillingsController {
   @ApiResponse({ status: 404, description: "Seller not found" })
   async getSellerStats(@Param("sellerId") sellerId: string) {
     return this.billingsService.getSellerStats(sellerId);
-  }
-
-  /**
-   * Stripe webhook endpoint for billings
-   */
-  @Post("webhook/stripe")
-  @SkipAuth()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Stripe webhook handler for billings (Internal)" })
-  @ApiResponse({ status: 200, description: "Webhook processed successfully" })
-  async handleStripeWebhook(
-    @Headers("stripe-signature") signature: string,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    // TODO: Verify webhook signature
-    // const stripe = new Stripe(this.configService.get('stripeSecretKey'));
-    // const webhookSecret = this.configService.get('stripeWebhookSecret');
-    // const event = stripe.webhooks.constructEvent(req.rawBody, signature, webhookSecret);
-
-    // For now, parse the event from body
-    const event = (req as any).body;
-
-    if (!event || !event.type) {
-      return { received: true };
-    }
-
-    // Handle different event types
-    switch (event.type) {
-      case "checkout.session.completed":
-        await this.handleCheckoutCompleted(event.data.object);
-        break;
-      case "checkout.session.expired":
-        await this.handleCheckoutExpired(event.data.object);
-        break;
-      case "payment_intent.succeeded":
-        await this.handlePaymentSucceeded(event.data.object);
-        break;
-      case "payment_intent.payment_failed":
-        await this.handlePaymentFailed(event.data.object);
-        break;
-      case "charge.refunded":
-        await this.handleChargeRefunded(event.data.object);
-        break;
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
-    }
-
-    return { received: true };
-  }
-
-  /**
-   * Handle checkout session completed
-   */
-  private async handleCheckoutCompleted(session: any) {
-    const updateDto: UpdateBillingFromWebhookDto = {
-      stripeSessionId: session.id,
-      status: BillingStatus.SUCCESS,
-      stripePaymentIntentId: session.payment_intent,
-      metadata: {
-        paymentStatus: session.payment_status,
-        customerEmail: session.customer_email,
-      },
-    };
-
-    try {
-      await this.billingsService.updateFromWebhook(updateDto);
-      console.log(`Billing updated for session: ${session.id}`);
-    } catch (error) {
-      console.error(`Failed to update billing for session: ${session.id}`, error);
-    }
-  }
-
-  /**
-   * Handle checkout session expired
-   */
-  private async handleCheckoutExpired(session: any) {
-    const updateDto: UpdateBillingFromWebhookDto = {
-      stripeSessionId: session.id,
-      status: BillingStatus.EXPIRED,
-    };
-
-    try {
-      await this.billingsService.updateFromWebhook(updateDto);
-      console.log(`Billing expired for session: ${session.id}`);
-    } catch (error) {
-      console.error(`Failed to expire billing for session: ${session.id}`, error);
-    }
-  }
-
-  /**
-   * Handle payment intent succeeded
-   */
-  private async handlePaymentSucceeded(paymentIntent: any) {
-    // Payment intent events might not have session ID directly
-    // We may need to look up by payment_intent ID
-    console.log(`Payment succeeded: ${paymentIntent.id}`);
-  }
-
-  /**
-   * Handle payment intent failed
-   */
-  private async handlePaymentFailed(paymentIntent: any) {
-    console.log(`Payment failed: ${paymentIntent.id}`);
-  }
-
-  /**
-   * Handle charge refunded
-   */
-  private async handleChargeRefunded(charge: any) {
-    console.log(`Charge refunded: ${charge.id}`);
   }
 }
