@@ -8,9 +8,6 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Headers,
-  RawBodyRequest,
-  Req,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -32,7 +29,7 @@ import {
   QuerySubscriptionsDto,
   QueryInvoicesDto,
 } from "./dto/query-subscription.dto";
-import { CurrentUser, SkipAuth } from "@/common/decorators/auth.decorators";
+import { CurrentUser } from "@/common/decorators/auth.decorators";
 
 /**
  * Subscriptions Controller
@@ -228,27 +225,5 @@ export class SubscriptionsController {
       user.sub,
       hasAdminPermission,
     );
-  }
-
-  /**
-   * Stripe webhook endpoint
-   */
-  @Post("webhooks/stripe")
-  @SkipAuth()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Stripe webhook handler (Internal)" })
-  @ApiResponse({ status: 200, description: "Webhook processed successfully" })
-  async handleStripeWebhook(
-    @Headers("stripe-signature") signature: string,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    // TODO: Verify webhook signature
-    // const stripe = new Stripe(this.configService.get('stripeSecretKey'));
-    // const webhookSecret = this.configService.get('stripeWebhookSecret');
-    // const event = stripe.webhooks.constructEvent(req.rawBody, signature, webhookSecret);
-
-    // For now, just acknowledge
-    await this.subscriptionsService.processWebhook({ type: "webhook.test" });
-    return { received: true };
   }
 }
