@@ -17,6 +17,7 @@ import {
   ApiParam,
 } from "@nestjs/swagger";
 import { SubscriptionsService } from "./subscriptions.service";
+import { SubscriptionInvoicesService } from "./services/subscription-invoices.service";
 import {
   CreateCheckoutSessionDto,
   CreateOneTimeCheckoutDto,
@@ -29,6 +30,7 @@ import {
   QuerySubscriptionsDto,
   QueryInvoicesDto,
 } from "./dto/query-subscription.dto";
+import { QuerySubscriptionInvoicesDto } from "./dto/query-invoice.dto";
 import { CurrentUser } from "@/common/decorators/auth.decorators";
 
 /**
@@ -39,7 +41,10 @@ import { CurrentUser } from "@/common/decorators/auth.decorators";
 @Controller("subscriptions")
 @ApiBearerAuth("Authorization")
 export class SubscriptionsController {
-  constructor(private readonly subscriptionsService: SubscriptionsService) {}
+  constructor(
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly invoicesService: SubscriptionInvoicesService,
+  ) {}
 
   /**
    * Create Stripe checkout session for subscription
@@ -215,13 +220,88 @@ export class SubscriptionsController {
   @ApiResponse({ status: 404, description: "Subscription not found" })
   async getInvoices(
     @Param("id") id: string,
-    @Query() query: QueryInvoicesDto,
     @CurrentUser() user: any,
   ) {
     const hasAdminPermission = user.permissions?.includes("perm_manage_users");
-    return this.subscriptionsService.getInvoices(
+    return this.invoicesService.findBySubscriptionId(
       id,
-      query,
+      user.sub,
+      hasAdminPermission,
+    );
+  }
+
+  /**
+   * Get current user's invoice history
+   */
+  @Get("invoices/me")
+  @ApiOperation({ summary: "Get current user invoice history" })
+  @ApiResponse({
+    status: 200,
+    description: "Invoice history retrieved successfully",
+  })
+  async getMyInvoices(
+    @Query() query: QuerySubscriptionInvoicesDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.invoicesService.findBySellerId(user.sub, user.sub, false);
+  }
+
+  /**
+   * Get all invoices (Admin only)
+   */
+  @Get("invoices")
+  @ApiOperation({ summary: "Get all invoices (Admin only)" })
+  @ApiResponse({
+    status: 200,
+    description: "Invoices retrieved successfully",
+  })
+  @ApiResponse({ status: 403, description: "Forbidden - Admin access required" })
+  async getAllInvoices(
+    @Query() query: QuerySubscriptionInvoicesDto,
+    @CurrentUser() user: any,
+  ) {
+    const hasAdminPermission = user.permissions?.includes("perm_manage_users");
+    return this.invoicesService.findAll(query, user.sub, hasAdminPermission);
+  }
+
+  /**
+   * Get invoice by ID
+   */
+  @Get("invoices/:invoiceId")
+  @ApiOperation({ summary: "Get invoice by ID (Owner or Admin)" })
+  @ApiParam({ name: "invoiceId", description: "Invoice ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Invoice retrieved successfully",
+  })
+  @ApiResponse({ status: 403, description: "Forbidden" })
+  @ApiResponse({ status: 404, description: "Invoice not found" })
+  async getInvoice(
+    @Param("invoiceId") invoiceId: string,
+    @CurrentUser() user: any,
+  ) {
+    const hasAdminPermission = user.permissions?.includes("perm_manage_users");
+    return this.invoicesService.findById(invoiceId, user.sub, hasAdminPermission);
+  }
+
+  /**
+   * Get seller invoice statistics
+   */
+  @Get("invoices/stats/seller/:sellerId")
+  @ApiOperation({ summary: "Get seller invoice statistics (Owner or Admin)" })
+  @ApiParam({ name: "sellerId", description: "Seller ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Seller statistics retrieved successfully",
+  })
+  @ApiResponse({ status: 403, description: "Forbidden" })
+  async getSellerStats(
+    @Param("sellerId") sellerId: string,
+    @CurrentUser() user: any,
+  ) {
+    const hasAdminPermission = user.permissions?.includes("perm_manage_users");
+    return this.invoicesService.getSellerStats(
+      sellerId,
       user.sub,
       hasAdminPermission,
     );

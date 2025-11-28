@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { SubscriptionsController } from "./subscriptions.controller";
 import { SubscriptionsService } from "./subscriptions.service";
+import { SubscriptionInvoicesService } from "./services/subscription-invoices.service";
 import { CosmosService } from "@/common/services/cosmos.service";
 import { BillingsModule } from "@/modules/billings/billings.module";
 
@@ -11,7 +12,7 @@ import { BillingsModule } from "@/modules/billings/billings.module";
 @Module({
   imports: [BillingsModule],
   controllers: [SubscriptionsController],
-  providers: [SubscriptionsService, CosmosService],
-  exports: [SubscriptionsService],
+  providers: [SubscriptionsService, SubscriptionInvoicesService, CosmosService],
+  exports: [SubscriptionsService, SubscriptionInvoicesService],
 })
 export class SubscriptionsModule {}
