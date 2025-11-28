@@ -84,11 +84,11 @@ async function bootstrap() {
       .addTag("RBAC", "Role-based access control helper endpoints")
       .addTag("Taxonomies", "Taxonomy and classification endpoints")
       .addTag("Listings", "Vehicle listing endpoints")
-      //.addTag("Vehicles", "Vehicle data endpoints")
+      .addTag("Vehicles", "Vehicle data endpoints")
       .addTag("Payments", "Payment and subscription endpoints")
       .addTag("Orders", "Order management endpoints")
       .addTag("Notifications", "Notification endpoints")
-      //.addTag("Offers", "Listing offer endpoints")
+      .addTag("Offers", "Listing offer endpoints")
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
