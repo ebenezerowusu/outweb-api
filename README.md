@@ -1,6 +1,6 @@
 # OnlyUsedTesla-API
 
-NestJS + Fastify backend service for the OnlyUsedTesla platform — a high-performance marketplace for used Tesla vehicles.
+Fastify backend service for the OnlyUsedTesla platform — a high-performance marketplace for used Tesla vehicles.
 
 ## Overview
 
