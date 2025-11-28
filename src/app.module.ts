@@ -16,6 +16,7 @@ import { TaxonomiesModule } from "./modules/taxonomies/taxonomies.module";
 import { SeoModule } from "./modules/seo/seo.module";
 import { ListingsModule } from "./modules/listings/listings.module";
 import { SubscriptionsModule } from "./modules/subscriptions/subscriptions.module";
+import { BillingsModule } from "./modules/billings/billings.module";
 import { OrdersModule } from "./modules/orders/orders.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { ListingOffersModule } from "./modules/listing-offers/listing-offers.module";
@@ -40,6 +41,7 @@ import { ListingOffersModule } from "./modules/listing-offers/listing-offers.mod
     SeoModule,
     ListingsModule,
     SubscriptionsModule,
+    BillingsModule,
     OrdersModule,
     NotificationsModule,
     ListingOffersModule,

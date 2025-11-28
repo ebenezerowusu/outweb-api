@@ -7,6 +7,8 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { CosmosService } from "@/common/services/cosmos.service";
 import { PaginatedResponse } from "@/common/types/pagination.type";
+import { BillingsService } from "@/modules/billings/billings.service";
+import { CreateBillingDto } from "@/modules/billings/dto/create-billing.dto";
 import {
   SubscriptionDocument,
   PublicSubscription,
@@ -40,6 +42,7 @@ export class SubscriptionsService {
   constructor(
     private readonly cosmosService: CosmosService,
     private readonly configService: ConfigService,
+    private readonly billingsService: BillingsService,
   ) {}
 
   /**
@@ -184,7 +187,7 @@ export class SubscriptionsService {
   async createOneTimeCheckout(
     dto: CreateOneTimeCheckoutDto,
     userId: string,
-  ): Promise<{ sessionId: string; url: string }> {
+  ): Promise<{ sessionId: string; url: string; billing: any }> {
     // Map product type to Stripe IDs
     const productIdMap: Record<string, string> = {
       featured_listing:
@@ -208,8 +211,15 @@ export class SubscriptionsService {
         "price_highlight",
     };
 
+    const priceAmountMap: Record<string, number> = {
+      featured_listing: 1000, // $10.00
+      bump_listing: 500, // $5.00
+      highlight_listing: 750, // $7.50
+    };
+
     const productId = productIdMap[dto.productType];
     const priceId = priceIdMap[dto.productType];
+    const amount = priceAmountMap[dto.productType];
 
     if (!productId || !priceId) {
       throw new BadRequestException({
@@ -240,10 +250,30 @@ export class SubscriptionsService {
     //   cancel_url: dto.cancelUrl,
     // });
 
-    // Placeholder response
+    // For now, generate a placeholder session ID
+    const sessionId = `cs_test_${dto.productType}_${Date.now()}`;
+
+    // Create billing record
+    const createBillingDto: CreateBillingDto = {
+      productType: dto.productType,
+      listingId: dto.listingId,
+      sellerId: dto.sellerId || "",
+      userId: userId,
+      stripeSessionId: sessionId,
+      stripePriceId: priceId,
+      amount: amount,
+      currency: "USD",
+      returnUrl: dto.successUrl,
+      cancelUrl: dto.cancelUrl,
+    };
+
+    const billing = await this.billingsService.create(createBillingDto);
+
+    // Return checkout session info and billing
     return {
-      sessionId: "cs_test_onetime_placeholder",
+      sessionId: sessionId,
       url: dto.successUrl,
+      billing: billing,
     };
   }
 
