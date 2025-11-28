@@ -12,8 +12,11 @@ import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { SkipAuth } from "@/common/decorators/auth.decorators";
 import { BillingsService } from "@/modules/billings/billings.service";
 import { SubscriptionsService } from "@/modules/subscriptions/subscriptions.service";
+import { SubscriptionInvoicesService } from "@/modules/subscriptions/services/subscription-invoices.service";
 import { BillingStatus } from "@/modules/billings/interfaces/billing.interface";
+import { InvoiceStatus } from "@/modules/subscriptions/interfaces/subscription-invoice.interface";
 import { UpdateBillingFromWebhookDto } from "@/modules/billings/dto/update-billing.dto";
+import { CreateSubscriptionInvoiceDto } from "@/modules/subscriptions/dto/create-invoice.dto";
 
 /**
  * Unified Webhooks Controller
@@ -27,6 +30,7 @@ export class WebhooksController {
   constructor(
     private readonly billingsService: BillingsService,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly invoicesService: SubscriptionInvoicesService,
   ) {}
 
   /**
@@ -100,10 +104,17 @@ export class WebhooksController {
           await this.handleSubscriptionEvent(event);
           break;
 
-        // Invoice events
-        case "invoice.paid":
+        // Invoice events (subscription invoices)
+        case "invoice.payment_succeeded":
+          await this.handleInvoicePaymentSucceeded(event.data.object);
+          break;
+
         case "invoice.payment_failed":
-          await this.handleInvoiceEvent(event);
+          await this.handleInvoicePaymentFailed(event.data.object);
+          break;
+
+        case "invoice.finalized":
+          await this.handleInvoiceFinalized(event.data.object);
           break;
 
         default:
@@ -236,14 +247,191 @@ export class WebhooksController {
   }
 
   /**
-   * Handle invoice events
+   * Handle invoice payment succeeded
+   * Creates a paid invoice record in subscriptionInvoices container
    */
-  private async handleInvoiceEvent(event: any) {
-    this.logger.log(`Processing invoice event: ${event.type}`);
+  private async handleInvoicePaymentSucceeded(invoice: any) {
+    this.logger.log(
+      `Processing invoice.payment_succeeded: ${invoice.id}, subscription: ${invoice.subscription}`,
+    );
+
     try {
-      await this.subscriptionsService.processWebhook(event);
+      // Check if invoice already exists (idempotency)
+      const existing = await this.invoicesService.findByStripeInvoiceId(
+        invoice.id,
+      );
+      if (existing) {
+        this.logger.log(
+          `Invoice already exists: ${invoice.id}, skipping creation`,
+        );
+        return;
+      }
+
+      // Extract billing period from invoice
+      const periodStart = new Date(invoice.period_start * 1000).toISOString();
+      const periodEnd = new Date(invoice.period_end * 1000).toISOString();
+
+      // Create invoice record
+      const createDto: CreateSubscriptionInvoiceDto = {
+        subscriptionId: invoice.subscription || "unknown",
+        sellerId: invoice.metadata?.sellerId || invoice.customer || "unknown",
+        amount: {
+          currency: invoice.currency?.toUpperCase() || "USD",
+          total: invoice.total / 100, // Convert from cents
+          tax: (invoice.tax || 0) / 100,
+          net: (invoice.subtotal || invoice.total) / 100,
+        },
+        status: InvoiceStatus.PAID,
+        paymentMethod: invoice.payment_method_types?.[0] || "card",
+        transactionRef: invoice.payment_intent || invoice.id,
+        billingPeriod: {
+          start: periodStart,
+          end: periodEnd,
+        },
+        stripe: {
+          invoiceId: invoice.id,
+          paymentIntentId: invoice.payment_intent || "",
+          chargeId: invoice.charge || "",
+        },
+        idempotencyKey: `invoice_${invoice.id}`,
+      };
+
+      await this.invoicesService.create(createDto);
+      this.logger.log(
+        `Invoice record created for Stripe invoice: ${invoice.id}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to process invoice event:`, error);
+      this.logger.error(
+        `Failed to create invoice record for: ${invoice.id}`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Handle invoice payment failed
+   * Creates a failed invoice record
+   */
+  private async handleInvoicePaymentFailed(invoice: any) {
+    this.logger.log(
+      `Processing invoice.payment_failed: ${invoice.id}, subscription: ${invoice.subscription}`,
+    );
+
+    try {
+      // Check if invoice already exists
+      const existing = await this.invoicesService.findByStripeInvoiceId(
+        invoice.id,
+      );
+
+      if (existing) {
+        // Update existing invoice to failed status
+        await this.invoicesService.updateByStripeInvoiceId(invoice.id, {
+          status: InvoiceStatus.FAILED,
+        });
+        this.logger.log(`Invoice updated to failed: ${invoice.id}`);
+        return;
+      }
+
+      // Extract billing period
+      const periodStart = new Date(invoice.period_start * 1000).toISOString();
+      const periodEnd = new Date(invoice.period_end * 1000).toISOString();
+
+      // Create failed invoice record
+      const createDto: CreateSubscriptionInvoiceDto = {
+        subscriptionId: invoice.subscription || "unknown",
+        sellerId: invoice.metadata?.sellerId || invoice.customer || "unknown",
+        amount: {
+          currency: invoice.currency?.toUpperCase() || "USD",
+          total: invoice.total / 100,
+          tax: (invoice.tax || 0) / 100,
+          net: (invoice.subtotal || invoice.total) / 100,
+        },
+        status: InvoiceStatus.FAILED,
+        paymentMethod: invoice.payment_method_types?.[0] || "card",
+        transactionRef: invoice.payment_intent || invoice.id,
+        billingPeriod: {
+          start: periodStart,
+          end: periodEnd,
+        },
+        stripe: {
+          invoiceId: invoice.id,
+          paymentIntentId: invoice.payment_intent || "",
+          chargeId: invoice.charge || "",
+        },
+        idempotencyKey: `invoice_${invoice.id}`,
+      };
+
+      await this.invoicesService.create(createDto);
+      this.logger.log(
+        `Failed invoice record created for Stripe invoice: ${invoice.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to create failed invoice record for: ${invoice.id}`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Handle invoice finalized
+   * Creates a pending invoice record
+   */
+  private async handleInvoiceFinalized(invoice: any) {
+    this.logger.log(
+      `Processing invoice.finalized: ${invoice.id}, subscription: ${invoice.subscription}`,
+    );
+
+    try {
+      // Check if invoice already exists
+      const existing = await this.invoicesService.findByStripeInvoiceId(
+        invoice.id,
+      );
+      if (existing) {
+        this.logger.log(
+          `Invoice already exists: ${invoice.id}, skipping creation`,
+        );
+        return;
+      }
+
+      // Extract billing period
+      const periodStart = new Date(invoice.period_start * 1000).toISOString();
+      const periodEnd = new Date(invoice.period_end * 1000).toISOString();
+
+      // Create pending invoice record
+      const createDto: CreateSubscriptionInvoiceDto = {
+        subscriptionId: invoice.subscription || "unknown",
+        sellerId: invoice.metadata?.sellerId || invoice.customer || "unknown",
+        amount: {
+          currency: invoice.currency?.toUpperCase() || "USD",
+          total: invoice.total / 100,
+          tax: (invoice.tax || 0) / 100,
+          net: (invoice.subtotal || invoice.total) / 100,
+        },
+        status: InvoiceStatus.PENDING,
+        paymentMethod: invoice.payment_method_types?.[0] || "card",
+        transactionRef: invoice.payment_intent || invoice.id,
+        billingPeriod: {
+          start: periodStart,
+          end: periodEnd,
+        },
+        stripe: {
+          invoiceId: invoice.id,
+          paymentIntentId: invoice.payment_intent || "",
+          chargeId: invoice.charge || "",
+        },
+        idempotencyKey: `invoice_${invoice.id}`,
+      };
+
+      await this.invoicesService.create(createDto);
+      this.logger.log(
+        `Pending invoice record created for Stripe invoice: ${invoice.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to create pending invoice record for: ${invoice.id}`,
+        error,
+      );
     }
   }
 }

@@ -16,6 +16,7 @@ import { TaxonomiesModule } from "./modules/taxonomies/taxonomies.module";
 import { SeoModule } from "./modules/seo/seo.module";
 import { ListingsModule } from "./modules/listings/listings.module";
 import { SubscriptionsModule } from "./modules/subscriptions/subscriptions.module";
+import { SubscriptionPlansModule } from "./modules/subscription-plans/subscription-plans.module";
 import { BillingsModule } from "./modules/billings/billings.module";
 import { OrdersModule } from "./modules/orders/orders.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
@@ -42,6 +43,7 @@ import { WebhooksModule } from "./modules/webhooks/webhooks.module";
     SeoModule,
     ListingsModule,
     SubscriptionsModule,
+    SubscriptionPlansModule,
     BillingsModule,
     WebhooksModule,
     OrdersModule,
