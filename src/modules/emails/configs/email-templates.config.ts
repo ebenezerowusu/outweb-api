@@ -129,7 +129,7 @@ export const EMAIL_TEMPLATES: Record<EmailTemplateType, EmailTemplate> = {
   [EmailTemplateType.CASH_OFFER_ALERT]: {
     type: EmailTemplateType.CASH_OFFER_ALERT,
     sendGridTemplateId:
-      process.env.SENDGRID_TMPL_CASHOFFER_ALERT || "d-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      process.env.SENDGRID_TMPL_CASHOFFER_ALERT || "d-9bbd858f556945de85dd1240b5e7c7cd",
     subject: "New Cash Offer opportunity",
     requiredVariables: [
       "listingShortId",
