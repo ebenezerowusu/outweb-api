@@ -23,6 +23,7 @@ import { NotificationsModule } from "./modules/notifications/notifications.modul
 import { ListingOffersModule } from "./modules/listing-offers/listing-offers.module";
 import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 import { EmailsModule } from "./modules/emails/emails.module";
+import { SmsModule } from "./modules/sms/sms.module";
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { EmailsModule } from "./modules/emails/emails.module";
     BillingsModule,
     WebhooksModule,
     EmailsModule,
+    SmsModule,
     OrdersModule,
     NotificationsModule,
     ListingOffersModule,
