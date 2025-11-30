@@ -1,193 +1,82 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
-  Body,
-  Query,
-  HttpCode,
-  HttpStatus,
-} from "@nestjs/common";
+import { Controller, Get, Post, Body, Param } from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiParam,
 } from "@nestjs/swagger";
 import { ListingsService } from "./listings.service";
-import { CreateListingDto } from "./dto/create-listing.dto";
-import {
-  UpdateListingDto,
-  UpdateListingStatusDto,
-  UpdateListingVisibilityDto,
-  FeatureListingDto,
-} from "./dto/update-listing.dto";
-import { QueryListingsDto } from "./dto/query-listing.dto";
-import {
-  CurrentUser,
-  Country,
-  SkipAuth,
-} from "@/common/decorators/auth.decorators";
+import { CreateListingUnifiedDto } from "./dto/create-listing-unified.dto";
 
-/**
- * Listings Controller
- * Handles vehicle listing management
- */
 @ApiTags("Listings")
+@ApiBearerAuth()
 @Controller("listings")
-@ApiBearerAuth("Authorization")
 export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
 
   /**
-   * List listings with filters
-   */
-  @Get()
-  @SkipAuth()
-  @ApiOperation({
-    summary: "List listings with filters and pagination (Public)",
-  })
-  @ApiResponse({ status: 200, description: "Listings retrieved successfully" })
-  async findAll(@Query() query: QueryListingsDto) {
-    return this.listingsService.findAll(query);
-  }
-
-  /**
-   * Get listing by ID
-   */
-  @Get(":id")
-  @SkipAuth()
-  @ApiOperation({ summary: "Get listing by ID (Public)" })
-  @ApiParam({ name: "id", description: "Listing ID" })
-  @ApiResponse({ status: 200, description: "Listing retrieved successfully" })
-  @ApiResponse({ status: 404, description: "Listing not found" })
-  async findOne(@Param("id") id: string) {
-    return this.listingsService.findOne(id);
-  }
-
-  /**
-   * Create new listing
+   * Create or update listing (handles both vehicles and listings containers)
    */
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: "Create new listing (Seller or Admin)" })
-  @ApiResponse({ status: 201, description: "Listing created successfully" })
-  @ApiResponse({ status: 400, description: "Bad request - validation error" })
-  @ApiResponse({ status: 403, description: "Insufficient permissions" })
-  async create(
-    @Body() createListingDto: CreateListingDto,
-    @CurrentUser() user: any,
-    @Country() country: string,
-  ) {
-    return this.listingsService.create(createListingDto, user.sub, country);
+  @ApiOperation({
+    summary: "Create or update listing",
+    description:
+      "Single payload creates/updates BOTH vehicle and listing. Vehicle: upserts by VIN. Listing: creates new if ownership changed, otherwise updates existing.",
+  })
+  @ApiResponse({
+    status: 201,
+    description:
+      "Listing created/updated successfully with populated vehicle data",
+  })
+  async createOrUpdate(@Body() dto: CreateListingUnifiedDto) {
+    return this.listingsService.createOrUpdate(dto);
   }
 
   /**
-   * Update listing
+   * Get listing by ID with populated vehicle data
    */
-  @Patch(":id")
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Update listing (Seller or Admin)" })
-  @ApiParam({ name: "id", description: "Listing ID" })
-  @ApiResponse({ status: 200, description: "Listing updated successfully" })
-  @ApiResponse({ status: 403, description: "Forbidden" })
-  @ApiResponse({ status: 404, description: "Listing not found" })
-  async update(
-    @Param("id") id: string,
-    @Body() updateListingDto: UpdateListingDto,
-    @CurrentUser() user: any,
-  ) {
-    const hasAdminPermission = user.permissions?.includes(
-      "perm_manage_listings",
-    );
-    return this.listingsService.update(
-      id,
-      updateListingDto,
-      user.sub,
-      hasAdminPermission,
-    );
-  }
-
-  /**
-   * Update listing status
-   */
-  @Patch(":id/status")
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Update listing status (Seller or Admin)" })
-  @ApiParam({ name: "id", description: "Listing ID" })
+  @Get(":id")
+  @ApiOperation({
+    summary: "Get listing by ID",
+    description:
+      "Retrieve listing with full vehicle data populated from vehicles container",
+  })
   @ApiResponse({
     status: 200,
-    description: "Listing status updated successfully",
+    description: "Listing with vehicle data retrieved successfully",
+    schema: {
+      example: {
+        id: "list_789",
+        shortId: "a0ae1",
+        slug: "2016-tesla-model-x-90d-red",
+        vehicleId: "veh_123",
+        seller: {
+          id: "seller_456",
+          type: "dealer",
+          displayName: "Tesla Fremont Inc.",
+        },
+        status: "Published",
+        saleTypes: "ForSale",
+        publishTypes: "WholeSale",
+        price: { currency: "USD", amount: 49950 },
+        // ... listing data
+        vehicle: {
+          id: "veh_123",
+          vin: "5YJXCBE29GF012345",
+          make: "Tesla",
+          model: "Model X",
+          trim: "90D",
+          year: 2016,
+          // ... full vehicle data
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 403, description: "Insufficient permissions" })
-  @ApiResponse({ status: 404, description: "Listing not found" })
-  async updateStatus(
-    @Param("id") id: string,
-    @Body() updateStatusDto: UpdateListingStatusDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.listingsService.updateStatus(id, updateStatusDto, user.sub);
-  }
-
-  /**
-   * Update listing visibility
-   */
-  @Patch(":id/visibility")
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Update listing visibility (Seller or Admin)" })
-  @ApiParam({ name: "id", description: "Listing ID" })
   @ApiResponse({
-    status: 200,
-    description: "Listing visibility updated successfully",
+    status: 404,
+    description: "Listing not found",
   })
-  @ApiResponse({ status: 403, description: "Insufficient permissions" })
-  @ApiResponse({ status: 404, description: "Listing not found" })
-  async updateVisibility(
-    @Param("id") id: string,
-    @Body() updateVisibilityDto: UpdateListingVisibilityDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.listingsService.updateVisibility(
-      id,
-      updateVisibilityDto,
-      user.sub,
-    );
-  }
-
-  /**
-   * Feature a listing
-   */
-  @Post(":id/feature")
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Feature a listing (Admin only)" })
-  @ApiParam({ name: "id", description: "Listing ID" })
-  @ApiResponse({ status: 200, description: "Listing featured successfully" })
-  @ApiResponse({ status: 403, description: "Insufficient permissions" })
-  @ApiResponse({ status: 404, description: "Listing not found" })
-  async featureListing(
-    @Param("id") id: string,
-    @Body() featureDto: FeatureListingDto,
-  ) {
-    return this.listingsService.featureListing(id, featureDto);
-  }
-
-  /**
-   * Delete listing
-   */
-  @Delete(":id")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: "Delete listing (Seller or Admin)" })
-  @ApiParam({ name: "id", description: "Listing ID" })
-  @ApiResponse({ status: 204, description: "Listing deleted successfully" })
-  @ApiResponse({ status: 403, description: "Forbidden" })
-  @ApiResponse({ status: 404, description: "Listing not found" })
-  async delete(@Param("id") id: string, @CurrentUser() user: any) {
-    const hasAdminPermission = user.permissions?.includes(
-      "perm_manage_listings",
-    );
-    await this.listingsService.delete(id, user.sub, hasAdminPermission);
+  async findById(@Param("id") id: string) {
+    return this.listingsService.findById(id);
   }
 }

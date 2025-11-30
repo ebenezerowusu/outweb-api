@@ -179,7 +179,7 @@ export class ListingOffersService {
     }
 
     // Validate listing is available
-    if (listing.status.state !== "published") {
+    if (listing.status !== "Published") {
       throw new BadRequestException({
         message: "Cannot make offer on inactive listing",
       });

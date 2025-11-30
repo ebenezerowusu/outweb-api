@@ -14,6 +14,7 @@ import { SellerReviewsModule } from "./modules/seller-reviews/seller-reviews.mod
 import { RbacModule } from "./modules/rbac/rbac.module";
 import { TaxonomiesModule } from "./modules/taxonomies/taxonomies.module";
 import { SeoModule } from "./modules/seo/seo.module";
+import { VehiclesModule } from "./modules/vehicles/vehicles.module";
 import { ListingsModule } from "./modules/listings/listings.module";
 import { SubscriptionsModule } from "./modules/subscriptions/subscriptions.module";
 import { SubscriptionPlansModule } from "./modules/subscription-plans/subscription-plans.module";
@@ -43,6 +44,7 @@ import { SmsModule } from "./modules/sms/sms.module";
     RbacModule,
     TaxonomiesModule,
     SeoModule,
+    VehiclesModule,
     ListingsModule,
     SubscriptionsModule,
     SubscriptionPlansModule,

@@ -1,257 +1,286 @@
+import { VehicleDocument } from "../../vehicles/interfaces/vehicle.interface";
+
 /**
  * Listing Document Interface
- * Represents a vehicle listing in the marketplace
+ * Matches the exact structure from the specification
  */
 export interface ListingDocument {
   id: string;
-  type: "listing";
-  sellerId: string;
+  shortId: string; // Human-friendly short code (unique)
+  slug: string; // SEO slug (unique)
+  vehicleId: string; // Links to vehicles container
+
   seller: ListingSeller;
-  vehicle: ListingVehicle;
-  pricing: ListingPricing;
-  media: ListingMedia;
+
+  // Listing-level commercial state
+  status: string; // from taxonomies.listingStatus
+  saleTypes: string; // from taxonomies.saleTypes (singular field, plural name)
+  publishTypes: string; // from taxonomies.publishTypes (singular field, plural name)
+
+  price: ListingPrice;
   location: ListingLocation;
-  features: ListingFeatures;
-  condition: ListingCondition;
-  status: ListingStatus;
-  visibility: ListingVisibility;
-  performance: ListingPerformance;
+  market: ListingMarket;
+
+  // Listing-level dynamic vehicle state
+  state: ListingState;
+
+  content: ListingContent;
+  media: ListingMedia;
+
+  offerSummary: ListingOfferSummary;
+  timeline: ListingTimeline;
+  flags: ListingFlags;
+
+  // Denormalized search index
+  searchIndex: ListingSearchIndex;
+
   audit: ListingAudit;
+
+  // Populated vehicle data (not stored in DB, populated at runtime)
+  vehicle?: VehicleDocument;
 }
 
 /**
- * Listing Seller Info
+ * Listing Seller
  */
 export interface ListingSeller {
   id: string;
-  name: string;
-  type: "Dealer" | "Private Seller";
-  rating: number | null;
-  reviewCount: number;
+  type: "dealer" | "private";
+  displayName: string;
 }
 
 /**
- * Listing Vehicle Data
+ * Listing Price
  */
-export interface ListingVehicle {
-  vin: string;
-  make: string;
-  makeId: string;
-  model: string;
-  modelId: string;
-  trim: string | null;
-  trimId: string | null;
-  year: number;
-  mileage: number;
-  exteriorColor: string;
-  exteriorColorId: string;
-  interiorColor: string;
-  interiorColorId: string;
-  bodyType: string;
-  bodyTypeId: string;
-  drivetrain: string;
-  drivetrainId: string;
-  batterySize: string | null;
-  batterySizeId: string | null;
-  batteryHealth: number | null;
-  range: number | null;
-  autopilotVersion: string | null;
-  fsdCapable: boolean;
-  specifications: Record<string, any>;
-}
-
-/**
- * Listing Pricing
- */
-export interface ListingPricing {
-  listPrice: number;
-  originalPrice: number | null;
-  currency: string;
-  priceHistory: PriceChange[];
-  negotiable: boolean;
-  acceptsOffers: boolean;
-  tradeinAccepted: boolean;
-  financingAvailable: boolean;
-}
-
-/**
- * Price Change History
- */
-export interface PriceChange {
-  price: number;
-  changedAt: string;
-  changedBy: string;
-  reason: string | null;
-}
-
-/**
- * Listing Media
- */
-export interface ListingMedia {
-  photos: ListingPhoto[];
-  videos: ListingVideo[];
-  documents: ListingMediaDocument[];
-}
-
-/**
- * Listing Photo
- */
-export interface ListingPhoto {
-  id: string;
-  url: string;
-  thumbnailUrl: string;
-  caption: string | null;
-  order: number;
-  isPrimary: boolean;
-  uploadedAt: string;
-}
-
-/**
- * Listing Video
- */
-export interface ListingVideo {
-  id: string;
-  url: string;
-  thumbnailUrl: string;
-  caption: string | null;
-  duration: number | null;
-  uploadedAt: string;
-}
-
-/**
- * Listing Document (inspection reports, etc.)
- */
-export interface ListingMediaDocument {
-  id: string;
-  url: string;
-  filename: string;
-  fileType: string;
-  fileSize: number;
-  uploadedAt: string;
+export interface ListingPrice {
+  currency: string; // e.g., "USD"
+  amount: number; // Price in cents or smallest currency unit
 }
 
 /**
  * Listing Location
  */
 export interface ListingLocation {
+  city: string;
+  state: string;
   country: string;
+  countryCode: string; // ISO 3166-1 alpha-2
+}
+
+/**
+ * Listing Market
+ */
+export interface ListingMarket {
+  country: string; // Primary market country
+  allowedCountries: string[]; // Countries where listing is visible
+  source: "web" | "user" | "phone" | "kyc" | string;
+}
+
+/**
+ * Listing State (dynamic vehicle state at listing time)
+ */
+export interface ListingState {
+  condition: string; // from taxonomies.condition
+  mileage: ListingMileage;
+  titleStatus: string; // from taxonomies.insuranceCategory / vehicle history
+  previousOwners: number;
+  insuranceCategory: string; // from taxonomies.insuranceCategory
+  lease: ListingLease;
+}
+
+/**
+ * Listing Mileage
+ */
+export interface ListingMileage {
+  value: number;
+  unit: "miles" | "km";
+}
+
+/**
+ * Listing Lease
+ */
+export interface ListingLease {
+  isLeased: boolean;
+  monthsRemaining: number;
+}
+
+/**
+ * Listing Content
+ */
+export interface ListingContent {
+  title: string;
+  description: string;
+  extra: string;
+  seo: ListingSEO;
+}
+
+/**
+ * Listing SEO
+ */
+export interface ListingSEO {
+  canonicalUrl: string;
+  metaTitle: string;
+  metaDescription: string;
+  openGraphImage: string;
+}
+
+/**
+ * Listing Media
+ */
+export interface ListingMedia {
+  images: ListingImage[];
+  video: ListingVideo;
+}
+
+/**
+ * Listing Image
+ */
+export interface ListingImage {
+  id: string;
+  type: "featured" | "standard";
+  sizes: ListingImageSizes;
+}
+
+/**
+ * Listing Image Sizes
+ */
+export interface ListingImageSizes {
+  original: string;
+  thumbnail: string;
+  medium: string;
+  large: string;
+}
+
+/**
+ * Listing Video
+ */
+export interface ListingVideo {
+  title: string | null;
+  description: string | null;
+  url: string;
+}
+
+/**
+ * Listing Offer Summary
+ */
+export interface ListingOfferSummary {
+  totalOffers: number;
+  highestOffer: ListingHighestOffer | null;
+  lastOfferAt: string | null;
+}
+
+/**
+ * Listing Highest Offer
+ */
+export interface ListingHighestOffer {
+  amount: number;
+  buyerId: string;
+  buyerName: string;
+  status: string; // e.g., "Pending", "Accepted", "Rejected"
+}
+
+/**
+ * Listing Timeline
+ */
+export interface ListingTimeline {
+  publishedOn: string | null;
+  soldOn: string | null;
+  expireOn: string | null;
+}
+
+/**
+ * Listing Flags
+ */
+export interface ListingFlags {
+  isTest: boolean;
+  isFeatured: boolean;
+  isBoosted: boolean;
+}
+
+/**
+ * Listing Search Index (denormalized for query optimization)
+ */
+export interface ListingSearchIndex {
+  version: number;
+
+  // From vehicles container
+  vin: string;
+  make: string;
+  model: string;
+  year: number;
+  trim: string;
+  bodyStyle: string;
+  driveTrain: string;
+  batteryCapacityKWh: number;
+  rangeEPA: number;
+  chargingPort: string;
+  chargerType: string;
+  enginePowerHP: number;
+  topSpeedMph: number;
+
+  // From listing.state
+  condition: string;
+  titleStatus: string;
+  previousOwners: number;
+  mileage: number;
+  mileageBucket: string; // e.g., "25k-50k"
+  exteriorColor: string;
+  interiorColor: string;
+  seats: number;
+  autopilotGen: string;
+  hasFSD: boolean;
+  hasEnhancedAP: boolean;
+  premiumPackage: boolean;
+  wheelsCode: string;
+  isLeased: boolean;
+  monthsRemaining: number;
+
+  // Listing commercial data
+  status: string;
+  saleType: string;
+  publishType: string;
+  price: number;
+  priceCurrency: string;
+  priceBucket: string; // e.g., "45k-50k"
+
+  sellerType: string;
+  sellerId: string;
+  sellerDisplayName: string;
+  dealerGroupId?: string;
+
+  countryCode: string;
   state: string;
   city: string;
-  zipCode: string;
-  latitude: number | null;
-  longitude: number | null;
+  marketCountry: string;
+
+  publishedOn: string | null;
+  publishedYearMonth: string | null; // e.g., "2025-04"
+  soldOn: string | null;
+  expireOn: string | null;
+
+  isFeatured: boolean;
+  isBoosted: boolean;
+  hasVideo: boolean;
+  imageCount: number;
+
+  totalOffers: number;
+  highestOffer: number | null;
+  lastOfferAt: string | null;
 }
 
 /**
- * Listing Features
- */
-export interface ListingFeatures {
-  standard: string[];
-  optional: string[];
-  highlights: string[];
-}
-
-/**
- * Listing Condition
- */
-export interface ListingCondition {
-  overall: "excellent" | "good" | "fair" | "needs_work";
-  exteriorRating: number;
-  interiorRating: number;
-  mechanicalRating: number;
-  description: string;
-  knownIssues: string[];
-  modifications: string[];
-  serviceHistory: ServiceRecord[];
-  accidentHistory: AccidentRecord[];
-}
-
-/**
- * Service Record
- */
-export interface ServiceRecord {
-  date: string;
-  mileage: number;
-  description: string;
-  cost: number | null;
-  provider: string | null;
-}
-
-/**
- * Accident Record
- */
-export interface AccidentRecord {
-  date: string;
-  description: string;
-  damage: string;
-  repaired: boolean;
-  cost: number | null;
-}
-
-/**
- * Listing Status
- */
-export interface ListingStatus {
-  state: ListingState;
-  substatus: string | null;
-  publishedAt: string | null;
-  soldAt: string | null;
-  expiresAt: string | null;
-  featured: boolean;
-  featuredUntil: string | null;
-  verified: boolean;
-  verifiedAt: string | null;
-}
-
-/**
- * Listing State
- */
-export type ListingState =
-  | "draft"
-  | "pending_review"
-  | "published"
-  | "sold"
-  | "expired"
-  | "suspended"
-  | "archived";
-
-/**
- * Listing Visibility
- */
-export interface ListingVisibility {
-  isPublic: boolean;
-  showSellerInfo: boolean;
-  showPricing: boolean;
-  allowMessages: boolean;
-  allowOffers: boolean;
-}
-
-/**
- * Listing Performance
- */
-export interface ListingPerformance {
-  views: number;
-  uniqueViews: number;
-  favorites: number;
-  shares: number;
-  inquiries: number;
-  offers: number;
-  lastViewedAt: string | null;
-}
-
-/**
- * Listing Audit Trail
+ * Listing Audit
  */
 export interface ListingAudit {
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+  createdBy: string | null;
+  updatedBy: string | null;
 }
 
 /**
- * Public Listing (safe for API responses)
+ * Listing with populated vehicle
  */
-export type PublicListing = Omit<ListingDocument, "vehicle"> & {
-  vehicle: Omit<ListingVehicle, "vin"> & { vinLastFour: string };
+export type ListingWithVehicle = ListingDocument & {
+  vehicle: VehicleDocument;
 };

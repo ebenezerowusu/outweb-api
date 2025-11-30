@@ -1,708 +1,461 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
-  BadRequestException,
+  Logger,
+  Inject,
+  forwardRef,
 } from "@nestjs/common";
-import { CosmosService } from "@/common/services/cosmos.service";
-import { PaginatedResponse } from "@/common/types/pagination.type";
+import { ConfigService } from "@nestjs/config";
+import { CosmosClient, Container } from "@azure/cosmos";
 import {
   ListingDocument,
-  PublicListing,
-  ListingState,
+  ListingWithVehicle,
+  ListingSearchIndex,
 } from "./interfaces/listing.interface";
-import { CreateListingDto } from "./dto/create-listing.dto";
-import {
-  UpdateListingDto,
-  UpdateListingStatusDto,
-  UpdateListingVisibilityDto,
-  FeatureListingDto,
-} from "./dto/update-listing.dto";
-import { QueryListingsDto } from "./dto/query-listing.dto";
-import { SellerDocument } from "@/modules/sellers/interfaces/seller.interface";
-import { TaxonomyDocument } from "@/modules/taxonomies/interfaces/taxonomy.interface";
+import { CreateListingUnifiedDto } from "./dto/create-listing-unified.dto";
+import { VehiclesService } from "../vehicles/vehicles.service";
+import { VehicleDocument } from "../vehicles/interfaces/vehicle.interface";
 
-/**
- * Listings Service
- * Handles vehicle listing management
- */
 @Injectable()
 export class ListingsService {
-  private readonly LISTINGS_CONTAINER = "listings";
-  private readonly SELLERS_CONTAINER = "sellers";
-  private readonly TAXONOMIES_CONTAINER = "taxonomies";
+  private readonly logger = new Logger(ListingsService.name);
+  private readonly container: Container;
 
-  constructor(private readonly cosmosService: CosmosService) {}
+  constructor(
+    private configService: ConfigService,
+    @Inject(forwardRef(() => VehiclesService))
+    private vehiclesService: VehiclesService,
+  ) {
+    const endpoint = this.configService.get<string>("COSMOS_ENDPOINT");
+    const key = this.configService.get<string>("COSMOS_KEY");
+    const databaseName = this.configService.get<string>("COSMOS_DATABASE");
+
+    if (!endpoint || !key || !databaseName) {
+      throw new Error("Cosmos DB configuration is missing");
+    }
+
+    const client = new CosmosClient({ endpoint, key });
+    this.container = client.database(databaseName).container("listings");
+
+    this.logger.log("Listings service initialized with Cosmos DB");
+  }
 
   /**
-   * List listings with filters and pagination
+   * Create or update listing with interconnected vehicle logic
+   * Single payload handles BOTH vehicles + listings containers
    */
-  async findAll(
-    query: QueryListingsDto,
-  ): Promise<PaginatedResponse<PublicListing>> {
-    let sqlQuery = "SELECT * FROM c WHERE 1=1";
-    const parameters: any[] = [];
+  async createOrUpdate(
+    dto: CreateListingUnifiedDto,
+  ): Promise<ListingWithVehicle> {
+    // STEP 1: Handle Vehicle Container (upsert by VIN)
+    const { vehicle: vehicleResult, isNew: isNewVehicle } =
+      await this.vehiclesService.upsertByVin(dto.vehicle);
 
-    // Search by make, model, or VIN
-    if (query.search) {
-      sqlQuery +=
-        " AND (CONTAINS(LOWER(c.vehicle.make), @search) OR CONTAINS(LOWER(c.vehicle.model), @search) OR CONTAINS(c.vehicle.vin, @search))";
-      parameters.push({ name: "@search", value: query.search.toLowerCase() });
-    }
+    this.logger.log(
+      `Vehicle ${isNewVehicle ? "created" : "updated"}: ${vehicleResult.id}`,
+    );
 
-    // Filter by seller
-    if (query.sellerId) {
-      sqlQuery += " AND c.sellerId = @sellerId";
-      parameters.push({ name: "@sellerId", value: query.sellerId });
-    }
+    // STEP 2: Handle Listing Container
+    const listing = await this.handleListing(dto, vehicleResult);
 
-    // Filter by make
-    if (query.makeId) {
-      sqlQuery += " AND c.vehicle.makeId = @makeId";
-      parameters.push({ name: "@makeId", value: query.makeId });
-    }
-
-    // Filter by model
-    if (query.modelId) {
-      sqlQuery += " AND c.vehicle.modelId = @modelId";
-      parameters.push({ name: "@modelId", value: query.modelId });
-    }
-
-    // Filter by year range
-    if (query.minYear) {
-      sqlQuery += " AND c.vehicle.year >= @minYear";
-      parameters.push({ name: "@minYear", value: query.minYear });
-    }
-    if (query.maxYear) {
-      sqlQuery += " AND c.vehicle.year <= @maxYear";
-      parameters.push({ name: "@maxYear", value: query.maxYear });
-    }
-
-    // Filter by price range
-    if (query.minPrice) {
-      sqlQuery += " AND c.pricing.listPrice >= @minPrice";
-      parameters.push({ name: "@minPrice", value: query.minPrice });
-    }
-    if (query.maxPrice) {
-      sqlQuery += " AND c.pricing.listPrice <= @maxPrice";
-      parameters.push({ name: "@maxPrice", value: query.maxPrice });
-    }
-
-    // Filter by mileage range
-    if (query.minMileage) {
-      sqlQuery += " AND c.vehicle.mileage >= @minMileage";
-      parameters.push({ name: "@minMileage", value: query.minMileage });
-    }
-    if (query.maxMileage) {
-      sqlQuery += " AND c.vehicle.mileage <= @maxMileage";
-      parameters.push({ name: "@maxMileage", value: query.maxMileage });
-    }
-
-    // Filter by colors
-    if (query.exteriorColorId) {
-      sqlQuery += " AND c.vehicle.exteriorColorId = @exteriorColorId";
-      parameters.push({
-        name: "@exteriorColorId",
-        value: query.exteriorColorId,
-      });
-    }
-    if (query.interiorColorId) {
-      sqlQuery += " AND c.vehicle.interiorColorId = @interiorColorId";
-      parameters.push({
-        name: "@interiorColorId",
-        value: query.interiorColorId,
-      });
-    }
-
-    // Filter by body type
-    if (query.bodyTypeId) {
-      sqlQuery += " AND c.vehicle.bodyTypeId = @bodyTypeId";
-      parameters.push({ name: "@bodyTypeId", value: query.bodyTypeId });
-    }
-
-    // Filter by drivetrain
-    if (query.drivetrainId) {
-      sqlQuery += " AND c.vehicle.drivetrainId = @drivetrainId";
-      parameters.push({ name: "@drivetrainId", value: query.drivetrainId });
-    }
-
-    // Filter by condition
-    if (query.condition) {
-      sqlQuery += " AND c.condition.overall = @condition";
-      parameters.push({ name: "@condition", value: query.condition });
-    }
-
-    // Filter by state
-    if (query.state) {
-      sqlQuery += " AND c.status.state = @state";
-      parameters.push({ name: "@state", value: query.state });
-    }
-
-    // Filter by featured
-    if (query.featured !== undefined) {
-      sqlQuery += " AND c.status.featured = @featured";
-      parameters.push({ name: "@featured", value: query.featured });
-    }
-
-    // Filter by verified
-    if (query.verified !== undefined) {
-      sqlQuery += " AND c.status.verified = @verified";
-      parameters.push({ name: "@verified", value: query.verified });
-    }
-
-    // Filter by FSD capable
-    if (query.fsdCapable !== undefined) {
-      sqlQuery += " AND c.vehicle.fsdCapable = @fsdCapable";
-      parameters.push({ name: "@fsdCapable", value: query.fsdCapable });
-    }
-
-    // Filter by location
-    if (query.country) {
-      sqlQuery += " AND c.location.country = @country";
-      parameters.push({ name: "@country", value: query.country.toUpperCase() });
-    }
-    if (query.state_location) {
-      sqlQuery += " AND c.location.state = @state_location";
-      parameters.push({ name: "@state_location", value: query.state_location });
-    }
-    if (query.city) {
-      sqlQuery += " AND LOWER(c.location.city) = @city";
-      parameters.push({ name: "@city", value: query.city.toLowerCase() });
-    }
-    if (query.zipCode) {
-      sqlQuery += " AND c.location.zipCode = @zipCode";
-      parameters.push({ name: "@zipCode", value: query.zipCode });
-    }
-
-    // Apply sorting
-    const sortMap: Record<string, string> = {
-      price_asc: "c.pricing.listPrice ASC",
-      price_desc: "c.pricing.listPrice DESC",
-      mileage_asc: "c.vehicle.mileage ASC",
-      mileage_desc: "c.vehicle.mileage DESC",
-      year_asc: "c.vehicle.year ASC",
-      year_desc: "c.vehicle.year DESC",
-      created_asc: "c.audit.createdAt ASC",
-      created_desc: "c.audit.createdAt DESC",
-    };
-    const sortBy = query.sortBy || "created_desc";
-    sqlQuery += ` ORDER BY ${sortMap[sortBy] || "c.audit.createdAt DESC"}`;
-
-    const { items, continuationToken } =
-      await this.cosmosService.queryItems<ListingDocument>(
-        this.LISTINGS_CONTAINER,
-        sqlQuery,
-        parameters,
-        query.limit,
-        query.cursor,
-      );
-
-    // Handle case where items might be undefined
-    const listingItems = items || [];
-
+    // STEP 3: Populate and return
     return {
-      items: listingItems.map((listing) => this.toPublicListing(listing)),
-      count: listingItems.length,
-      nextCursor: continuationToken || null,
+      ...listing,
+      vehicle: vehicleResult,
     };
   }
 
   /**
-   * Get single listing by ID
+   * Handle listing creation or update logic
    */
-  async findOne(id: string): Promise<PublicListing> {
-    const listing = await this.cosmosService.readItem<ListingDocument>(
-      this.LISTINGS_CONTAINER,
-      id,
-      id,
+  private async handleListing(
+    dto: CreateListingUnifiedDto,
+    vehicle: VehicleDocument,
+  ): Promise<ListingDocument> {
+    const sellerId = dto.sellerId || "system"; // TODO: Get from auth context
+
+    // Check for existing active listing by this seller for this VIN
+    const existingListing = await this.findActiveListingBySellerAndVin(
+      sellerId,
+      vehicle.vin,
     );
 
-    if (!listing) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: "Not Found",
-        message: "Listing not found",
-      });
+    if (existingListing) {
+      // Check if key details changed (ownership transfer, major changes)
+      const keyDetailsChanged = this.hasKeyDetailsChanged(existingListing, dto);
+
+      if (keyDetailsChanged) {
+        // CREATE NEW listing + mark old as "Sold"
+        await this.markAsSold(existingListing.id);
+        this.logger.log(
+          `Marked listing ${existingListing.id} as sold due to key changes`,
+        );
+        return await this.createNewListing(dto, vehicle, sellerId);
+      } else {
+        // UPDATE existing listing
+        return await this.updateExistingListing(existingListing, dto, vehicle);
+      }
+    } else {
+      // CREATE new listing
+      return await this.createNewListing(dto, vehicle, sellerId);
     }
-
-    // Increment view count
-    listing.performance.views += 1;
-    listing.performance.lastViewedAt = new Date().toISOString();
-    await this.cosmosService.updateItem(
-      this.LISTINGS_CONTAINER,
-      listing,
-      listing.id,
-    );
-
-    return this.toPublicListing(listing);
   }
 
   /**
-   * Create new listing
+   * Create a new listing
    */
-  async create(
-    dto: CreateListingDto,
-    userId: string,
-    country: string,
-  ): Promise<PublicListing> {
-    // Determine seller
-    const sellerId = dto.sellerId || userId;
-
-    // Get seller information
-    const seller = await this.cosmosService.readItem<SellerDocument>(
-      this.SELLERS_CONTAINER,
-      sellerId,
-      sellerId,
-    );
-
-    if (!seller) {
-      throw new BadRequestException({
-        statusCode: 400,
-        error: "Bad Request",
-        message: "Seller not found",
-      });
-    }
-
-    // Resolve taxonomy names from IDs
-    const taxonomies = await this.resolveTaxonomies(
-      [
-        dto.vehicle.makeId,
-        dto.vehicle.modelId,
-        dto.vehicle.trimId,
-        dto.vehicle.exteriorColorId,
-        dto.vehicle.interiorColorId,
-        dto.vehicle.bodyTypeId,
-        dto.vehicle.drivetrainId,
-        dto.vehicle.batterySizeId,
-      ].filter(Boolean) as string[],
-    );
-
+  private async createNewListing(
+    dto: CreateListingUnifiedDto,
+    vehicle: VehicleDocument,
+    sellerId: string,
+  ): Promise<ListingDocument> {
     const now = new Date().toISOString();
-    const listingId = this.cosmosService.generateId();
+    const shortId = this.generateShortId();
+    const slug = this.generateSlug(dto, vehicle);
 
     const listing: ListingDocument = {
-      id: listingId,
-      type: "listing",
-      sellerId: seller.id,
+      id: `list_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      shortId,
+      slug,
+      vehicleId: vehicle.id,
+
       seller: {
-        id: seller.id,
-        name:
-          seller.sellerType === "Dealer"
-            ? seller.dealerDetails!.companyName
-            : seller.privateDetails!.fullName,
-        type: seller.sellerType,
-        rating: seller.meta.averageRating,
-        reviewCount: seller.meta.totalReviews,
+        id: sellerId,
+        type: dto.sellerType || "private",
+        displayName: dto.sellerDisplayName || "Unknown Seller",
       },
-      vehicle: {
-        vin: dto.vehicle.vin,
-        // TODO: Update to use new taxonomy structure - these will show as 'Unknown' until resolved
-        make: "Unknown", // taxonomies[dto.vehicle.makeId]?.name || 'Unknown',
-        makeId: dto.vehicle.makeId,
-        model: "Unknown", // taxonomies[dto.vehicle.modelId]?.name || 'Unknown',
-        modelId: dto.vehicle.modelId,
-        trim: null, // dto.vehicle.trimId ? taxonomies[dto.vehicle.trimId]?.name || null : null,
-        trimId: dto.vehicle.trimId || null,
-        year: dto.vehicle.year,
-        mileage: dto.vehicle.mileage,
-        exteriorColor: "Unknown", // taxonomies[dto.vehicle.exteriorColorId]?.name || 'Unknown',
-        exteriorColorId: dto.vehicle.exteriorColorId,
-        interiorColor: "Unknown", // taxonomies[dto.vehicle.interiorColorId]?.name || 'Unknown',
-        interiorColorId: dto.vehicle.interiorColorId,
-        bodyType: "Unknown", // taxonomies[dto.vehicle.bodyTypeId]?.name || 'Unknown',
-        bodyTypeId: dto.vehicle.bodyTypeId,
-        drivetrain: "Unknown", // taxonomies[dto.vehicle.drivetrainId]?.name || 'Unknown',
-        drivetrainId: dto.vehicle.drivetrainId,
-        batterySize: null, // dto.vehicle.batterySizeId ? taxonomies[dto.vehicle.batterySizeId]?.name || null : null,
-        batterySizeId: dto.vehicle.batterySizeId || null,
-        batteryHealth: dto.vehicle.batteryHealth ?? null,
-        range: dto.vehicle.range ?? null,
-        autopilotVersion: dto.vehicle.autopilotVersion || null,
-        fsdCapable: dto.vehicle.fsdCapable ?? false,
-        specifications: dto.vehicle.specifications || {},
+
+      status: dto.status,
+      saleTypes: dto.saleTypes,
+      publishTypes: dto.publishTypes,
+
+      price: dto.price,
+      location: dto.location,
+
+      market: {
+        country: dto.location.countryCode,
+        allowedCountries: dto.allowedCountries || [dto.location.countryCode],
+        source: dto.marketSource || "web",
       },
-      pricing: {
-        listPrice: dto.pricing.listPrice,
-        originalPrice: dto.pricing.originalPrice ?? null,
-        currency: dto.pricing.currency || "USD",
-        priceHistory: [
-          {
-            price: dto.pricing.listPrice,
-            changedAt: now,
-            changedBy: userId,
-            reason: "Initial listing",
-          },
-        ],
-        negotiable: dto.pricing.negotiable ?? true,
-        acceptsOffers: dto.pricing.acceptsOffers ?? true,
-        tradeinAccepted: dto.pricing.tradeinAccepted ?? false,
-        financingAvailable: dto.pricing.financingAvailable ?? false,
+
+      state: dto.state,
+
+      content: {
+        title:
+          dto.contentTitle ||
+          `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+        description: dto.contentDescription || "",
+        extra: "",
+        seo: {
+          canonicalUrl: `https://onlyusedtesla.com/listing/${slug}`,
+          metaTitle:
+            dto.contentTitle ||
+            `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+          metaDescription: dto.contentDescription || "",
+          openGraphImage: "",
+        },
       },
+
       media: {
-        photos: [],
-        videos: [],
-        documents: [],
+        images: [],
+        video: { title: null, description: null, url: "" },
       },
-      location: {
-        country: dto.location.country.toUpperCase(),
-        state: dto.location.state,
-        city: dto.location.city,
-        zipCode: dto.location.zipCode,
-        latitude: dto.location.latitude ?? null,
-        longitude: dto.location.longitude ?? null,
+
+      offerSummary: {
+        totalOffers: 0,
+        highestOffer: null,
+        lastOfferAt: null,
       },
-      features: {
-        standard: dto.standardFeatures || [],
-        optional: dto.optionalFeatures || [],
-        highlights: dto.highlights || [],
+
+      timeline: {
+        publishedOn: dto.status === "Published" ? now : null,
+        soldOn: null,
+        expireOn: null,
       },
-      condition: {
-        overall: dto.condition.overall,
-        exteriorRating: dto.condition.exteriorRating,
-        interiorRating: dto.condition.interiorRating,
-        mechanicalRating: dto.condition.mechanicalRating,
-        description: dto.condition.description,
-        knownIssues: dto.condition.knownIssues || [],
-        modifications: dto.condition.modifications || [],
-        serviceHistory: [],
-        accidentHistory: [],
+
+      flags: {
+        isTest: false,
+        isFeatured: false,
+        isBoosted: false,
       },
-      status: {
-        state: "draft",
-        substatus: null,
-        publishedAt: null,
-        soldAt: null,
-        expiresAt: null,
-        featured: false,
-        featuredUntil: null,
-        verified: false,
-        verifiedAt: null,
-      },
-      visibility: {
-        isPublic: false,
-        showSellerInfo: true,
-        showPricing: true,
-        allowMessages: true,
-        allowOffers: true,
-      },
-      performance: {
-        views: 0,
-        uniqueViews: 0,
-        favorites: 0,
-        shares: 0,
-        inquiries: 0,
-        offers: 0,
-        lastViewedAt: null,
-      },
+
+      searchIndex: this.buildSearchIndex(vehicle, dto),
+
       audit: {
         createdAt: now,
         updatedAt: now,
-        createdBy: userId,
-        updatedBy: userId,
+        createdBy: sellerId,
+        updatedBy: sellerId,
       },
     };
 
-    const createdListing = await this.cosmosService.createItem(
-      this.LISTINGS_CONTAINER,
-      listing,
-    );
+    const { resource } = await this.container.items.create(listing);
+    if (!resource) {
+      throw new Error("Failed to create listing");
+    }
+    this.logger.log(`Created listing ${resource.id} for vehicle ${vehicle.id}`);
 
-    return this.toPublicListing(createdListing);
+    return resource;
   }
 
   /**
-   * Update listing
+   * Update existing listing
    */
-  async update(
-    id: string,
-    dto: UpdateListingDto,
-    userId: string,
-    isAdmin: boolean,
-  ): Promise<PublicListing> {
-    const listing = await this.cosmosService.readItem<ListingDocument>(
-      this.LISTINGS_CONTAINER,
-      id,
-      id,
-    );
+  private async updateExistingListing(
+    existing: ListingDocument,
+    dto: CreateListingUnifiedDto,
+    vehicle: VehicleDocument,
+  ): Promise<ListingDocument> {
+    const updated: ListingDocument = {
+      ...existing,
+      status: dto.status,
+      saleTypes: dto.saleTypes,
+      publishTypes: dto.publishTypes,
+      price: dto.price,
+      location: dto.location,
+      state: dto.state,
+      searchIndex: this.buildSearchIndex(vehicle, dto),
+      audit: {
+        ...existing.audit,
+        updatedAt: new Date().toISOString(),
+      },
+    };
 
-    if (!listing) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: "Not Found",
-        message: "Listing not found",
-      });
-    }
+    const { resource } = await this.container
+      .item(existing.id, existing.seller.id)
+      .replace(updated);
 
-    // Check access
-    if (!isAdmin && listing.sellerId !== userId) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        error: "Forbidden",
-        message: "You do not have permission to update this listing",
-      });
+    if (!resource) {
+      throw new Error("Failed to update listing");
     }
-
-    // Update fields
-    if (dto.mileage !== undefined) {
-      listing.vehicle.mileage = dto.mileage;
-    }
-
-    if (dto.listPrice !== undefined) {
-      listing.pricing.priceHistory.push({
-        price: dto.listPrice,
-        changedAt: new Date().toISOString(),
-        changedBy: userId,
-        reason: dto.priceChangeReason || "Price update",
-      });
-      listing.pricing.listPrice = dto.listPrice;
-    }
-
-    if (dto.negotiable !== undefined) {
-      listing.pricing.negotiable = dto.negotiable;
-    }
-    if (dto.acceptsOffers !== undefined) {
-      listing.pricing.acceptsOffers = dto.acceptsOffers;
-    }
-    if (dto.tradeinAccepted !== undefined) {
-      listing.pricing.tradeinAccepted = dto.tradeinAccepted;
-    }
-    if (dto.financingAvailable !== undefined) {
-      listing.pricing.financingAvailable = dto.financingAvailable;
-    }
-
-    if (dto.conditionDescription !== undefined) {
-      listing.condition.description = dto.conditionDescription;
-    }
-    if (dto.knownIssues !== undefined) {
-      listing.condition.knownIssues = dto.knownIssues;
-    }
-    if (dto.modifications !== undefined) {
-      listing.condition.modifications = dto.modifications;
-    }
-    if (dto.highlights !== undefined) {
-      listing.features.highlights = dto.highlights;
-    }
-
-    listing.audit.updatedAt = new Date().toISOString();
-    listing.audit.updatedBy = userId;
-
-    const updatedListing = await this.cosmosService.updateItem(
-      this.LISTINGS_CONTAINER,
-      listing,
-      listing.id,
-    );
-
-    return this.toPublicListing(updatedListing);
+    this.logger.log(`Updated listing ${existing.id}`);
+    return resource;
   }
 
   /**
-   * Update listing status
+   * Find listing by ID and populate vehicle
    */
-  async updateStatus(
-    id: string,
-    dto: UpdateListingStatusDto,
-    userId: string,
-  ): Promise<PublicListing> {
-    const listing = await this.cosmosService.readItem<ListingDocument>(
-      this.LISTINGS_CONTAINER,
-      id,
-      id,
-    );
+  async findById(id: string): Promise<ListingWithVehicle> {
+    // Cross-partition query
+    const querySpec = {
+      query: "SELECT * FROM c WHERE c.id = @id",
+      parameters: [{ name: "@id", value: id }],
+    };
 
-    if (!listing) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: "Not Found",
-        message: "Listing not found",
-      });
+    const { resources } = await this.container.items
+      .query<ListingDocument>(querySpec)
+      .fetchAll();
+
+    if (resources.length === 0) {
+      throw new NotFoundException(`Listing with ID ${id} not found`);
     }
 
-    const now = new Date().toISOString();
+    const listing = resources[0];
 
-    // Update status
-    listing.status.state = dto.state;
-    listing.status.substatus = dto.substatus || null;
-
-    // Handle state transitions
-    if (dto.state === "published" && !listing.status.publishedAt) {
-      listing.status.publishedAt = now;
-      listing.visibility.isPublic = true;
-    }
-
-    if (dto.state === "sold") {
-      listing.status.soldAt = now;
-      listing.visibility.isPublic = false;
-    }
-
-    listing.audit.updatedAt = now;
-    listing.audit.updatedBy = userId;
-
-    const updatedListing = await this.cosmosService.updateItem(
-      this.LISTINGS_CONTAINER,
-      listing,
-      listing.id,
-    );
-
-    return this.toPublicListing(updatedListing);
-  }
-
-  /**
-   * Update listing visibility
-   */
-  async updateVisibility(
-    id: string,
-    dto: UpdateListingVisibilityDto,
-    userId: string,
-  ): Promise<PublicListing> {
-    const listing = await this.cosmosService.readItem<ListingDocument>(
-      this.LISTINGS_CONTAINER,
-      id,
-      id,
-    );
-
-    if (!listing) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: "Not Found",
-        message: "Listing not found",
-      });
-    }
-
-    // Update visibility settings
-    if (dto.isPublic !== undefined) {
-      listing.visibility.isPublic = dto.isPublic;
-    }
-    if (dto.showSellerInfo !== undefined) {
-      listing.visibility.showSellerInfo = dto.showSellerInfo;
-    }
-    if (dto.showPricing !== undefined) {
-      listing.visibility.showPricing = dto.showPricing;
-    }
-    if (dto.allowMessages !== undefined) {
-      listing.visibility.allowMessages = dto.allowMessages;
-    }
-    if (dto.allowOffers !== undefined) {
-      listing.visibility.allowOffers = dto.allowOffers;
-    }
-
-    listing.audit.updatedAt = new Date().toISOString();
-    listing.audit.updatedBy = userId;
-
-    const updatedListing = await this.cosmosService.updateItem(
-      this.LISTINGS_CONTAINER,
-      listing,
-      listing.id,
-    );
-
-    return this.toPublicListing(updatedListing);
-  }
-
-  /**
-   * Feature a listing
-   */
-  async featureListing(
-    id: string,
-    dto: FeatureListingDto,
-  ): Promise<PublicListing> {
-    const listing = await this.cosmosService.readItem<ListingDocument>(
-      this.LISTINGS_CONTAINER,
-      id,
-      id,
-    );
-
-    if (!listing) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: "Not Found",
-        message: "Listing not found",
-      });
-    }
-
-    const now = new Date();
-    const featuredUntil = new Date(
-      now.getTime() + dto.durationDays * 24 * 60 * 60 * 1000,
-    );
-
-    listing.status.featured = true;
-    listing.status.featuredUntil = featuredUntil.toISOString();
-    listing.audit.updatedAt = now.toISOString();
-
-    const updatedListing = await this.cosmosService.updateItem(
-      this.LISTINGS_CONTAINER,
-      listing,
-      listing.id,
-    );
-
-    return this.toPublicListing(updatedListing);
-  }
-
-  /**
-   * Delete listing
-   */
-  async delete(id: string, userId: string, isAdmin: boolean): Promise<void> {
-    const listing = await this.cosmosService.readItem<ListingDocument>(
-      this.LISTINGS_CONTAINER,
-      id,
-      id,
-    );
-
-    if (!listing) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: "Not Found",
-        message: "Listing not found",
-      });
-    }
-
-    // Check access
-    if (!isAdmin && listing.sellerId !== userId) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        error: "Forbidden",
-        message: "You do not have permission to delete this listing",
-      });
-    }
-
-    // Soft delete by archiving
-    listing.status.state = "archived";
-    listing.visibility.isPublic = false;
-    listing.audit.updatedAt = new Date().toISOString();
-    listing.audit.updatedBy = userId;
-
-    await this.cosmosService.updateItem(
-      this.LISTINGS_CONTAINER,
-      listing,
-      listing.id,
-    );
-  }
-
-  /**
-   * Helper: Resolve taxonomy IDs to names
-   */
-  // TODO: BREAKING CHANGE - Update this method to work with new taxonomy structure
-  // The new taxonomy structure has one document per category (make, model, etc.)
-  // with an options array inside. This method needs to be completely rewritten.
-  // For now, returning empty object to allow compilation.
-  private async resolveTaxonomies(ids: string[]): Promise<Record<string, any>> {
-    // TODO: Implement proper taxonomy resolution with new structure
-    // Example: Load 'make' taxonomy, find option by ID, return option.label
-    return {};
-  }
-
-  /**
-   * Helper: Convert ListingDocument to PublicListing
-   */
-  private toPublicListing(listing: ListingDocument): PublicListing {
-    const { vehicle, ...rest } = listing;
-    const { vin, ...vehicleWithoutVin } = vehicle;
-    const vinLastFour = vin.slice(-4);
+    // Populate vehicle data
+    const vehicle = await this.vehiclesService.findById(listing.vehicleId);
 
     return {
-      ...rest,
-      vehicle: {
-        ...vehicleWithoutVin,
-        vinLastFour,
+      ...listing,
+      vehicle,
+    };
+  }
+
+  /**
+   * Find active listing by seller and VIN
+   */
+  private async findActiveListingBySellerAndVin(
+    sellerId: string,
+    vin: string,
+  ): Promise<ListingDocument | null> {
+    const querySpec = {
+      query:
+        "SELECT * FROM c WHERE c.seller.id = @sellerId AND c.searchIndex.vin = @vin AND c.status != @soldStatus",
+      parameters: [
+        { name: "@sellerId", value: sellerId },
+        { name: "@vin", value: vin },
+        { name: "@soldStatus", value: "Sold" },
+      ],
+    };
+
+    const { resources } = await this.container.items
+      .query<ListingDocument>(querySpec, { partitionKey: sellerId })
+      .fetchAll();
+
+    return resources.length > 0 ? resources[0] : null;
+  }
+
+  /**
+   * Check if key details changed (warrants new listing)
+   */
+  private hasKeyDetailsChanged(
+    existing: ListingDocument,
+    dto: CreateListingUnifiedDto,
+  ): boolean {
+    const sellerId = dto.sellerId || "system";
+
+    return (
+      existing.seller.id !== sellerId || // Ownership change
+      existing.state.titleStatus !== dto.state.titleStatus // Title status change
+    );
+  }
+
+  /**
+   * Mark listing as sold
+   */
+  private async markAsSold(listingId: string): Promise<void> {
+    const listing = await this.findListingById(listingId);
+
+    const updated: ListingDocument = {
+      ...listing,
+      status: "Sold",
+      timeline: {
+        ...listing.timeline,
+        soldOn: new Date().toISOString(),
       },
     };
+
+    await this.container.item(listingId, listing.seller.id).replace(updated);
+  }
+
+  /**
+   * Find listing by ID (without vehicle population)
+   */
+  private async findListingById(id: string): Promise<ListingDocument> {
+    const querySpec = {
+      query: "SELECT * FROM c WHERE c.id = @id",
+      parameters: [{ name: "@id", value: id }],
+    };
+
+    const { resources } = await this.container.items
+      .query<ListingDocument>(querySpec)
+      .fetchAll();
+
+    if (resources.length === 0) {
+      throw new NotFoundException(`Listing with ID ${id} not found`);
+    }
+
+    return resources[0];
+  }
+
+  /**
+   * Build denormalized search index
+   */
+  private buildSearchIndex(
+    vehicle: VehicleDocument,
+    dto: CreateListingUnifiedDto,
+  ): ListingSearchIndex {
+    return {
+      version: 1,
+
+      // From vehicles
+      vin: vehicle.vin,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      trim: vehicle.trim,
+      bodyStyle: vehicle.bodyStyle,
+      driveTrain: vehicle.performance.driveTrain,
+      batteryCapacityKWh: vehicle.battery.capacityKWh,
+      rangeEPA: vehicle.battery.rangeEPA,
+      chargingPort: vehicle.battery.charging.chargingPort,
+      chargerType: vehicle.battery.charging.chargerType,
+      enginePowerHP: vehicle.performance.enginePowerHP,
+      topSpeedMph: vehicle.performance.topSpeedMph,
+
+      // From listing.state
+      condition: dto.state.condition,
+      titleStatus: dto.state.titleStatus,
+      previousOwners: dto.state.previousOwners,
+      mileage: dto.state.mileage.value,
+      mileageBucket: this.calculateMileageBucket(dto.state.mileage.value),
+      exteriorColor: vehicle.specification.exteriorColor,
+      interiorColor: vehicle.specification.interiorColor,
+      seats: vehicle.specification.seats,
+      autopilotGen: vehicle.features.autopilot,
+      hasFSD: vehicle.features.IsFullSelfDriving,
+      hasEnhancedAP: false, // TODO: Derive from features
+      premiumPackage: vehicle.features.premiumPackage,
+      wheelsCode: vehicle.features.wheels,
+      isLeased: dto.state.lease.isLeased,
+      monthsRemaining: dto.state.lease.monthsRemaining,
+
+      // Listing commercial data
+      status: dto.status,
+      saleType: dto.saleTypes,
+      publishType: dto.publishTypes,
+      price: dto.price.amount,
+      priceCurrency: dto.price.currency,
+      priceBucket: this.calculatePriceBucket(dto.price.amount),
+
+      sellerType: dto.sellerType || "private",
+      sellerId: dto.sellerId || "system",
+      sellerDisplayName: dto.sellerDisplayName || "Unknown",
+
+      countryCode: dto.location.countryCode,
+      state: dto.location.state,
+      city: dto.location.city,
+      marketCountry: dto.location.countryCode,
+
+      publishedOn: dto.status === "Published" ? new Date().toISOString() : null,
+      publishedYearMonth:
+        dto.status === "Published"
+          ? new Date().toISOString().substring(0, 7)
+          : null,
+      soldOn: null,
+      expireOn: null,
+
+      isFeatured: false,
+      isBoosted: false,
+      hasVideo: false,
+      imageCount: 0,
+
+      totalOffers: 0,
+      highestOffer: null,
+      lastOfferAt: null,
+    };
+  }
+
+  /**
+   * Generate short ID
+   */
+  private generateShortId(): string {
+    return Math.random().toString(36).substring(2, 7);
+  }
+
+  /**
+   * Generate SEO slug
+   */
+  private generateSlug(
+    dto: CreateListingUnifiedDto,
+    vehicle: VehicleDocument,
+  ): string {
+    return `${vehicle.year}-${vehicle.make}-${vehicle.model}-${vehicle.specification.exteriorColor}`
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+  }
+
+  /**
+   * Calculate mileage bucket
+   */
+  private calculateMileageBucket(mileage: number): string {
+    if (mileage < 25000) return "0-25k";
+    if (mileage < 50000) return "25k-50k";
+    if (mileage < 75000) return "50k-75k";
+    if (mileage < 100000) return "75k-100k";
+    return "100k+";
+  }
+
+  /**
+   * Calculate price bucket
+   */
+  private calculatePriceBucket(price: number): string {
+    if (price < 30000) return "0-30k";
+    if (price < 40000) return "30k-40k";
+    if (price < 50000) return "40k-50k";
+    if (price < 60000) return "50k-60k";
+    if (price < 70000) return "60k-70k";
+    return "70k+";
   }
 }

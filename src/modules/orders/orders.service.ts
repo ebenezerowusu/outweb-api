@@ -160,9 +160,16 @@ export class OrdersService {
     }
 
     // Validate listing is available for purchase
-    if (listing.status.state !== "published") {
+    if (listing.status !== "Published") {
       throw new BadRequestException({
         message: "Listing is not available for purchase",
+      });
+    }
+
+    // Validate vehicle is populated
+    if (!listing.vehicle) {
+      throw new BadRequestException({
+        message: "Listing vehicle data not available",
       });
     }
 
@@ -191,13 +198,13 @@ export class OrdersService {
           model: listing.vehicle.model,
           year: listing.vehicle.year,
           trim: listing.vehicle.trim,
-          mileage: listing.vehicle.mileage,
-          exteriorColor: listing.vehicle.exteriorColor,
-          interiorColor: listing.vehicle.interiorColor,
+          mileage: listing.state.mileage.value,
+          exteriorColor: listing.vehicle.specification.exteriorColor,
+          interiorColor: listing.vehicle.specification.interiorColor,
         },
       },
       pricing: {
-        listPrice: listing.pricing.listPrice,
+        listPrice: listing.price.amount,
         agreedPrice: dto.agreedPrice,
         depositAmount: dto.depositAmount,
         depositPaidAt: null,
